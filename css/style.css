@@ -874,3 +874,14 @@ tr:hover td { background: rgba(232,220,200,0.15); }
 .collection-carte-lignes-haut { position: absolute; top: 12px; left: 12px; right: 12px; display: flex; flex-wrap: wrap; gap: 4px; z-index: 1; }
 .collection-carte-ligne-tag { font-family: 'DM Sans', sans-serif; font-size: 0.62rem; letter-spacing: 0.08em; color: rgba(255,255,255,0.85); background: rgba(255,255,255,0.15); padding: 2px 8px;}
 .section-label { font-family: 'DM Sans', sans-serif; font-size: 0.72rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--gris); margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--beige); }
+
+
+/* ═══════════════════════════════════════
+   ADMIN — TOAST
+   ═══════════════════════════════════════ */
+
+
+.toast { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.9); background: var(--gris-fonce); color: var(--blanc); padding: 16px 32px; border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 1rem; z-index: 9999; opacity: 0; transition: opacity 0.3s, transform 0.3s; pointer-events: none; }
+.toast.visible { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+.toast.toast-succes { background: var(--primary); }
+.toast.toast-erreur { background: var(--danger); }
