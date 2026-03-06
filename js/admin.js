@@ -8,14 +8,15 @@ document.addEventListener('DOMContentLoaded', () => {
   const session = sessionStorage.getItem('uc_admin');
   const ecran = document.getElementById('ecran-connexion');
   const layout = document.querySelector('.admin-layout');
-  const nav = document.getElementById('nav-admin');
+  const nav = document.getElementById('nav');
   if (session !== 'true') {
-    if (ecran) ecran.style.display = 'flex';
-    if (layout) layout.style.display = 'none';
-    if (nav) nav.style.display = 'none';
+    if (ecran) ecran.classList.add('visible');
+    if (layout) layout.classList.add('cache');
+    if (nav) nav.classList.add('cache');
     return;
   }
-  if (ecran) ecran.style.display = 'none';
+  if (ecran) ecran.classList.remove('visible');
+  chargerStatsAccueil();
   const dateField = document.getElementById('nf-date');
   if (dateField) dateField.value = new Date().toISOString().split('T')[0];
   initBurgerAdmin();
