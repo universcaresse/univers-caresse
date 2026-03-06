@@ -3,11 +3,19 @@
    ═══════════════════════════════════════ */
 
 // ─── INITIALISATION ───
+
 document.addEventListener('DOMContentLoaded', () => {
-  if (sessionStorage.getItem('uc_admin') !== 'true') {
-    document.getElementById('acces-refuse').classList.add('visible');
+  const session = sessionStorage.getItem('uc_admin');
+  const ecran = document.getElementById('ecran-connexion');
+  const layout = document.querySelector('.admin-layout');
+  const nav = document.getElementById('nav-admin');
+  if (session !== 'true') {
+    if (ecran) ecran.style.display = 'flex';
+    if (layout) layout.style.display = 'none';
+    if (nav) nav.style.display = 'none';
     return;
   }
+  if (ecran) ecran.style.display = 'none';
   const dateField = document.getElementById('nf-date');
   if (dateField) dateField.value = new Date().toISOString().split('T')[0];
   initBurgerAdmin();
