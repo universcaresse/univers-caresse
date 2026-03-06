@@ -171,7 +171,8 @@ function ouvrirFicheCollection(col) {
   document.getElementById('fiche-collection-desc').textContent = groupe.info.description_collection || '';
   document.getElementById('fiche-collection-lignes').innerHTML = lignesHtml || '<p class="vide-desc">Aucune ligne</p>';
   document.getElementById('fiche-collection-modifier').onclick = () => modifierCollection(groupe.info.rowIndex);
-  fiche.classList.add('visible');
+ fiche.classList.add('visible');
+  window.scrollTo(0, 0);
 }
 
 function fermerFicheCollection() {
