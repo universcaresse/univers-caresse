@@ -1,0 +1,1499 @@
+/* ═══════════════════════════════════════
+   UNIVERS CARESSE — admin.js
+   ═══════════════════════════════════════ */
+
+// ─── INITIALISATION ───
+document.addEventListener('DOMContentLoaded', () => {
+  if (sessionStorage.getItem('uc_admin') !== 'true') {
+    document.getElementById('acces-refuse').classList.add('visible');
+    return;
+  }
+  const dateField = document.getElementById('nf-date');
+  if (dateField) dateField.value = new Date().toISOString().split('T')[0];
+  initBurgerAdmin();
+  chargerCollections();
+});
+
+// ─── NAVIGATION SIDEBAR ───
+function afficherSection(id, bouton) {
+  document.querySelectorAll('.section-admin').forEach(s => s.classList.remove('visible'));
+  document.querySelectorAll('.sidebar-lien').forEach(l => l.classList.remove('actif'));
+  fermerFicheCollection();
+   const s = document.getElementById('section-' + id);
+  if (s) s.classList.add('visible');
+  if (bouton) bouton.classList.add('actif');
+  fermerSidebarMobile();
+  window.scrollTo(0, 0);
+  document.body.scrollTop = 0;
+  document.documentElement.scrollTop = 0;
+  const contenu = document.querySelector('.admin-contenu');
+  if (contenu) contenu.scrollTop = 0;
+if (id === 'accueil')        chargerStatsAccueil();
+if (id === 'collections')    { chargerCollections(); chargerListesFournisseurs(); }
+  if (id === 'recettes')       chargerRecettes();
+  if (id === 'densites')       chargerDensites();
+  if (id === 'inventaire')     chargerInventaire();
+  if (id === 'factures')       chargerFactures();
+ if (id === 'nouvelle-facture' && !factureActive) initialiserNouvelleFacture();
+}
+
+// ─── STATS ACCUEIL ───
+async function chargerStatsAccueil() {
+  try {
+   const resCol = await appelAPI('getCollectionsPublic');
+    if (resCol && resCol.collections) {
+      document.getElementById('admin-stat-collections').textContent = resCol.collections.length;
+    }
+    const resRec = await appelAPI('getRecettes');
+    if (resRec && resRec.recettes) {
+      const nb = resRec.recettes.filter(r => r.statut === 'public').length;
+      document.getElementById('admin-stat-produits').textContent = nb + '+';
+    }
+  } catch(err) {}
+}
+
+// ─── BURGER MOBILE ───
+function initBurgerAdmin() {
+  const overlay = document.getElementById('sidebar-overlay');
+  if (overlay) overlay.addEventListener('click', fermerSidebarMobile);
+  const burger = document.getElementById('burger-admin');
+  if (burger) burger.addEventListener('click', function(e) { e.stopPropagation(); });
+}
+
+function toggleSidebarAdmin() {
+ 
+  document.getElementById('sidebar-admin').classList.toggle('ouvert');
+  document.getElementById('sidebar-overlay').classList.toggle('visible');
+}
+
+function fermerSidebarMobile() {
+  const sidebar = document.getElementById('sidebar-admin');
+  const overlay = document.getElementById('sidebar-overlay');
+  if (sidebar) sidebar.classList.remove('ouvert');
+  if (overlay) overlay.classList.remove('visible');
+}
+
+// ─── MESSAGES ───
+function afficherMsg(zone, texte, type = 'succes') {
+  const el = document.getElementById('msg-' + zone);
+  if (!el) return;
+  el.innerHTML = `<div class="msg msg-${type}">${texte}</div>`;
+  setTimeout(() => { el.innerHTML = ''; }, 4000);
+}
+
+// ─── COULEUR PAR NOM ───
+function stringToColor(str) {
+  const palette = ['#5a8a3a','#4a7c9e','#9b6b9b','#c4773a','#3a8a7a','#8a5a3a','#6b7a3a','#9b3a5a','#3a5a8a'];
+  let h = 0;
+  for (let i = 0; i < str.length; i++) h = str.charCodeAt(i) + ((h << 5) - h);
+  return palette[Math.abs(h) % palette.length];
+}
+
+/* ════════════════════════════════
+   COLLECTIONS
+════════════════════════════════ */
+let donneesCollections = [];
+
+async function chargerCollections() {
+  const loading = document.getElementById('loading-collections');
+  const contenu = document.getElementById('contenu-collections');
+  const vide    = document.getElementById('vide-collections');
+  loading.style.display = 'block';
+  contenu.innerHTML = '';
+  vide.style.display = 'none';
+
+  const res = await appelAPI('getCollections');
+  loading.style.display = 'none';
+  if (!res || !res.success) { afficherMsg('collections', 'Erreur lors du chargement.', 'erreur'); return; }
+  donneesCollections = res.items || [];
+  if (!donneesCollections.length) { vide.style.display = 'block'; return; }
+
+  const groupes = {};
+  donneesCollections.forEach(item => {
+    if (!groupes[item.collection]) {
+      groupes[item.collection] = { slogan: item.slogan, couleur_hex: item.couleur_hex, lignes: [] };
+    }
+    if (item.ligne) groupes[item.collection].lignes.push(item);
+  });
+
+  let html = '<div class="collections-grille">';
+  Object.entries(groupes).forEach(([col, data]) => {
+    const couleurs = couleurCollection(col, data.couleur_hex);
+    const lignesHtml = data.lignes.map(item =>
+      `<span class="collection-carte-ligne-tag">${item.ligne.toUpperCase()}</span>`
+    ).join('');
+    html += `
+      <div class="collection-carte" onclick="ouvrirFicheCollection('${col.replace(/'/g, "\\'")}')">
+        <div class="collection-carte-bg" style="background:linear-gradient(145deg,${couleurs[0]},${couleurs[1]});"></div>
+        <div class="collection-carte-overlay"></div>
+        <div class="collection-carte-contenu">
+          <div class="collection-carte-lignes">${lignesHtml}</div>
+          <span class="collection-carte-nom">${col.toUpperCase()}</span>
+          <span class="collection-carte-slogan">${data.slogan || ''}</span>
+        </div>
+      </div>`;
+  });
+  html += '</div>';
+  contenu.innerHTML = html;
+}
+
+function ouvrirFicheCollection(col) {
+  const groupe = {};
+  donneesCollections.forEach(item => {
+    if (item.collection === col) {
+      if (!groupe.info) {
+        groupe.info = item;
+      }
+      if (item.ligne) {
+        if (!groupe.lignes) groupe.lignes = [];
+        groupe.lignes.push(item);
+      }
+    }
+  });
+  if (!groupe.info) return;
+
+  const couleurs = couleurCollection(col, groupe.info.couleur_hex);
+  const lignesHtml = (groupe.lignes || []).map(item => `
+    <div class="fiche-ligne-item">
+      <div class="fiche-ligne-info">
+        <span class="fiche-ligne-nom">${item.ligne.toUpperCase()}</span>
+        ${item.format ? `<span class="fiche-ligne-format">${item.format}</span>` : ''}
+        ${item.description_ligne ? `<p class="fiche-ligne-desc">${item.description_ligne}</p>` : ''}
+      </div>
+      <button class="btn btn-sm btn-edit" onclick="modifierCollection(${item.rowIndex})">Modifier</button>
+    </div>`).join('');
+
+  const fiche = document.getElementById('fiche-collection');
+  document.getElementById('fiche-collection-titre').textContent = col.toUpperCase();
+  document.getElementById('fiche-collection-bandeau').style.background =
+    `linear-gradient(145deg,${couleurs[0]},${couleurs[1]})`;
+  document.getElementById('fiche-collection-slogan').textContent = groupe.info.slogan || '';
+  document.getElementById('fiche-collection-desc').textContent = groupe.info.description_collection || '';
+  document.getElementById('fiche-collection-lignes').innerHTML = lignesHtml || '<p class="vide-desc">Aucune ligne</p>';
+  document.getElementById('fiche-collection-modifier').onclick = () => modifierCollection(groupe.info.rowIndex);
+  fiche.classList.add('visible');
+}
+
+function fermerFicheCollection() {
+  document.getElementById('fiche-collection').classList.remove('visible');
+}
+
+
+
+
+
+function ouvrirFormCollectionPour(col) {
+  ouvrirFormCollection();
+  document.getElementById('fc-collection').value = col;
+}
+
+function ouvrirFormCollection() {
+  document.getElementById('form-collections-titre').textContent = 'Nouvelle collection';
+  document.getElementById('fc-rowIndex').value = '';
+  document.getElementById('fc-mode').value = 'collection';
+  document.getElementById('fc-bloc-collection').style.display = '';
+  document.getElementById('fc-bloc-ligne').style.display = 'none';
+  document.getElementById('fc-toggle-mode').textContent = '+ Ajouter une ligne';
+  ['fc-rang','fc-collection','fc-slogan','fc-desc-col','fc-couleur-hex','fc-photo-url',
+   'fc-ligne','fc-format','fc-desc-ligne','fc-couleur-hex-ligne','fc-photo-url-ligne','fc-collection-ligne']
+    .forEach(id => { const e = document.getElementById(id); if (e) e.value = ''; });
+  ['fc-photo-preview','fc-photo-preview-ligne'].forEach(id => {
+    const e = document.getElementById(id); if (e) e.innerHTML = '';
+  });
+  ingredientsBase = [];
+  rafraichirListeIngredientsBase();
+  document.getElementById('form-collections').classList.add('visible');
+  document.getElementById('fc-rang').focus();
+}
+function fermerFormCollection() {
+  document.getElementById('form-collections').classList.remove('visible');
+}
+
+async function modifierCollection(rowIndex) {
+  const item = donneesCollections.find(i => i.rowIndex === rowIndex);
+  if (!item) return;
+  document.getElementById('form-collections-titre').textContent = 'Modifier l\'entrée';
+  document.getElementById('fc-rowIndex').value          = rowIndex;
+  document.getElementById('fc-rang').value              = item.rang || '';
+  document.getElementById('fc-collection').value        = item.collection || '';
+  document.getElementById('fc-slogan').value            = item.slogan || '';
+  document.getElementById('fc-desc-col').value          = item.description_collection || '';
+  document.getElementById('fc-ligne').value             = item.ligne || '';
+  document.getElementById('fc-format').value            = item.format || '';
+  document.getElementById('fc-desc-ligne').value        = item.description_ligne || '';
+  document.getElementById('fc-couleur-hex').value       = item.couleur_hex || '#8b8680';
+  document.getElementById('fc-photo-url').value         = item.photo_url || '';
+  const res = await appelAPI('getRecettesBase');
+  ingredientsBase = (res && res.items ? res.items : [])
+    .filter(i => i.collection === item.collection && i.ligne === item.ligne)
+    .map(i => ({ type: i.ingredient_type, nom: i.ingredient_nom, quantite: i.quantite_g }));
+  rafraichirListeIngredientsBase();
+  document.getElementById('form-collections').classList.add('visible');
+  document.getElementById('fc-collection').focus();
+}
+
+
+async function sauvegarderCollection() {
+  const btnSauvegarder = document.querySelector('#form-collections .btn-primary');
+  if (btnSauvegarder) { btnSauvegarder.disabled = true; btnSauvegarder.innerHTML = '<span class="spinner"></span> Sauvegarde…'; }
+  const rowIndex = document.getElementById('fc-rowIndex').value;
+  const mode     = document.getElementById('fc-mode').value;
+
+  if (mode === 'ligne') {
+    const col   = document.getElementById('fc-collection-ligne').value;
+    const ligne = document.getElementById('fc-ligne').value.toUpperCase();
+    if (!col || !ligne) {
+      if (btnSauvegarder) { btnSauvegarder.disabled = false; btnSauvegarder.innerHTML = 'Enregistrer'; }
+      afficherMsg('collections', 'Le nom de la ligne est requis.', 'erreur');
+      return;
+    }
+    await appelAPIPost('saveRecetteBase', {
+      collection: col,
+      ligne,
+      ingredients: ingredientsBase.map(i => ({ type: i.type, nom: i.nom, quantite_g: i.quantite }))
+    });
+    const d = {
+      collection:        col,
+      ligne,
+      format:            document.getElementById('fc-format').value,
+      description_ligne: document.getElementById('fc-desc-ligne').value,
+      couleur_hex:       document.getElementById('fc-couleur-hex-ligne').value,
+      photo_url:         document.getElementById('fc-photo-url-ligne').value,
+      rang:              '', slogan: '', description_collection: ''
+    };
+    const res = await appelAPIPost('addCollectionItem', d);
+    if (res && res.success) {
+      if (btnSauvegarder) { btnSauvegarder.disabled = false; btnSauvegarder.innerHTML = 'Enregistrer'; }
+      fermerFormCollection();
+      afficherMsg('collections', 'Ligne ajoutée.');
+      chargerCollections();
+    } else {
+      afficherMsg('collections', 'Erreur lors de la sauvegarde.', 'erreur');
+      if (btnSauvegarder) { btnSauvegarder.disabled = false; btnSauvegarder.innerHTML = 'Enregistrer'; }
+    }
+    return;
+  }
+
+  const d = {
+    rang:                   document.getElementById('fc-rang').value,
+    collection:             document.getElementById('fc-collection').value.toUpperCase(),
+    slogan:                 document.getElementById('fc-slogan').value,
+    description_collection: document.getElementById('fc-desc-col').value,
+    ligne:                  '',
+    format:                 '',
+    description_ligne:      '',
+    couleur_hex:            document.getElementById('fc-couleur-hex').value,
+    photo_url:              document.getElementById('fc-photo-url').value,
+  };
+  if (!d.collection) {
+    if (btnSauvegarder) { btnSauvegarder.disabled = false; btnSauvegarder.innerHTML = 'Enregistrer'; }
+    afficherMsg('collections', 'Le nom de la collection est requis.', 'erreur');
+    return;
+  }
+  const res = rowIndex
+    ? await appelAPIPost('updateCollectionItem', { ...d, rowIndex: parseInt(rowIndex) })
+    : await appelAPIPost('addCollectionItem', d);
+  if (res && res.success) {
+    if (btnSauvegarder) { btnSauvegarder.disabled = false; btnSauvegarder.innerHTML = 'Enregistrer'; }
+    fermerFormCollection();
+    afficherMsg('collections', rowIndex ? 'Entrée mise à jour.' : 'Entrée ajoutée.');
+    chargerCollections();
+  } else {
+    afficherMsg('collections', 'Erreur lors de la sauvegarde.', 'erreur');
+    if (btnSauvegarder) { btnSauvegarder.disabled = false; btnSauvegarder.innerHTML = 'Enregistrer'; }
+  }
+}
+
+async function supprimerLigne(rowIndex) {
+  if (!confirm('Supprimer cette ligne ?')) return;
+  const res = await appelAPIPost('deleteCollectionItem', { rowIndex });
+  if (res && res.success) {
+    afficherMsg('collections', 'Ligne supprimée.');
+    chargerCollections();
+  } else {
+    afficherMsg('collections', 'Erreur.', 'erreur');
+  }
+}
+
+/* ════════════════════════════════
+   RECETTES
+════════════════════════════════ */
+let donneesRecettes = [];
+let collectionsDisponibles = {};
+
+async function chargerRecettes() {
+  const loading = document.getElementById('loading-recettes');
+  const grille  = document.getElementById('grille-recettes');
+  const vide    = document.getElementById('vide-recettes');
+  loading.style.display = 'block';
+  grille.style.display  = 'none';
+  vide.style.display    = 'none';
+  document.getElementById('filtre-recette-collection').value = '';
+  document.getElementById('filtre-recette-ligne').innerHTML  = '<option value="">Toutes les lignes</option>';
+  document.getElementById('filtre-recette-ligne').disabled   = true;
+
+   const res = await appelAPI('getRecettes');
+
+ loading.style.display = 'none';
+  if (!res || !res.success) { afficherMsg('recettes', 'Erreur.', 'erreur'); return; }
+  donneesRecettes = res.recettes || [];
+  await chargerCollectionsPourSelecteur();
+
+  if (!donneesRecettes.length) { vide.style.display = 'block'; return; }
+
+  grille.innerHTML = '';
+  donneesRecettes.forEach(rec => {
+    const couleur = rec.couleur_hex || '#8b8680';
+    const div = document.createElement('div');
+    div.className = 'recette-carte';
+     
+   div.style.cursor = 'pointer';
+    div.onclick = () => ouvrirFicheRecette(rec.recette_id);
+    div.innerHTML = `
+       
+      <div class="recette-visuel">
+        <div class="recette-couleur" style="background:${couleur}">
+          <div class="recette-photo-placeholder">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <rect x="3" y="3" width="18" height="18" rx="2"/>
+              <circle cx="8.5" cy="8.5" r="1.5"/>
+              <polyline points="21 15 16 10 5 21"/>
+            </svg>
+            Photo à venir
+          </div>
+          <div class="recette-dot" style="background:${couleur}"></div>
+        </div>
+      </div>
+
+      
+    <div class="recette-infos">
+        <span class="recette-badge">${rec.collection || '—'}</span>
+        <span class="recette-statut-badge recette-statut-${rec.statut || 'test'}">${rec.statut === 'public' ? 'Public' : 'Test'}</span>
+        <div class="recette-nom">${rec.nom || '—'}</div>
+        <div class="recette-ligne">${rec.ligne || ''}</div>
+        <div class="recette-bas">
+          <span class="recette-prix">${rec.prix_vente ? formaterPrix(rec.prix_vente) : '—\u00a0$'}</span>
+          ${rec.format ? `<span class="recette-format">${rec.format}</span>` : ''}
+        </div>
+      </div>`;
+    grille.appendChild(div);
+  });
+grille.style.display = 'grid';
+  peuplerFiltresRecettes();
+}
+
+function peuplerFiltresRecettes() {
+  const sel = document.getElementById('filtre-recette-collection');
+  const valActuelle = sel.value;
+  sel.innerHTML = '<option value="">Toutes les collections</option>';
+  const collections = [...new Set(donneesRecettes.map(r => r.collection).filter(Boolean))].sort();
+  collections.forEach(col => {
+    const opt = document.createElement('option');
+    opt.value = col; opt.textContent = col;
+    sel.appendChild(opt);
+  });
+  sel.value = valActuelle;
+}
+
+function onFiltreCollection() {
+  const col = document.getElementById('filtre-recette-collection').value;
+  const selLigne = document.getElementById('filtre-recette-ligne');
+  selLigne.innerHTML = '<option value="">Toutes les lignes</option>';
+  if (col) {
+    const lignes = [...new Set(donneesRecettes.filter(r => r.collection === col).map(r => r.ligne).filter(Boolean))].sort();
+    lignes.forEach(l => {
+      const opt = document.createElement('option');
+      opt.value = l; opt.textContent = l;
+      selLigne.appendChild(opt);
+    });
+    selLigne.disabled = false;
+  } else {
+    selLigne.disabled = true;
+  }
+  filtrerRecettes();
+}
+
+function filtrerRecettes() {
+  const col    = document.getElementById('filtre-recette-collection').value;
+  const ligne  = document.getElementById('filtre-recette-ligne').value;
+  const statut = document.getElementById('filtre-recette-statut').value;
+  const cartes = document.querySelectorAll('#grille-recettes .recette-carte');
+  const vide   = document.getElementById('vide-recettes');
+  let visible  = 0;
+  cartes.forEach(carte => {
+    const rec = donneesRecettes.find(r => r.nom === carte.querySelector('.recette-nom').textContent);
+    if (!rec) return;
+    const ok = (!col || rec.collection === col) && (!ligne || rec.ligne === ligne) && (!statut || (rec.statut || 'test') === statut);
+    carte.style.display = ok ? '' : 'none';
+    if (ok) visible++;
+  });
+  vide.style.display = visible === 0 ? 'block' : 'none';
+}
+
+
+
+   
+async function chargerCollectionsPourSelecteur() {
+  if (Object.keys(collectionsDisponibles).length > 0) return;
+  const res = await appelAPI('getCollections');
+  if (!res || !res.success) return;
+  const sel = document.getElementById('fr-collection');
+  sel.innerHTML = '<option value="">— Choisir —</option>';
+  collectionsDisponibles = {};
+  (res.items || []).forEach(item => {
+    if (!collectionsDisponibles[item.collection]) collectionsDisponibles[item.collection] = [];
+    if (item.ligne && !collectionsDisponibles[item.collection].includes(item.ligne))
+      collectionsDisponibles[item.collection].push(item.ligne);
+  });
+  Object.keys(collectionsDisponibles).sort().forEach(col => {
+    const o = document.createElement('option');
+    o.value = col; o.textContent = col; sel.appendChild(o);
+  });
+}
+
+async function mettreAJourLignes() {
+  const col = document.getElementById('fr-collection').value;
+  const sel = document.getElementById('fr-ligne');
+  sel.innerHTML = '';
+  const lignes = collectionsDisponibles[col] || [];
+  if (!lignes.length) { sel.innerHTML = '<option value="">— Aucune ligne —</option>'; return; }
+  lignes.forEach(l => {
+    const o = document.createElement('option'); o.value = l; o.textContent = l; sel.appendChild(o);
+  });
+  await chargerIngredientsBaseRecette();
+}
+
+async function chargerIngredientsBaseRecette() {
+  const col   = document.getElementById('fr-collection').value;
+  const ligne = document.getElementById('fr-ligne').value;
+  if (!col || !ligne) return;
+  const res = await appelAPI('getRecettesBase');
+  if (!res || !res.items) return;
+  ingredientsBase = res.items
+    .filter(i => i.collection === col && i.ligne === ligne)
+    .map(i => ({ type: i.ingredient_type, nom: i.ingredient_nom, quantite: i.quantite_g }));
+  rafraichirListeIngredientsBase();
+}
+
+
+
+function ouvrirFicheRecette(id) {
+  const rec = donneesRecettes.find(r => r.recette_id === id);
+  if (!rec) return;
+  document.getElementById('form-recettes-titre').textContent = rec.nom;
+  document.getElementById('fr-id').value           = rec.recette_id;
+  document.getElementById('fr-nom').value          = rec.nom || '';
+  document.getElementById('fr-couleur').value      = rec.couleur_hex || '';
+  document.getElementById('fr-format').value       = rec.format || '';
+  document.getElementById('fr-unites').value       = rec.nb_unites || '';
+  document.getElementById('fr-cure').value         = rec.cure || '';
+  document.getElementById('fr-prix').value         = rec.prix_vente || '';
+  document.getElementById('fr-description').value  = rec.description || '';
+  document.getElementById('fr-instructions').value = rec.instructions || '';
+  document.getElementById('fr-notes').value        = rec.notes || '';
+  document.getElementById('fr-collection').value   = rec.collection || '';
+  mettreAJourLignes();
+  document.getElementById('fr-ligne').value        = rec.ligne || '';
+  document.getElementById('form-recettes').classList.add('visible');
+  document.getElementById('fr-nom').focus();
+}
+function ouvrirFormRecette() {
+  document.getElementById('form-recettes-titre').textContent = 'Nouvelle recette';
+  document.getElementById('fr-id').value = '';
+ ['fr-nom','fr-couleur','fr-format','fr-unites','fr-cure','fr-prix','fr-description','fr-instructions','fr-notes']
+    .forEach(id => { const e = document.getElementById(id); if (e) e.value = ''; });
+  document.getElementById('fr-statut').value = 'test';
+  document.getElementById('fr-collection').value = '';
+  document.getElementById('fr-ligne').innerHTML = '<option value="">— Choisir collection —</option>';
+  document.getElementById('form-recettes').classList.add('visible');
+  document.getElementById('fr-nom').focus();
+}
+
+function fermerFormRecette() {
+  document.getElementById('form-recettes').classList.remove('visible');
+}
+
+function modifierRecette(id) {
+  const rec = donneesRecettes.find(r => r.recette_id === id);
+  if (!rec) return;
+  document.getElementById('form-recettes-titre').textContent = 'Modifier la recette';
+  document.getElementById('fr-id').value           = rec.recette_id;
+  document.getElementById('fr-nom').value          = rec.nom || '';
+  document.getElementById('fr-couleur').value      = rec.couleur_hex || '';
+  document.getElementById('fr-format').value       = rec.format || '';
+  document.getElementById('fr-unites').value       = rec.nb_unites || '';
+  document.getElementById('fr-cure').value         = rec.cure || '';
+  document.getElementById('fr-prix').value         = rec.prix_vente || '';
+  document.getElementById('fr-description').value  = rec.description || '';
+  document.getElementById('fr-instructions').value = rec.instructions || '';
+  document.getElementById('fr-notes').value        = rec.notes || '';
+  document.getElementById('fr-statut').value       = rec.statut || 'test';
+  document.getElementById('fr-collection').value   = rec.collection || '';
+  mettreAJourLignes();
+  document.getElementById('fr-ligne').value        = rec.ligne || '';
+  document.getElementById('form-recettes').classList.add('visible');
+  document.getElementById('fr-nom').focus();
+}
+async function sauvegarderRecette() {
+  const btnSauvegarder = document.querySelector('#form-recettes .btn-primary');
+  if (btnSauvegarder) { btnSauvegarder.disabled = true; btnSauvegarder.innerHTML = '<span class="spinner"></span> Sauvegarde…'; }
+  const id = document.getElementById('fr-id').value;
+  const d = {
+    recette_id:   id || ('REC-' + Date.now()),
+    nom:          document.getElementById('fr-nom').value.toUpperCase(),
+    couleur_hex:  document.getElementById('fr-couleur').value,
+    collection:   document.getElementById('fr-collection').value,
+    ligne:        document.getElementById('fr-ligne').value,
+    format:       document.getElementById('fr-format').value,
+    nb_unites:    parseInt(document.getElementById('fr-unites').value) || 1,
+    cure:         parseInt(document.getElementById('fr-cure').value) || 0,
+    prix_vente:   parseFloat(document.getElementById('fr-prix').value) || 0,
+    description:  document.getElementById('fr-description').value,
+    instructions: document.getElementById('fr-instructions').value,
+    notes:        document.getElementById('fr-notes').value,
+    statut:       document.getElementById('fr-statut').value || 'test',
+    image_url:    document.getElementById('fr-image-url').value,
+    ingredients:  []
+  };
+  if (!d.nom) { afficherMsg('recettes', 'Le nom est requis.', 'erreur'); return; }
+  const res = await appelAPIPost('saveRecette', d);
+if (res && res.success) {
+    if (btnSauvegarder) { btnSauvegarder.disabled = false; btnSauvegarder.innerHTML = 'Enregistrer'; }
+    fermerFormRecette();
+    afficherMsg('recettes', id ? 'Recette mise à jour.' : 'Recette créée.');
+    chargerRecettes();
+  } else {
+    afficherMsg('recettes', 'Erreur.', 'erreur');
+    if (btnSauvegarder) { btnSauvegarder.disabled = false; btnSauvegarder.innerHTML = 'Enregistrer'; }
+  }
+}
+
+// ─── CLOUDINARY ───
+function ouvrirCloudinary() {
+  cloudinary.openUploadWidget({
+    cloudName: 'dfasrauyy',
+    uploadPreset: 'univers-caresse',
+    sources: ['local', 'camera'],
+    multiple: false,
+    language: 'fr',
+    folder: 'univers-caresse/produits'
+  }, (error, result) => {
+    if (!error && result && result.event === 'success') {
+      document.getElementById('fr-image-url').value = result.info.secure_url;
+      const preview = document.getElementById('fr-image-preview');
+      preview.innerHTML = `<img src="${result.info.secure_url}" style="max-width:120px;margin-top:8px;">`;
+    }
+  });
+}
+
+function ouvrirCloudinaryCollection() {
+  cloudinary.openUploadWidget({
+    cloudName: 'dfasrauyy',
+    uploadPreset: 'univers-caresse',
+    sources: ['local', 'camera'],
+    multiple: false,
+    language: 'fr',
+    folder: 'univers-caresse/collections'
+  }, (error, result) => {
+  if (!error && result && result.event === 'success') {
+  
+      document.getElementById('fc-photo-url').value = result.info.secure_url;
+      
+      const preview = document.getElementById('fc-photo-preview');
+      if (preview) preview.innerHTML = `<img src="${result.info.secure_url}" class="photo-preview">`;
+    }
+  });
+}
+function ouvrirCloudinaryLigne() {
+  cloudinary.openUploadWidget({
+    cloudName: 'dfasrauyy',
+    uploadPreset: 'univers-caresse',
+    sources: ['local', 'camera'],
+    multiple: false,
+    language: 'fr',
+    folder: 'univers-caresse/lignes'
+  }, (error, result) => {
+    if (!error && result && result.event === 'success') {
+      document.getElementById('fc-photo-url-ligne').value = result.info.secure_url;
+      const preview = document.getElementById('fc-photo-preview-ligne');
+      if (preview) preview.innerHTML = `<img src="${result.info.secure_url}" class="photo-preview">`;
+    }
+  });
+}
+
+function basculerModeFormCollection() {
+  const mode    = document.getElementById('fc-mode');
+  const blocCol = document.getElementById('fc-bloc-collection');
+  const blocLig = document.getElementById('fc-bloc-ligne');
+  const titre   = document.getElementById('form-collections-titre');
+  const toggle  = document.getElementById('fc-toggle-mode');
+  const col     = document.getElementById('fc-collection').value;
+
+  if (mode.value === 'collection') {
+    mode.value = 'ligne';
+    blocCol.style.display = 'none';
+    blocLig.style.display = '';
+    titre.textContent = 'Nouvelle ligne — ' + (col || '');
+    toggle.textContent = '← Retour collection';
+    document.getElementById('fc-collection-ligne').value = col;
+  } else {
+    mode.value = 'collection';
+    blocCol.style.display = '';
+    blocLig.style.display = 'none';
+    titre.textContent = document.getElementById('fc-rowIndex').value ? 'Modifier la collection' : 'Nouvelle collection';
+    toggle.textContent = '+ Ajouter une ligne';
+  }
+}
+
+
+
+
+
+
+function apercuCouleurCollection(input) {
+  const val = input.value.trim();
+  if (/^#[0-9a-fA-F]{6}$/.test(val)) {
+    input.style.backgroundColor = val;
+    input.style.color = '#fff';
+  } else {
+    input.style.backgroundColor = '';
+    input.style.color = '';
+  }
+}
+
+
+
+// ─── INGRÉDIENTS DE BASE ───
+let ingredientsBase = [];
+
+function ajouterIngredientBase(type='', nom='', quantite=0) {
+  ingredientsBase.push({ type, nom, quantite });
+  rafraichirListeIngredientsBase();
+}
+
+function supprimerIngredientBase(index) {
+  ingredientsBase.splice(index, 1);
+  rafraichirListeIngredientsBase();
+}
+
+function rafraichirListeIngredientsBase() {
+  const liste = document.getElementById('liste-ingredients-base');
+  if (!liste) return;
+  if (ingredientsBase.length === 0) { liste.innerHTML = ''; return; }
+  liste.innerHTML = ingredientsBase.map((ing, i) => `
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">
+    <select class="form-ctrl" style="flex:1" onchange="ingredientsBase[${i}].type=this.value; ingredientsBase[${i}].nom=''; rafraichirListeIngredientsBase()">
+        <option value="">— Type —</option>
+       ${(listesDropdown.types || []).map(t => `<option value="${t}" ${ing.type===t?'selected':''}>${t}</option>`).join('')}
+      </select>
+      <select class="form-ctrl" style="flex:2" onchange="ingredientsBase[${i}].nom=this.value">
+        <option value="">— Ingrédient —</option>
+      ${(listesDropdown.fullData || []).filter(d => d.type===ing.type).map(d => `<option value="${d.ingredient}" ${ing.nom===d.ingredient?'selected':''}>${d.ingredient}</option>`).join('')}
+      </select>
+      <input type="text" inputmode="numeric" class="form-ctrl" style="width:90px" value="${ing.quantite||''}" placeholder="g" onchange="ingredientsBase[${i}].quantite=parseFloat(this.value)||0">
+      <button class="btn btn-sm btn-danger" onclick="supprimerIngredientBase(${i})">✕</button>
+    </div>
+  `).join('');
+}
+
+async function supprimerRecette(id) {
+  if (!confirm('Supprimer cette recette ?')) return;
+  const res = await appelAPIPost('deleteRecette', { recette_id: id });
+  if (res && res.success) {
+    afficherMsg('recettes', 'Recette supprimée.');
+    chargerRecettes();
+  } else {
+    afficherMsg('recettes', 'Erreur.', 'erreur');
+  }
+}
+
+/* ════════════════════════════════
+   NOUVELLE FACTURE
+════════════════════════════════ */
+let factureActive = null;
+let produitsFacture = [];
+
+function calculerPrixParG() {
+  const prix  = parseFloat(document.getElementById('fp-prix-unitaire').value) || 0;
+  const qte   = parseFloat(document.getElementById('fp-contenu-qte').value) || 0;
+  const unite = document.getElementById('fp-contenu-unite').value;
+  let g = qte;
+  if (unite === 'L')  g = qte * 1000;
+  if (unite === 'kg') g = qte * 1000;
+  document.getElementById('fp-prix-par-g').value = g > 0 ? (prix / g).toFixed(4) + ' $/g' : '';
+}
+
+async function creerFacture() {
+  const numero      = document.getElementById('nf-numero').value.trim();
+  const date        = document.getElementById('nf-date').value;
+  const fournisseur = document.getElementById('nf-fournisseur').value.trim();
+  if (!numero || !date || !fournisseur) {
+    afficherMsg('nouvelle-facture', 'Tous les champs sont requis.', 'erreur');
+    return;
+  }
+  const res = await appelAPIPost('createInvoice', { numeroFacture: numero, date, fournisseur });
+  if (res && res.success) {
+    factureActive = { numero, date, fournisseur };
+    produitsFacture = [];
+    document.getElementById('etape1-facture').style.display = 'none';
+    document.getElementById('etape2-facture').style.display = 'block';
+    document.getElementById('nf-entete-titre').textContent = 'Facture ' + numero;
+    document.getElementById('nf-entete-info').textContent  = date + ' — ' + fournisseur;
+    mettreAJourTotaux(0);
+    afficherMsg('nouvelle-facture', 'Facture créée. Ajoutez les produits.');
+  } else {
+    afficherMsg('nouvelle-facture', res?.message || 'Erreur.', 'erreur');
+  }
+}
+
+async function ajouterProduit() {
+  if (!factureActive) return;
+  const rowIndex     = document.getElementById('fp-row-index').value;
+  const nom          = document.getElementById('fp-nom').value.trim();
+  const quantite     = parseFloat(document.getElementById('fp-quantite').value) || 0;
+  const unite        = document.getElementById('fp-unite').value.trim();
+  const contenuQte   = parseFloat(document.getElementById('fp-contenu-qte').value) || 0;
+  const contenuUnite = document.getElementById('fp-contenu-unite').value;
+  const prixUnitaire = parseFloat(document.getElementById('fp-prix-unitaire').value) || 0;
+  const type         = document.getElementById('fp-type').value;
+  const ingredient   = document.getElementById('fp-ingredient').value.trim();
+  if (!nom || quantite <= 0 || prixUnitaire <= 0) {
+    afficherMsg('nouvelle-facture', 'Nom, quantité et prix sont requis.', 'erreur');
+    return;
+  }
+  let g = contenuQte;
+  if (contenuUnite === 'L')  g = contenuQte * 1000;
+  if (contenuUnite === 'kg') g = contenuQte * 1000;
+  const prixParG = g > 0 ? (prixUnitaire / g) : 0;
+  const d = {
+    numeroFacture: factureActive.numero,
+    fournisseur:   factureActive.fournisseur,
+    nomProduit:    nom, quantite, unite,
+    contenuQte, contenuUnite,
+    prixUnitaire,
+    prixParUnite:  prixParG.toFixed(4),
+    type, ingredient
+  };
+  const res = rowIndex
+    ? await appelAPIPost('updateProduct', { ...d, rowIndex: parseInt(rowIndex) })
+    : await appelAPIPost('addProduct', d);
+  if (res && res.success) {
+    reinitialiserFormProduit();
+    await rechargerProduits();
+    afficherMsg('nouvelle-facture', rowIndex ? 'Produit mis à jour.' : 'Produit ajouté.');
+  } else {
+    afficherMsg('nouvelle-facture', 'Erreur.', 'erreur');
+  }
+}
+
+async function rechargerProduits() {
+  const res = await appelAPIPost('getInvoiceProducts', { numeroFacture: factureActive.numero });
+  if (!res || !res.success) return;
+  produitsFacture = res.products || [];
+  afficherProduits();
+  mettreAJourTotaux(res.total || 0);
+}
+
+function afficherProduits() {
+  const tableau = document.getElementById('tableau-produits');
+  const vide    = document.getElementById('vide-produits');
+  const tbody   = document.getElementById('tbody-produits');
+  if (!produitsFacture.length) { tableau.style.display = 'none'; vide.style.display = 'block'; return; }
+  tbody.innerHTML = '';
+  produitsFacture.forEach(p => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td style="font-weight:500">${p.nomProduit}</td>
+      <td>${p.quantite}</td>
+      <td style="color:var(--gris);font-size:0.78rem">${p.contenuQte ? p.contenuQte + ' ' + p.contenuUnite : '—'}</td>
+      <td>${formaterPrix(p.prixUnitaire)}</td>
+      <td style="color:var(--gris);font-size:0.75rem">${p.prixParUnite ? parseFloat(p.prixParUnite).toFixed(4) + ' $/g' : '—'}</td>
+      <td style="color:var(--primary);font-weight:500">${formaterPrix(p.prixTotal)}</td>
+      <td style="color:var(--gris);font-size:0.75rem">${p.type || '—'}</td>
+      <td>
+        <div class="td-actions">
+          <button class="btn-edit" onclick="modifierProduit(${p.rowIndex})">Modifier</button>
+          <button class="btn-suppr" onclick="supprimerProduit(${p.rowIndex})">Supprimer</button>
+        </div>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+  vide.style.display  = 'none';
+  tableau.style.display = 'table';
+}
+
+function mettreAJourTotaux(sousTotal) {
+  const st  = sousTotal || 0;
+  const tps = parseFloat(document.getElementById('nf-tps').value) || 0;
+  const tvq = parseFloat(document.getElementById('nf-tvq').value) || 0;
+  document.getElementById('nf-sous-total').textContent  = formaterPrix(st);
+  document.getElementById('nf-total-final').textContent = formaterPrix(st + tps + tvq);
+}
+
+function recalculerTotal() {
+  const st = produitsFacture.reduce((acc, p) => acc + (p.prixTotal || 0), 0);
+  mettreAJourTotaux(st);
+}
+
+function modifierProduit(rowIndex) {
+  const p = produitsFacture.find(x => x.rowIndex === rowIndex);
+  if (!p) return;
+  document.getElementById('fp-row-index').value     = rowIndex;
+  document.getElementById('fp-nom').value           = p.nomProduit;
+  document.getElementById('fp-quantite').value      = p.quantite;
+  document.getElementById('fp-unite').value         = p.unite || '';
+  document.getElementById('fp-contenu-qte').value   = p.contenuQte || '';
+  document.getElementById('fp-contenu-unite').value = p.contenuUnite || 'g';
+  document.getElementById('fp-prix-unitaire').value = p.prixUnitaire;
+  document.getElementById('fp-type').value          = p.type || '';
+  document.getElementById('fp-ingredient').value    = p.ingredient || '';
+  calculerPrixParG();
+  document.getElementById('btn-annuler-produit').style.display = 'inline-flex';
+  document.getElementById('fp-nom').focus();
+}
+
+function annulerEditionProduit() { reinitialiserFormProduit(); }
+
+function reinitialiserFormProduit() {
+  ['fp-row-index','fp-nom','fp-quantite','fp-unite','fp-contenu-qte','fp-prix-unitaire','fp-ingredient','fp-prix-par-g']
+    .forEach(id => { const e = document.getElementById(id); if (e) e.value = ''; });
+  document.getElementById('fp-contenu-unite').value = 'g';
+  document.getElementById('fp-type').value = '';
+  document.getElementById('btn-annuler-produit').style.display = 'none';
+}
+
+async function supprimerProduit(rowIndex) {
+  if (!confirm('Supprimer ce produit ?')) return;
+  const res = await appelAPIPost('deleteProduct', { numeroFacture: factureActive.numero, rowIndex });
+  if (res && res.success) {
+    await rechargerProduits();
+    afficherMsg('nouvelle-facture', 'Produit supprimé.');
+  } else {
+    afficherMsg('nouvelle-facture', 'Erreur.', 'erreur');
+  }
+}
+
+async function finaliserFacture() {
+  if (!confirm('Finaliser cette facture ?')) return;
+  const st  = produitsFacture.reduce((acc, p) => acc + (p.prixTotal || 0), 0);
+  const tps = parseFloat(document.getElementById('nf-tps').value) || 0;
+  const tvq = parseFloat(document.getElementById('nf-tvq').value) || 0;
+  const res = await appelAPIPost('finalizeInvoice', {
+    numeroFacture: factureActive.numero,
+    sousTotal: st.toFixed(2),
+    tps:       tps.toFixed(2),
+    tvq:       tvq.toFixed(2)
+  });
+  if (res && res.success) {
+    afficherMsg('nouvelle-facture', `Facture finalisée. Total\u00a0: ${formaterPrix(parseFloat(res.total))}`);
+    reinitialiserNouvelleFacture();
+  } else {
+    afficherMsg('nouvelle-facture', 'Erreur.', 'erreur');
+  }
+}
+
+function reinitialiserNouvelleFacture() {
+  factureActive = null;
+  produitsFacture = [];
+  document.getElementById('etape2-facture').style.display = 'none';
+  document.getElementById('etape1-facture').style.display = 'block';
+  ['nf-numero','nf-fournisseur','nf-tps','nf-tvq'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('nf-date').value = new Date().toISOString().split('T')[0];
+}
+
+/* ════════════════════════════════
+   FACTURES
+════════════════════════════════ */
+let toutesFactures = [];
+
+async function chargerFactures() {
+  const loading = document.getElementById('loading-factures');
+  const tableau = document.getElementById('tableau-factures');
+  const vide    = document.getElementById('vide-factures');
+  loading.style.display = 'block';
+  tableau.style.display = 'none';
+  vide.style.display    = 'none';
+
+  const res = await appelAPI('getInvoicesListWithFilters');
+
+loading.style.display = 'none';
+  if (!res || !res.invoices) { afficherMsg('factures', 'Erreur lors du chargement.', 'erreur'); return; }
+  toutesFactures = res.invoices || [];
+
+  const selFourn    = document.getElementById('filtre-fournisseur');
+  const valActuelle = selFourn.value;
+  selFourn.innerHTML = '<option value="">Tous les fournisseurs</option>';
+  (res.fournisseurs || []).forEach(f => {
+    const o = document.createElement('option');
+    o.value = f; o.textContent = f; selFourn.appendChild(o);
+  });
+  selFourn.value = valActuelle;
+
+  afficherFactures(toutesFactures);
+}
+
+function filtrerFactures() {
+  const fourn  = document.getElementById('filtre-fournisseur').value;
+  const statut = document.getElementById('filtre-statut').value;
+  const filtrees = toutesFactures.filter(f =>
+    (!fourn  || f.fournisseur === fourn) &&
+    (!statut || f.statut === statut)
+  );
+  afficherFactures(filtrees);
+}
+
+function reinitialiserFiltres() {
+  document.getElementById('filtre-fournisseur').value = '';
+  document.getElementById('filtre-statut').value = '';
+  afficherFactures(toutesFactures);
+}
+
+function afficherFactures(liste) {
+  const tableau = document.getElementById('tableau-factures');
+  const vide    = document.getElementById('vide-factures');
+  const tbody   = document.getElementById('tbody-factures');
+  const compte  = document.getElementById('factures-compte');
+
+  compte.textContent = liste.length + ' facture' + (liste.length > 1 ? 's' : '');
+
+  if (!liste.length) { tableau.style.display = 'none'; vide.style.display = 'block'; return; }
+
+  tbody.innerHTML = '';
+  const triees = [...liste].sort((a, b) => b.dateRaw.localeCompare(a.dateRaw));
+
+  triees.forEach(f => {
+    const badge = f.statut === 'Finalisée'
+      ? `<span class="badge-statut-ok">Finalisée</span>`
+      : `<span class="badge-statut-cours">En cours</span>`;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td style="font-weight:500;font-family:'Playfair Display',serif">${f.numero}</td>
+      <td style="color:var(--gris);font-size:0.82rem">${f.date}</td>
+      <td>${f.fournisseur}</td>
+      <td style="color:var(--gris);font-size:0.82rem">${f.tps ? formaterPrix(f.tps) : '—'}</td>
+      <td style="color:var(--gris);font-size:0.82rem">${f.tvq ? formaterPrix(f.tvq) : '—'}</td>
+      <td style="color:var(--primary);font-weight:500;font-family:'Playfair Display',serif">${f.total ? formaterPrix(f.total) : '—'}</td>
+      <td>${badge}</td>
+      <td>
+        <div class="td-actions">
+          <button class="btn-edit" onclick="voirDetailFacture('${f.numero.replace(/'/g,"\\'")}','${f.date}','${f.fournisseur.replace(/'/g,"\\'")}')">Voir</button>
+          <button class="btn-suppr" onclick="supprimerFacture('${f.numero.replace(/'/g,"\\'")}')">Supprimer</button>
+        </div>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+
+  vide.style.display    = 'none';
+  tableau.style.display = 'table';
+}
+
+async function voirDetailFacture(numero, date, fournisseur) {
+  const modal = document.getElementById('modal-facture');
+  modal.classList.add('ouvert');
+  document.getElementById('modal-facture-titre').textContent = 'Facture ' + numero;
+  document.getElementById('modal-facture-info').textContent  = date + ' — ' + fournisseur;
+  document.getElementById('contenu-detail-facture').innerHTML = '';
+  document.getElementById('loading-detail-facture').style.display = 'block';
+
+  const res = await appelAPIPost('getInvoiceProducts', { numeroFacture: numero });
+  document.getElementById('loading-detail-facture').style.display = 'none';
+
+  if (!res || !res.success || !res.products.length) {
+    document.getElementById('contenu-detail-facture').innerHTML = '<div class="vide"><div class="vide-titre">Aucun produit</div></div>';
+    return;
+  }
+
+  let html = `
+    <div class="tableau-wrap">
+      <table>
+        <thead>
+          <tr><th>Produit</th><th>Qté</th><th>Contenu</th><th>Prix unit.</th><th>Prix/g</th><th>Total</th><th>Type</th><th>Ingrédient</th></tr>
+        </thead>
+        <tbody>`;
+  res.products.forEach(p => {
+    html += `
+      <tr>
+        <td style="font-weight:500">${p.nomProduit}</td>
+        <td>${p.quantite}</td>
+        <td style="color:var(--gris);font-size:0.78rem">${p.contenuQte ? p.contenuQte + ' ' + p.contenuUnite : '—'}</td>
+        <td>${formaterPrix(p.prixUnitaire)}</td>
+        <td style="color:var(--gris);font-size:0.75rem">${p.prixParUnite ? parseFloat(p.prixParUnite).toFixed(4) + ' $/g' : '—'}</td>
+        <td style="color:var(--primary);font-weight:500">${formaterPrix(p.prixTotal)}</td>
+        <td style="color:var(--gris);font-size:0.75rem">${p.type || '—'}</td>
+        <td style="color:var(--gris);font-size:0.78rem">${p.ingredient || '—'}</td>
+      </tr>`;
+  });
+  html += `</tbody></table></div>`;
+  html += `<div style="text-align:right;padding:16px 0;border-top:1px solid var(--beige);margin-top:8px;font-family:'Playfair Display',serif;font-size:1.2rem;color:var(--primary)">Sous-total\u00a0: ${formaterPrix(res.total)}</div>`;
+  document.getElementById('contenu-detail-facture').innerHTML = html;
+}
+
+function fermerModalFacture() {
+  document.getElementById('modal-facture').classList.remove('ouvert');
+}
+
+async function supprimerFacture(numero) {
+  if (!confirm('Supprimer la facture ' + numero + ' et tous ses produits ?')) return;
+  const res = await appelAPIPost('deleteInvoice', { numeroFacture: numero });
+  if (res && res.success) {
+    afficherMsg('factures', 'Facture supprimée.');
+    chargerFactures();
+  } else {
+    afficherMsg('factures', 'Erreur lors de la suppression.', 'erreur');
+  }
+}
+
+/* ════════════════════════════════
+   INVENTAIRE
+════════════════════════════════ */
+async function chargerInventaire() {
+  const loading = document.getElementById('loading-inventaire');
+  const contenu = document.getElementById('contenu-inventaire');
+  const vide    = document.getElementById('vide-inventaire');
+  loading.style.display = 'block';
+  contenu.innerHTML = '';
+  vide.style.display = 'none';
+
+  const res = await appelAPI('getInventory');
+
+
+ loading.style.display = 'none';
+  if (!res || !res.success) { afficherMsg('inventaire', 'Erreur.', 'erreur'); return; }
+
+  const inv   = res.inventory || {};
+  const types = Object.keys(inv).sort();
+  if (!types.length) { vide.style.display = 'block'; return; }
+
+  let html = '';
+  let total = 0;
+
+  types.forEach(type => {
+    const ings = inv[type];
+    html += `
+      <div class="inv-section">
+        <div class="inv-header">
+          <div class="inv-titre">${type}</div>
+          <div class="inv-line"></div>
+        </div>
+        <div class="tableau-wrap">
+          <table>
+            <thead>
+              <tr><th>Ingrédient</th><th>Fournisseur</th><th>Unités</th><th>Format</th><th>Total (g)</th><th>Prix/g</th><th>Valeur</th></tr>
+            </thead>
+            <tbody>`;
+    Object.keys(ings).sort().forEach(nom => {
+      Object.keys(ings[nom]).forEach((fourn, idx) => {
+        const d = ings[nom][fourn];
+        total += d.valeur || 0;
+        html += `
+          <tr>
+            <td style="font-weight:${idx === 0 ? '500' : '300'}">${idx === 0 ? nom : ''}</td>
+            <td style="color:var(--gris);font-size:0.8rem">${fourn}</td>
+            <td>${d.unites}</td>
+            <td style="color:var(--gris);font-size:0.78rem">${d.format || '—'}</td>
+            <td>${Math.round(d.grammes).toLocaleString('fr-CA')}\u00a0g</td>
+            <td style="color:var(--gris);font-size:0.78rem">${d.prixParG ? d.prixParG.toFixed(4) + ' $/g' : '—'}</td>
+            <td style="color:var(--primary);font-weight:500">${formaterPrix(d.valeur)}</td>
+          </tr>`;
+      });
+    });
+    html += `</tbody></table></div></div>`;
+  });
+
+  html += `
+    <div class="inv-total">
+      <div class="inv-total-label">Valeur totale de l'inventaire</div>
+      <div class="inv-total-montant">${formaterPrix(total)}</div>
+    </div>`;
+
+  contenu.innerHTML = html;
+}
+
+/* ════════════════════════════════
+   DENSITÉS
+════════════════════════════════ */
+let donneesDensites = [];
+
+async function chargerDensites() {
+  const loading = document.getElementById('loading-densites');
+  const tableau = document.getElementById('tableau-densites');
+  const vide    = document.getElementById('vide-densites');
+  loading.style.display = 'block';
+  tableau.style.display = 'none';
+  vide.style.display    = 'none';
+
+  const res = await appelAPI('getDensities');
+
+
+loading.style.display = 'none';
+  if (!res || !Array.isArray(res.densities)) { afficherMsg('densites', 'Erreur.', 'erreur'); return; }
+  donneesDensites = res.densities;
+
+  if (!donneesDensites.length) { vide.style.display = 'block'; return; }
+
+  const tbody = document.getElementById('tbody-densites');
+  tbody.innerHTML = '';
+  donneesDensites.forEach(d => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td style="font-weight:500">${d.type}</td>
+      <td>${parseFloat(d.densite).toFixed(3)}</td>
+      <td>${d.unite}</td>
+      <td>
+        <div class="td-actions">
+          <button class="btn-edit" onclick="modifierDensite('${d.type.replace(/'/g, "\\'")}')">Modifier</button>
+        </div>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+  tableau.style.display = 'table';
+}
+
+function ouvrirFormDensite() {
+  document.getElementById('form-densites-titre').textContent = 'Nouveau type';
+  document.getElementById('fd-mode').value    = 'ajout';
+  document.getElementById('fd-type').value    = '';
+  document.getElementById('fd-densite').value = '';
+  document.getElementById('fd-unite').value   = 'ml';
+  document.getElementById('fd-type').readOnly = false;
+  document.getElementById('form-densites').classList.add('visible');
+  document.getElementById('fd-type').focus();
+}
+
+function fermerFormDensite() {
+  document.getElementById('form-densites').classList.remove('visible');
+}
+
+function modifierDensite(type) {
+  const d = donneesDensites.find(x => x.type === type);
+  if (!d) return;
+  document.getElementById('form-densites-titre').textContent = 'Modifier la densité';
+  document.getElementById('fd-mode').value    = 'modif';
+  document.getElementById('fd-type').value    = d.type;
+  document.getElementById('fd-densite').value = d.densite;
+  document.getElementById('fd-unite').value   = d.unite;
+  document.getElementById('fd-type').readOnly = true;
+  document.getElementById('form-densites').classList.add('visible');
+  document.getElementById('fd-densite').focus();
+}
+
+async function sauvegarderDensite() {
+  const mode    = document.getElementById('fd-mode').value;
+  const type    = document.getElementById('fd-type').value.trim();
+  const densite = parseFloat(document.getElementById('fd-densite').value);
+  const unite   = document.getElementById('fd-unite').value;
+  if (!type) { afficherMsg('densites', 'Le type est requis.', 'erreur'); return; }
+  if (isNaN(densite) || densite <= 0) { afficherMsg('densites', 'Densité invalide.', 'erreur'); return; }
+  const action = mode === 'modif' ? 'saveDensity' : 'addDensityType';
+  const res = await appelAPIPost(action, { type, densite, unite });
+  if (res && res.success) {
+    fermerFormDensite();
+    afficherMsg('densites', mode === 'modif' ? 'Densité mise à jour.' : 'Type ajouté.');
+    donneesDensites = [];
+    chargerDensites();
+  } else {
+    afficherMsg('densites', res?.message || 'Erreur.', 'erreur');
+  }
+}
+
+/* ════════════════════════════════
+   NOUVELLE FACTURE — WIZARD
+════════════════════════════════ */
+
+let listesDropdown = { types: [], fullData: [], fournisseurs: [] };
+
+async function initialiserNouvelleFacture() {
+  if (factureActive) return;
+  factureActive   = null;
+  produitsFacture = [];
+  const dateField = document.getElementById('facture-date');
+  if (dateField && !dateField.value) dateField.value = new Date().toISOString().split('T')[0];
+  await chargerListesFournisseurs();
+  wizardEtape1();
+}
+
+async function chargerListesFournisseurs() {
+  const res = await appelAPI('getDropdownLists');
+  if (res) {
+    listesDropdown.types    = res.types    || [];
+    listesDropdown.fullData = res.fullData || [];
+  }
+  const resFactures = await appelAPI('getInvoicesListWithFilters');
+  if (resFactures) {
+    listesDropdown.fournisseurs = resFactures.fournisseurs || [];
+  }
+  peuplerSelectFournisseur();
+  peuplerSelectType();
+}
+
+function peuplerSelectFournisseur() {
+  const sel = document.getElementById('facture-fournisseur');
+  if (!sel) return;
+  sel.innerHTML = '<option value=""></option>';
+  listesDropdown.fournisseurs.forEach(f => {
+    const opt = document.createElement('option');
+    opt.value = f; opt.textContent = f;
+    sel.appendChild(opt);
+  });
+  const optNew = document.createElement('option');
+  optNew.value = '__nouveau__'; optNew.textContent = '+ Nouveau fournisseur…';
+  sel.appendChild(optNew);
+}
+
+function peuplerSelectType() {
+  const sel = document.getElementById('item-type');
+  if (!sel) return;
+  sel.innerHTML = '<option value=""></option>';
+  listesDropdown.types.forEach(t => {
+    const opt = document.createElement('option');
+    opt.value = t; opt.textContent = t;
+    sel.appendChild(opt);
+  });
+}
+
+function onChangeFournisseur() {
+  const sel   = document.getElementById('facture-fournisseur');
+  const champ = document.getElementById('facture-fournisseur-nouveau');
+  if (!sel || !champ) return;
+  champ.style.display = sel.value === '__nouveau__' ? 'block' : 'none';
+  if (sel.value === '__nouveau__') champ.focus();
+}
+
+function onChangeType() {
+  const type = document.getElementById('item-type')?.value;
+  const sel  = document.getElementById('item-ingredient');
+  if (!sel) return;
+  sel.innerHTML = '<option value=""></option>';
+  listesDropdown.fullData.filter(d => d.type === type).forEach(d => {
+    const opt = document.createElement('option');
+    opt.value = d.ingredient; opt.textContent = d.ingredient;
+    sel.appendChild(opt);
+  });
+  const optNew = document.createElement('option');
+  optNew.value = '__nouveau__'; optNew.textContent = '+ Nouvel ingrédient…';
+  sel.appendChild(optNew);
+}
+
+function onChangeIngredient() {
+  const sel   = document.getElementById('item-ingredient');
+  const champ = document.getElementById('item-ingredient-nouveau');
+  if (!sel || !champ) return;
+  champ.style.display = sel.value === '__nouveau__' ? 'block' : 'none';
+  if (sel.value === '__nouveau__') champ.focus();
+}
+
+function wizardEtape1() {
+  document.getElementById('wizard-step-1').style.display = 'block';
+  document.getElementById('wizard-step-2').style.display = 'none';
+  document.getElementById('wizard-step-3').style.display = 'none';
+  document.getElementById('wizard-etape-1').classList.add('active');
+  document.getElementById('wizard-etape-1').classList.remove('complete');
+  document.getElementById('wizard-etape-2').classList.remove('active', 'complete');
+  document.getElementById('wizard-etape-3').classList.remove('active', 'complete');
+}
+
+async function wizardEtape2() {
+  const numeroFacture = document.getElementById('facture-numero')?.value?.trim();
+  const date          = document.getElementById('facture-date')?.value;
+  let fournisseur     = document.getElementById('facture-fournisseur')?.value;
+  if (fournisseur === '__nouveau__') {
+    fournisseur = document.getElementById('facture-fournisseur-nouveau')?.value?.trim();
+  }
+  if (!numeroFacture || !date || !fournisseur) {
+    afficherMsg('facture-msg', 'Numéro, date et fournisseur sont requis.', 'erreur');
+    return;
+  }
+
+  if (!factureActive) {
+    const res = await appelAPIPost('createInvoice', { numeroFacture, date, fournisseur });
+    if (!res || !res.success) {
+      afficherMsg('facture-msg', res?.message || 'Erreur lors de la création.', 'erreur');
+      return;
+    }
+    factureActive = { numeroFacture, date, fournisseur };
+    if (!listesDropdown.fournisseurs.includes(fournisseur)) {
+      listesDropdown.fournisseurs.push(fournisseur);
+      listesDropdown.fournisseurs.sort();
+    }
+  }
+
+  document.getElementById('wizard-step-1').style.display = 'none';
+  document.getElementById('wizard-step-2').style.display = 'block';
+  document.getElementById('wizard-step-3').style.display = 'none';
+  document.getElementById('wizard-etape-1').classList.remove('active');
+  document.getElementById('wizard-etape-1').classList.add('complete');
+  document.getElementById('wizard-etape-2').classList.add('active');
+  document.getElementById('wizard-etape-3').classList.remove('active', 'complete');
+  afficherBanniereFacture();
+  afficherItemsFacture();
+}
+
+function wizardEtape3() {
+  if (produitsFacture.length === 0) {
+    afficherMsg('item-msg', 'Ajoutez au moins un item avant de continuer.', 'erreur');
+    return;
+  }
+  document.getElementById('wizard-step-1').style.display = 'none';
+  document.getElementById('wizard-step-2').style.display = 'none';
+  document.getElementById('wizard-step-3').style.display = 'block';
+  document.getElementById('wizard-etape-2').classList.remove('active');
+  document.getElementById('wizard-etape-2').classList.add('complete');
+  document.getElementById('wizard-etape-3').classList.add('active');
+  const sousTotal = produitsFacture.reduce((s, i) => s + i.prixTotal, 0);
+  document.getElementById('final-sous-total').value = sousTotal.toFixed(2);
+  calculerTotalFinal();
+}
+
+function afficherBanniereFacture() {
+  const banniere = document.getElementById('facture-banniere');
+  if (!banniere || !factureActive) return;
+  banniere.style.display = 'flex';
+  const sousTotal = produitsFacture.reduce((s, i) => s + i.prixTotal, 0);
+  document.getElementById('banniere-numero').textContent     = factureActive.numeroFacture;
+  document.getElementById('banniere-fournisseur').textContent = factureActive.fournisseur;
+  document.getElementById('banniere-sous-total').textContent  = formaterPrix(sousTotal);
+}
+
+async function ajouterItem() {
+  if (!factureActive) {
+    afficherMsg('item-msg', 'Aucune facture active.', 'erreur');
+    return;
+  }
+  let ingredient = document.getElementById('item-ingredient')?.value;
+  if (ingredient === '__nouveau__') {
+    ingredient = document.getElementById('item-ingredient-nouveau')?.value?.trim();
+  }
+  const type        = document.getElementById('item-type')?.value;
+  const formatQte   = document.getElementById('item-format-qte')?.value?.trim();
+  const formatUnite = document.getElementById('item-format-unite')?.value;
+  const prixUnit    = document.getElementById('item-prix-unitaire')?.value?.trim();
+  const quantite    = document.getElementById('item-quantite')?.value?.trim();
+  const notes       = document.getElementById('item-notes')?.value?.trim();
+
+  if (!type || !ingredient || !formatQte || !prixUnit || !quantite) {
+    afficherMsg('item-msg', 'Tous les champs obligatoires doivent être remplis.', 'erreur');
+    return;
+  }
+
+  const prixTotal = parseFloat(quantite) * parseFloat(prixUnit);
+
+  const res = await appelAPIPost('addProduct', {
+    numFacture:   factureActive.numeroFacture,
+    date:         factureActive.date,
+    fournisseur:  factureActive.fournisseur,
+    type,
+    ingredient,
+    formatQte:    parseFloat(formatQte),
+    formatUnite,
+    prixUnitaire: parseFloat(prixUnit),
+    quantite:     parseFloat(quantite),
+    notes:        notes || '',
+    codeBarres:   ''
+  });
+
+  if (!res || !res.success) {
+    afficherMsg('item-msg', res?.message || 'Erreur lors de l\'ajout.', 'erreur');
+    return;
+  }
+
+  produitsFacture.push({ type, ingredient, formatQte, formatUnite, prixUnitaire: parseFloat(prixUnit), quantite: parseFloat(quantite), prixTotal });
+  afficherMsg('item-msg', 'Item ajouté.', 'succes');
+  reinitialiserFormulaireItem();
+  afficherItemsFacture();
+  afficherBanniereFacture();
+}
+
+function reinitialiserFormulaireItem() {
+  ['item-type','item-ingredient','item-format-qte','item-prix-unitaire','item-quantite','item-notes']
+    .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  const champNouv = document.getElementById('item-ingredient-nouveau');
+  if (champNouv) { champNouv.style.display = 'none'; champNouv.value = ''; }
+  document.getElementById('item-format-unite').value = 'g';
+  document.getElementById('item-ingredient').innerHTML = '<option value=""></option>';
+}
+
+function afficherItemsFacture() {
+  const zone = document.getElementById('items-tableau-zone');
+  if (!zone) return;
+  if (produitsFacture.length === 0) {
+    zone.innerHTML = '<p class="vide-desc" style="padding:24px 0;">Aucun item pour l\'instant.</p>';
+    return;
+  }
+  const sousTotal = produitsFacture.reduce((s, i) => s + i.prixTotal, 0);
+  let html = `
+    <div class="tableau-wrap">
+      <table>
+        <thead>
+          <tr><th>Type</th><th>Ingrédient</th><th>Format</th><th>Prix unit.</th><th>Qté</th><th>Total</th></tr>
+        </thead>
+        <tbody>`;
+  produitsFacture.forEach(item => {
+    html += `
+      <tr>
+        <td>${item.type}</td>
+        <td>${item.ingredient}</td>
+        <td>${item.formatQte} ${item.formatUnite}</td>
+        <td>${formaterPrix(item.prixUnitaire)}</td>
+        <td>${item.quantite}</td>
+        <td>${formaterPrix(item.prixTotal)}</td>
+      </tr>`;
+  });
+  html += `</tbody></table></div>
+    <div class="inv-total" style="margin-top:16px;">
+      <div class="inv-total-label">Sous-total</div>
+      <div class="inv-total-montant">${formaterPrix(sousTotal)}</div>
+    </div>`;
+  zone.innerHTML = html;
+}
+
+function calculerTotalFinal() {
+  const sousTotal = parseFloat(document.getElementById('final-sous-total')?.value) || 0;
+  const tps       = parseFloat(document.getElementById('final-tps')?.value)        || 0;
+  const tvq       = parseFloat(document.getElementById('final-tvq')?.value)        || 0;
+  const livraison = parseFloat(document.getElementById('final-livraison')?.value)  || 0;
+  const affichage = document.getElementById('final-total-affichage');
+  if (affichage) affichage.textContent = formaterPrix(sousTotal + tps + tvq + livraison);
+}
+
+async function finaliserFacture() {
+  if (!factureActive) {
+    afficherMsg('final-msg', 'Aucune facture active.', 'erreur');
+    return;
+  }
+  if (produitsFacture.length === 0) {
+    afficherMsg('final-msg', 'Aucun item à finaliser.', 'erreur');
+    return;
+  }
+  const btnFinaliser = document.querySelector('.btn-finaliser');
+  if (btnFinaliser) { btnFinaliser.disabled = true; btnFinaliser.innerHTML = '<span class="spinner"></span> Finalisation…'; }
+  const sousTotal = parseFloat(document.getElementById('final-sous-total')?.value) || 0;
+  const tps       = parseFloat(document.getElementById('final-tps')?.value)        || 0;
+  const tvq       = parseFloat(document.getElementById('final-tvq')?.value)        || 0;
+  const livraison = parseFloat(document.getElementById('final-livraison')?.value)  || 0;
+  const res = await appelAPIPost('finalizeInvoice', {
+    numeroFacture: factureActive.numeroFacture,
+    sousTotal, tps, tvq, livraison
+  });
+ 
+if (!res || !res.success) {
+    if (btnFinaliser) { btnFinaliser.disabled = false; btnFinaliser.innerHTML = 'Finaliser'; }
+    afficherMsg('final-msg', res?.message || 'Erreur lors de la finalisation.', 'erreur');
+    return;
+  }
+  afficherMsg('final-msg', `✓ Facture ${factureActive.numeroFacture} finalisée — Total : ${formaterPrix(res.total)}`, 'succes');
+  setTimeout(() => {
+
+     
+     factureActive   = null;
+    produitsFacture = [];
+    wizardEtape1();
+    document.getElementById('facture-numero').value = '';
+    document.getElementById('facture-date').value   = new Date().toISOString().split('T')[0];
+    document.getElementById('facture-fournisseur').value = '';
+    document.getElementById('facture-banniere').style.display = 'none';
+    document.getElementById('items-tableau-zone').innerHTML = '';
+    document.getElementById('final-total-affichage').textContent = '0,00 $';
+  }, 5000);
+}
