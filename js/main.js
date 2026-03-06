@@ -141,10 +141,7 @@ function validerConnexion() {
 function seDeconnecter() {
   adminConnecte = false;
   sessionStorage.removeItem('uc_admin');
-  afficherModePublic();
-  if (window.location.pathname.includes('/admin/')) {
-    window.location.href = '../index.html';
-  }
+  window.location.href = '/univers-caresse/admin/';
 }
 
 function afficherModeAdmin() {
