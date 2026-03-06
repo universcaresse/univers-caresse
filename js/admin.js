@@ -105,7 +105,7 @@ function stringToColor(str) {
    COLLECTIONS
 ════════════════════════════════ */
 let donneesCollections = [];
-
+ 
 async function chargerCollections() {
   const loading = document.getElementById('loading-collections');
   const contenu = document.getElementById('contenu-collections');
