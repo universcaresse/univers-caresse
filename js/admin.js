@@ -267,7 +267,7 @@ async function sauvegarderCollection() {
       if (btnSauvegarder) { btnSauvegarder.disabled = false; btnSauvegarder.innerHTML = 'Enregistrer'; }
       fermerFormCollection();
       afficherMsg('collections', 'Ligne ajoutée.');
-      chargerCollections();
+       await chargerCollections();
     } else {
       afficherMsg('collections', 'Erreur lors de la sauvegarde.', 'erreur');
       if (btnSauvegarder) { btnSauvegarder.disabled = false; btnSauvegarder.innerHTML = 'Enregistrer'; }
