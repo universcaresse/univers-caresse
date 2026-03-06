@@ -280,9 +280,6 @@ async function sauvegarderCollection() {
     collection:             document.getElementById('fc-collection').value.toUpperCase(),
     slogan:                 document.getElementById('fc-slogan').value,
     description_collection: document.getElementById('fc-desc-col').value,
-    ligne:                  '',
-    format:                 '',
-    description_ligne:      '',
     couleur_hex:            document.getElementById('fc-couleur-hex').value,
     photo_url:              document.getElementById('fc-photo-url').value,
   };
