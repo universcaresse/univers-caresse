@@ -119,8 +119,6 @@ main { padding-top: var(--nav-h); }
    ═══════════════════════════════════════ */
 .fade-in { opacity: 0; transform: translateY(24px); transition: opacity 1.2s ease, transform 1.2s ease; }
 .fade-in.visible { opacity: 1; transform: translateY(0); }
-.collection-tile { opacity: 0; transform: translateY(24px); transition: opacity 1.2s ease, transform 1.2s ease; }
-.collection-tile.visible { opacity: 1; transform: translateY(0); }
 @keyframes fadeIn { to { opacity: 1; transform: none; } }
 
 .mosaic-item { opacity: 1; }
