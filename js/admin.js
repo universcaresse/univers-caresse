@@ -1532,8 +1532,8 @@ async function chargerContenuSite() {
   if (loading) loading.style.display = 'flex';
   if (corps) corps.style.display = 'none';
  const data = await appelAPI('getContenu');
-  if (loading) loading.style.display = 'none';
-  if (!data || !data.success) { afficherMsg('msg-contenu-site', 'Erreur de chargement.', 'erreur'); return; }
+if (loading) loading.style.display = 'none';
+  if (!data || !data.success || !data.contenu) { afficherMsg('msg-contenu-site', 'Erreur de chargement.', 'erreur'); return; }
   const c = data.contenu;
   Object.keys(c).forEach(cle => {
     const el = document.getElementById('cs-' + cle);
