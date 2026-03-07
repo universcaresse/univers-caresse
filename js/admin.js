@@ -1531,7 +1531,7 @@ async function chargerContenuSite() {
   const corps = document.getElementById('corps-contenu-site');
   if (loading) loading.style.display = 'flex';
   if (corps) corps.style.display = 'none';
-  const data = await appelAdminAPI('getContenu');
+ const data = await appelAPI('getContenu');
   if (loading) loading.style.display = 'none';
   if (!data || !data.success) { afficherMsg('msg-contenu-site', 'Erreur de chargement.', 'erreur'); return; }
   const c = data.contenu;
