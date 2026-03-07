@@ -262,7 +262,7 @@ async function chargerCollections() {
     const couleurs = couleurCollection(col.nom, col.couleur_hex);
       const lien = encodeURIComponent(col.nom);
       strip.innerHTML += `
-        <a href="#catalogue" onclick="naviguer('catalogue')" class="collection-tile">
+       <a href="#catalogue" onclick="naviguer('catalogue'); setTimeout(() => filtrer('${col.nom}'), 300);" class="collection-tile">
           <div class="collection-tile-bg" style="background: linear-gradient(135deg, ${couleurs[0]} 0%, ${couleurs[1]} 100%);"></div>
           <div class="collection-tile-overlay"></div>
           <div class="collection-tile-content">

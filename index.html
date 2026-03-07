@@ -497,6 +497,10 @@ function filtrer(collection) {
   document.querySelectorAll('.collection-section').forEach(s => {
     s.classList.toggle('masquee', collection !== 'tout' && s.dataset.collection !== collection);
   });
+  const cible = collection === 'tout'
+    ? document.getElementById('catalogue-body')
+    : document.querySelector(`.collection-section[data-collection="${collection}"]`);
+  if (cible) cible.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 function ouvrirModal(produit) {
