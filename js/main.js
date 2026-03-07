@@ -380,10 +380,9 @@ async function envoyerFormulaire() {
 
    console.log('result:', JSON.stringify(result));
     if (result && result.success) {
-      msgSucces.style.display = 'block';
+     msgSucces.style.display = 'block';
       msgErreur.style.display = 'none';
-      document.getElementById('formulaire-contact').style.opacity = '0.4';
-      document.getElementById('formulaire-contact').style.pointerEvents = 'none';
+      document.getElementById('formulaire-contact').style.display = 'none';
     } else {
       throw new Error('Échec envoi');
     }
