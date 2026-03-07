@@ -500,8 +500,10 @@ function filtrer(collection) {
   const cible = collection === 'tout'
     ? document.getElementById('catalogue-body')
     : document.querySelector(`.collection-section[data-collection="${collection}"]`);
- if (cible) {
-    const offset = cible.getBoundingClientRect().top + window.scrollY - 80;
+if (cible) {
+    const filtresH = document.getElementById('filtres-bar').offsetHeight;
+    const navH = document.getElementById('nav').offsetHeight;
+    const offset = cible.getBoundingClientRect().top + window.scrollY - navH - filtresH - 16;
     window.scrollTo({ top: offset, behavior: 'smooth' });
   }
 }
