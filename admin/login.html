@@ -11,12 +11,19 @@
   <link rel="stylesheet" href="../css/style.css">
 </head>
 <body class="login-body">
-  <div class="connexion-boite">
-    <img src="../Images/Logofinal.png" alt="Univers Caresse" class="connexion-logo">
-    <h2 class="connexion-titre">Administration</h2>
-    <input type="password" id="input-mdp" class="form-ctrl">
-    <p id="erreur-mdp" class="connexion-erreur"></p>
-    <button class="btn btn-primary" onclick="valider()">Entrer</button>
+  <div class="login-contenu">
+    <div class="login-logo-wrap">
+      <p class="login-admin-label">Administration</p>
+      <img src="../Images/Logofinal.png" alt="Univers Caresse" class="hero-logo-img login-logo">
+    </div>
+    <div class="login-separateur"></div>
+    <div class="login-champ">
+      <div class="login-row">
+        <input type="password" id="input-mdp" class="form-ctrl login-input">
+        <button class="btn btn-hero login-btn" onclick="valider()">ENTRER →</button>
+      </div>
+      <p id="erreur-mdp" class="connexion-erreur"></p>
+    </div>
   </div>
   
   <script>
