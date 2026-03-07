@@ -910,3 +910,12 @@ tr:hover td { background: rgba(232,220,200,0.15); }
 .login-row .login-input { flex: 1; border-radius: 4px 0 0 4px; }
 .login-row .login-btn { border-radius: 0 4px 4px 0; white-space: nowrap; }
 .connexion-erreur { color: var(--danger); font-size: 0.85rem; min-height: 20px; }
+
+
+
+/* ═══════════════════════════════════════
+  truc
+
+   ═══════════════════════════════════════ */
+
+.citation-guillemet { color: var(--primary); }
