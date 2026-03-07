@@ -500,7 +500,10 @@ function filtrer(collection) {
   const cible = collection === 'tout'
     ? document.getElementById('catalogue-body')
     : document.querySelector(`.collection-section[data-collection="${collection}"]`);
-  if (cible) cible.scrollIntoView({ behavior: 'smooth', block: 'start' });
+ if (cible) {
+    const offset = cible.getBoundingClientRect().top + window.scrollY - 80;
+    window.scrollTo({ top: offset, behavior: 'smooth' });
+  }
 }
 
 function ouvrirModal(produit) {
