@@ -47,6 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initNav();
   initSPA();
   initScrollAnimations();
+  chargerContenu();
 });
 
 function initScrollAnimations() {
@@ -346,6 +347,62 @@ async function chargerCatalogue() {
     }).join('');
   } catch (err) {
     conteneur.innerHTML = '<p style="padding:40px;">Erreur de chargement.</p>';
+  }
+}
+
+// ─── CONTENU DYNAMIQUE ───
+async function chargerContenu() {
+  try {
+    const data = await appelAPI('getContenu', { t: Date.now() });
+    if (!data || !data.success || !data.contenu) return;
+    const c = data.contenu;
+    const set = (id, val) => { const el = document.getElementById(id); if (el && val) el.textContent = val; };
+    const setHtml = (id, val) => { const el = document.getElementById(id); if (el && val) el.innerHTML = val; };
+
+    set('contenu-accueil-eyebrow', c.accueil_eyebrow);
+    set('contenu-accueil-cta', c.accueil_cta);
+    set('contenu-accueil-stat-label', c.accueil_stat_label);
+    set('contenu-accueil-stat-valeur', c.accueil_stat_valeur);
+    set('contenu-qui-eyebrow', c.qui_eyebrow);
+    set('contenu-qui-titre', c.qui_titre);
+    set('contenu-qui-titre-em', c.qui_titre_em);
+    set('contenu-qui-texte', c.qui_texte);
+    set('contenu-qui-signature-nom', c.qui_signature_nom);
+    set('contenu-qui-signature-titre', c.qui_signature_titre);
+    set('contenu-section-texte-p1', c.section_texte_p1);
+    set('contenu-section-texte-p2', c.section_texte_p2);
+    set('contenu-section-texte-p3', c.section_texte_p3);
+    set('contenu-valeur-01-titre', c.valeur_01_titre);
+    set('contenu-valeur-01-desc', c.valeur_01_desc);
+    set('contenu-valeur-02-titre', c.valeur_02_titre);
+    set('contenu-valeur-02-desc', c.valeur_02_desc);
+    set('contenu-valeur-03-titre', c.valeur_03_titre);
+    set('contenu-valeur-03-desc', c.valeur_03_desc);
+    set('contenu-valeur-04-titre', c.valeur_04_titre);
+    set('contenu-valeur-04-desc', c.valeur_04_desc);
+    set('contenu-citation-texte', c.citation_texte);
+    set('contenu-citation-source', c.citation_source);
+    set('contenu-bas-engagement-01-titre', c.bas_engagement_01_titre);
+    set('contenu-bas-engagement-01-texte', c.bas_engagement_01_texte);
+    set('contenu-bas-engagement-02-titre', c.bas_engagement_02_titre);
+    set('contenu-bas-engagement-02-texte', c.bas_engagement_02_texte);
+    set('contenu-bas-engagement-03-titre', c.bas_engagement_03_titre);
+    set('contenu-bas-engagement-03-texte', c.bas_engagement_03_texte);
+    set('contenu-bas-engagement-04-titre', c.bas_engagement_04_titre);
+    set('contenu-bas-engagement-04-texte', c.bas_engagement_04_texte);
+    set('contenu-bas-allergenes', c.bas_allergenes);
+    set('contenu-bas-conservation-titre', c.bas_conservation_titre);
+    set('contenu-bas-conservation-texte', c.bas_conservation_texte);
+    set('contenu-bas-cure-titre', c.bas_cure_titre);
+    set('contenu-bas-cure-texte', c.bas_cure_texte);
+    set('contenu-bas-usage-titre', c.bas_usage_titre);
+    set('contenu-bas-usage-texte', c.bas_usage_texte);
+    set('contenu-bas-commande-titre', c.bas_commande_titre);
+    set('contenu-bas-commande-texte', c.bas_commande_texte);
+    set('contenu-bas-demande-titre', c.bas_demande_titre);
+    set('contenu-bas-demande-texte', c.bas_demande_texte);
+  } catch (err) {
+    console.error('Erreur chargerContenu:', err);
   }
 }
 
