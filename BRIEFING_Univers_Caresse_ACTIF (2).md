@@ -53,6 +53,8 @@ Jean-Claude est direct et exigeant — c'est une qualité. Il ne veut pas de ré
 - Jamais de placeholder dans les champs
 - **CORRECTIONS :** Jamais de fichier complet sauf si demandé — toujours trouve/remplace
 - **PLUSIEURS CHANGEMENTS :** Annoncer le nombre, demander une par une ou réécriture complète
+- **UNE ÉTAPE À LA FOIS :** Proposer le changement → attendre OK → exécuter → attendre OK → étape suivante. Jamais enchaîner sans confirmation explicite.
+- **JAMAIS donner plusieurs blocs de code en même temps** — un seul trouve/remplace à la fois, attendre OK avant le suivant
 - **DOCUMENTATION :** Toujours en `.md`, complets et autonomes
 - **JAMAIS de formules condescendantes**
 - **TESTER MENTALEMENT avant de donner le code**
@@ -141,7 +143,8 @@ Univers Caresse — savonnerie artisanale de Chantal Mondor.
 univers-caresse/
 ├── index.html              ✅ SPA public — 5 sections fusionnées
 ├── admin/
-│   └── index.html          ✅ Admin — 7 sections
+│   ├── index.html          ✅ Admin — 7 sections
+│   └── login.html          ✅ Page de connexion autonome
 ├── css/
 │   └── style.css           ✅ SOURCE UNIQUE — public + admin, zéro doublon
 ├── js/
@@ -372,9 +375,8 @@ Coût ingrédient = quantite_g × prix_par_g_reel × (1 + marge_perte_%)
 - [ ] Nav mobile : supprimer "Site public" et "Déconnexion" de la barre — les mettre dans le burger
 
 ### Admin — Connexion
-- [ ] Formulaire de connexion = page 1 de l'admin (plus de redirect vers site public)
-- [ ] Accès direct `/admin/` ouvre le formulaire de connexion
-- [ ] Une fois connecté → tableau de bord
+- [ ] Finir le visuel de `login.html` (centré, or, ligne, champ+bouton sur même ligne)
+- [ ] Remplacer `btn-hero` par `btn-primary` dans `login.html`
 
 ### Site public
 - [ ] Supprimer le bouton Connexion de la nav publique
@@ -383,24 +385,31 @@ Coût ingrédient = quantite_g × prix_par_g_reel × (1 + marge_perte_%)
 
 ---
 
-## 🔴 EN COURS — Connexion admin (non résolu)
+## 🔴 EN COURS — Page login.html (visuel non terminé)
 
-### Ce qui a été fait :
-- `ecran-connexion` ajouté à la fin de `admin/index.html` juste avant `</body>` ✅
-- `validerConnexionAdmin()` ajoutée à la fin de `admin.js` ✅
-- CSS `.ecran-connexion` avec `z-index: 99999` dans `style.css` ✅
-- `DOMContentLoaded` dans `admin.js` modifié pour cacher `.admin-layout` et `#nav-admin` si pas de session ✅
+⚠️ **NOTE : 3h de travail inutile — problème simple non réglé. À reprendre proprement.**
 
-### Problème persistant :
-L'écran de connexion ne couvre pas le contenu — le logo, nav et contenu admin apparaissent derrière/par-dessus le formulaire. Le `z-index` ne semble pas fonctionner.
+### Ce qui fonctionne :
+- `admin/login.html` existe et est sur GitHub ✅
+- `admin/index.html` redirige vers `login.html` si pas de session ✅
+- Déconnexion redirige vers `login.html` ✅
+- Mot de passe `2026` → sessionStorage → redirect admin ✅
 
-### À vérifier en priorité :
-1. Le `DOMContentLoaded` dans `admin.js` — vérifier qu'il cache bien `nav-admin` et `.admin-layout`
-2. Vérifier l'ID exact de la nav admin dans `admin/index.html` — est-ce `nav-admin` ou autre chose ?
-3. S'assurer que `validerConnexionAdmin` est bien dans `admin.js`
-4. Le second `DOMContentLoaded` inline dans `admin/index.html` qui appelle `chargerStatsAccueil()` — il s'exécute sans vérification de session
+### Ce qui reste à régler :
+- Visuel `login.html` : centré, "Administration" en or, ligne séparatrice or, champ + bouton sur même ligne
+- `btn-hero` n'existe pas — utiliser `btn-primary` dans `login.html`
+- Toutes les classes `.login-*` sont dans `style.css` mais mal appliquées
 
-### Fichiers modifiés (à uploader au début de la prochaine session) :
-- `admin/index.html`
-- `admin.js`
-- `style.css`
+### Classes `.login-*` dans style.css (état actuel) :
+```css
+.login-body { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--blanc); }
+.login-contenu { display: flex; flex-direction: column; align-items: center; padding: var(--padding-page); max-width: 600px; width: 100%; }
+.login-logo-wrap { position: relative; display: flex; justify-content: center; width: 100%; margin-bottom: 8px; }
+.login-admin-label { position: absolute; top: 0; left: 0; font-family: 'DM Sans', sans-serif; font-size: 0.78rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); }
+.login-logo { width: 220px; }
+.login-separateur { width: 100%; height: 1px; background: var(--accent); margin: 32px 0; }
+.login-champ { display: flex; flex-direction: column; gap: 8px; width: 100%; }
+.login-row { display: flex; gap: 0; width: 100%; }
+.login-row .login-input { flex: 1; border-radius: 4px 0 0 4px; }
+.login-row .login-btn { border-radius: 0 4px 4px 0; white-space: nowrap; }
+```
