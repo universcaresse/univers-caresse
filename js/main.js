@@ -26,7 +26,7 @@ const COULEURS_COLLECTIONS = {
 function couleurCollection(nom, hex) {
   if (hex && hex.trim()) return [hex.trim(), assombrirCouleur(hex.trim())];
   const cle = nom ? nom.toUpperCase() : '';
-  return COULEURS_COLLECTIONS[cle] || ['#8b8680', '#5a5654'];
+ return COULEURS_COLLECTIONS[cle] || ['#c44536', '#a02d20'];
 }
 function assombrirCouleur(hex) {
   hex = hex.replace('#', '');
@@ -59,7 +59,7 @@ function initScrollAnimations() {
     });
   }, { threshold: 0.15 });
 
- document.querySelectorAll('.fade-in, .collection-tile').forEach(el => observer.observe(el));
+document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
 
   const mosaicObserver = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
