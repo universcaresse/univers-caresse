@@ -6,16 +6,10 @@
 
 document.addEventListener('DOMContentLoaded', () => {
   const session = sessionStorage.getItem('uc_admin');
-  const ecran = document.getElementById('ecran-connexion');
-  const layout = document.querySelector('.admin-layout');
-  const nav = document.getElementById('nav');
   if (session !== 'true') {
-    if (ecran) ecran.classList.add('visible');
-    if (layout) layout.classList.add('cache');
-    if (nav) nav.classList.add('cache');
+    window.location.href = '/univers-caresse/admin/login.html';
     return;
   }
-  if (ecran) ecran.classList.remove('visible');
   chargerStatsAccueil();
   const dateField = document.getElementById('nf-date');
   if (dateField) dateField.value = new Date().toISOString().split('T')[0];
