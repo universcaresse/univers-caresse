@@ -38,7 +38,7 @@ if (id === 'collections')    { chargerCollections(); chargerListesFournisseurs()
   if (id === 'inventaire')     chargerInventaire();
   if (id === 'factures')       chargerFactures();
  if (id === 'nouvelle-facture' && !factureActive) initialiserNouvelleFacture();
-}
+  if (id === 'contenu-site')    chargerContenuSite();
 
 // ─── STATS ACCUEIL ───
 async function chargerStatsAccueil() {
@@ -1521,5 +1521,38 @@ function validerConnexionAdmin() {
     document.getElementById('erreur-mdp-admin').textContent = 'Mot de passe incorrect.';
     document.getElementById('input-mdp-admin').value = '';
     document.getElementById('input-mdp-admin').focus();
+  }
+}
+
+// ─── CONTENU DU SITE ───
+async function chargerContenuSite() {
+  const loading = document.getElementById('loading-contenu-site');
+  const corps = document.getElementById('corps-contenu-site');
+  if (loading) loading.style.display = 'flex';
+  if (corps) corps.style.display = 'none';
+  const data = await appelAdminAPI('getContenu');
+  if (loading) loading.style.display = 'none';
+  if (!data || !data.success) { afficherMsg('msg-contenu-site', 'Erreur de chargement.', 'erreur'); return; }
+  const c = data.contenu;
+  Object.keys(c).forEach(cle => {
+    const el = document.getElementById('cs-' + cle);
+    if (el) el.value = c[cle];
+  });
+  if (corps) corps.style.display = 'block';
+}
+
+async function sauvegarderContenuSite() {
+  const corps = document.getElementById('corps-contenu-site');
+  if (!corps) return;
+  const contenu = {};
+  corps.querySelectorAll('[id^="cs-"]').forEach(el => {
+    const cle = el.id.replace('cs-', '');
+    contenu[cle] = el.value;
+  });
+  const data = await appelAdminAPI('updateContenu', { contenu });
+  if (data && data.success) {
+    afficherMsg('msg-contenu-site', 'Contenu sauvegardé.', 'succes');
+  } else {
+    afficherMsg('msg-contenu-site', 'Erreur lors de la sauvegarde.', 'erreur');
   }
 }
