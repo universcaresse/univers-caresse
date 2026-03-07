@@ -10,19 +10,15 @@
 </head>
 <body>
 
-<!-- NAVIGATION --> 
+<!-- NAVIGATION -->
 <nav id="nav">
-
   <ul class="nav-links" id="nav-links">
     <li><a href="#accueil" class="active" onclick="naviguer('accueil')">Accueil</a></li>
     <li><a href="#catalogue" onclick="naviguer('catalogue')">Catalogue</a></li>
-    <li><a href="#qui-sommes-nous" onclick="naviguer('qui-sommes-nous')">Qui sommes-nous</a></li>
     <li><a href="#bon-a-savoir" onclick="naviguer('bon-a-savoir')">Bon à savoir</a></li>
     <li><a href="#contact" onclick="naviguer('contact')">Contact</a></li>
-  
   </ul>
   <div class="nav-actions">
-  
     <button class="burger" id="burger" onclick="toggleMenu()">
       <span></span><span></span><span></span>
     </button>
@@ -62,7 +58,7 @@
           Découvrir les collections
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
         </a>
-     <div class="hero-stats fade-in delay-5">
+        <div class="hero-stats fade-in delay-5">
           <div class="hero-stat">
             <div class="hero-stat-num" id="hero-stat-collections">—</div>
             <div class="hero-stat-label">Collections</div>
@@ -108,48 +104,7 @@
       </div>
     </div>
 
-    <section class="section-collections">
-      <div class="section-header">
-        <h2 class="section-title">Nos collections</h2>
-        <div class="section-line"></div>
-        <span class="section-count" id="collections-count"></span>
-      </div>
-      <div class="collections-strip" id="collections-strip"></div>
-    </section>
-
-  </section>
-
-  <!-- ══════════════════════════════════
-       SECTION CATALOGUE
-  ══════════════════════════════════ -->
-  <section id="section-catalogue" class="page-section">
-
-    <div class="catalogue-hero">
-      <div>
-        <h1 class="catalogue-title">Nos <span>collections</span></h1>
-        <p class="catalogue-subtitle">Produits fabriqués à la main, en petites séries</p>
-      </div>
-    </div>
- 
-    <div class="filtres-bar" id="filtres-bar">
-      <span class="filtre-label">Collection :</span>
-      <button class="filtre-btn actif" data-filtre="tout" onclick="filtrer('tout')">Toutes</button>
-    </div>
-
-    <div class="chargement" id="chargement">
-      <div class="chargement-spinner"></div>
-      Chargement des collections…
-    </div>
-
-    <div class="catalogue-body" id="catalogue-body" style="display:none"></div>
-
-  </section>
-
-  <!-- ══════════════════════════════════
-       SECTION QUI SOMMES-NOUS
-  ══════════════════════════════════ -->
-  <section id="section-qui-sommes-nous" class="page-section">
-
+    <!-- ── QUI SOMMES-NOUS intégré ── -->
     <div class="page-hero fade-in">
       <div>
         <p class="page-hero-eyebrow">Savonnerie artisanale</p>
@@ -193,7 +148,7 @@
         <div class="valeur-item">
           <div class="valeur-num">03</div>
           <div class="valeur-titre">Fabriqué au Québec</div>
-          <div class="valeur-desc">Chaque savon naît dans notre atelier québécois, en petites séries soigneusement contrôlées pour vous garantir fraîcheur et qualité.</div>
+          <div class="valeur-desc">Chaque savon naît dans notre atelier québécois, en petites séries soigneusement contrôlées pour vous garantir fraîcheur et qualité.</jour>
         </div>
         <div class="valeur-item">
           <div class="valeur-num">04</div>
@@ -208,14 +163,40 @@
       <span class="citation-source">Chantal Mondor — Fondatrice</span>
     </div>
 
-    <section class="section-cta">
-      <h2>Découvrez nos collections</h2>
-      <p>Dix univers inspirés par la nature, fabriqués à la main avec amour.</p>
-      <a href="#catalogue" onclick="naviguer('catalogue')">
-        Voir le catalogue
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-      </a>
+    <section class="section-collections">
+      <div class="section-header">
+        <h2 class="section-title">Nos collections</h2>
+        <div class="section-line"></div>
+        <span class="section-count" id="collections-count"></span>
+      </div>
+      <div class="collections-strip" id="collections-strip"></div>
     </section>
+
+  </section>
+
+  <!-- ══════════════════════════════════
+       SECTION CATALOGUE
+  ══════════════════════════════════ -->
+  <section id="section-catalogue" class="page-section">
+
+    <div class="catalogue-hero">
+      <div>
+        <h1 class="catalogue-title">Nos <span>collections</span></h1>
+        <p class="catalogue-subtitle">Produits fabriqués à la main, en petites séries</p>
+      </div>
+    </div>
+
+    <div class="filtres-bar" id="filtres-bar">
+      <span class="filtre-label">Collection :</span>
+      <button class="filtre-btn actif" data-filtre="tout" onclick="filtrer('tout')">Toutes</button>
+    </div>
+
+    <div class="chargement" id="chargement">
+      <div class="chargement-spinner"></div>
+      Chargement des collections…
+    </div>
+
+    <div class="catalogue-body" id="catalogue-body" style="display:none"></div>
 
   </section>
 
