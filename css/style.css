@@ -7,19 +7,154 @@
 /* ═══════════════════════════════════════
    VARIABLES
    ═══════════════════════════════════════ */
-:root {
-  --primary:        #5a8a3a;
-  --primary-dark:   #4a6e2e;
-  --accent:         #d4a445;
-  --danger:         #c44536;
-  --blanc:          #f9f7f4;
-  --beige:          #e8dcc8;
-  --gris:           #8b8680;
-  --gris-fonce:     #3d3b39;
-  --logo:           #333333;
-  --nav-h:          72px;
-  --padding-page:   80px;
-  --padding-mobile: 20px;
+/* PRIMARY */
+  --primary-04:     rgba(90,138,58,0.04);
+  --primary-05:     rgba(90,138,58,0.05);
+  --primary-06:     rgba(90,138,58,0.06);
+  --primary-08:     rgba(90,138,58,0.08);
+  --primary-10:     rgba(90,138,58,0.10);
+  --primary-12:     rgba(90,138,58,0.12);
+  --primary-15:     rgba(90,138,58,0.15);
+  --primary-16:     rgba(90,138,58,0.16);
+  --primary-18:     rgba(90,138,58,0.18);
+  --primary-20:     rgba(90,138,58,0.20);
+  --primary-30:     rgba(90,138,58,0.30);
+  --primary-40:     rgba(90,138,58,0.40);
+  --primary-50:     rgba(90,138,58,0.50);
+  --primary-60:     rgba(90,138,58,0.60);
+  --primary-70:     rgba(90,138,58,0.70);
+  --primary-75:     rgba(90,138,58,0.75);
+  --primary-80:     rgba(90,138,58,0.80);
+  --primary-85:     rgba(90,138,58,0.85);
+  --primary-88:     rgba(90,138,58,0.88);
+  --primary-90:     rgba(90,138,58,0.90);
+
+  /* DANGER */
+  --danger-06:      rgba(196,69,54,0.06);
+  --danger-08:      rgba(196,69,54,0.08);
+  --danger-10:      rgba(196,69,54,0.10);
+  --danger-15:      rgba(196,69,54,0.15);
+  --danger-16:      rgba(196,69,54,0.16);
+  --danger-20:      rgba(196,69,54,0.20);
+  --danger-30:      rgba(196,69,54,0.30);
+  --danger-40:      rgba(196,69,54,0.40);
+  --danger-50:      rgba(196,69,54,0.50);
+  --danger-60:      rgba(196,69,54,0.60);
+  --danger-70:      rgba(196,69,54,0.70);
+  --danger-75:      rgba(196,69,54,0.75);
+  --danger-80:      rgba(196,69,54,0.80);
+  --danger-85:      rgba(196,69,54,0.85);
+  --danger-88:      rgba(196,69,54,0.88);
+  --danger-90:      rgba(196,69,54,0.90);
+
+  /* ACCENT */
+  --accent-08:      rgba(212,164,69,0.08);
+  --accent-10:      rgba(212,164,69,0.10);
+  --accent-12:      rgba(212,164,69,0.12);
+  --accent-15:      rgba(212,164,69,0.15);
+  --accent-20:      rgba(212,164,69,0.20);
+  --accent-30:      rgba(212,164,69,0.30);
+  --accent-40:      rgba(212,164,69,0.40);
+  --accent-50:      rgba(212,164,69,0.50);
+  --accent-60:      rgba(212,164,69,0.60);
+  --accent-70:      rgba(212,164,69,0.70);
+  --accent-75:      rgba(212,164,69,0.75);
+  --accent-80:      rgba(212,164,69,0.80);
+  --accent-85:      rgba(212,164,69,0.85);
+  --accent-88:      rgba(212,164,69,0.88);
+  --accent-90:      rgba(212,164,69,0.90);
+
+  /* BEIGE */
+  --beige-08:       rgba(232,220,200,0.08);
+  --beige-10:       rgba(232,220,200,0.10);
+  --beige-15:       rgba(232,220,200,0.15);
+  --beige-20:       rgba(232,220,200,0.20);
+  --beige-30:       rgba(232,220,200,0.30);
+  --beige-40:       rgba(232,220,200,0.40);
+  --beige-50:       rgba(232,220,200,0.50);
+  --beige-60:       rgba(232,220,200,0.60);
+  --beige-70:       rgba(232,220,200,0.70);
+  --beige-75:       rgba(232,220,200,0.75);
+  --beige-80:       rgba(232,220,200,0.80);
+  --beige-85:       rgba(232,220,200,0.85);
+  --beige-88:       rgba(232,220,200,0.88);
+  --beige-90:       rgba(232,220,200,0.90);
+
+  /* BLANC */
+  --blanc-15:       rgba(249,247,244,0.15);
+  --blanc-20:       rgba(249,247,244,0.20);
+  --blanc-30:       rgba(249,247,244,0.30);
+  --blanc-40:       rgba(249,247,244,0.40);
+  --blanc-50:       rgba(249,247,244,0.50);
+  --blanc-60:       rgba(249,247,244,0.60);
+  --blanc-70:       rgba(249,247,244,0.70);
+  --blanc-75:       rgba(249,247,244,0.75);
+  --blanc-80:       rgba(249,247,244,0.80);
+  --blanc-85:       rgba(249,247,244,0.85);
+  --blanc-88:       rgba(249,247,244,0.88);
+  --blanc-90:       rgba(249,247,244,0.90);
+  --blanc-92:       rgba(249,247,244,0.92);
+
+  /* BLANC PUR */
+  --blanc-pur-15:   rgba(255,255,255,0.15);
+  --blanc-pur-45:   rgba(255,255,255,0.45);
+  --blanc-pur-50:   rgba(255,255,255,0.50);
+  --blanc-pur-60:   rgba(255,255,255,0.60);
+  --blanc-pur-65:   rgba(255,255,255,0.65);
+  --blanc-pur-70:   rgba(255,255,255,0.70);
+  --blanc-pur-75:   rgba(255,255,255,0.75);
+  --blanc-pur-80:   rgba(255,255,255,0.80);
+  --blanc-pur-85:   rgba(255,255,255,0.85);
+  --blanc-pur-88:   rgba(255,255,255,0.88);
+  --blanc-pur-90:   rgba(255,255,255,0.90);
+
+  /* GRIS */
+  --gris-08:        rgba(139,134,128,0.08);
+  --gris-10:        rgba(139,134,128,0.10);
+  --gris-15:        rgba(139,134,128,0.15);
+  --gris-20:        rgba(139,134,128,0.20);
+  --gris-30:        rgba(139,134,128,0.30);
+  --gris-40:        rgba(139,134,128,0.40);
+  --gris-50:        rgba(139,134,128,0.50);
+  --gris-60:        rgba(139,134,128,0.60);
+  --gris-70:        rgba(139,134,128,0.70);
+  --gris-75:        rgba(139,134,128,0.75);
+  --gris-80:        rgba(139,134,128,0.80);
+  --gris-85:        rgba(139,134,128,0.85);
+  --gris-88:        rgba(139,134,128,0.88);
+  --gris-90:        rgba(139,134,128,0.90);
+
+  /* GRIS FONCÉ */
+  --gris-fonce-08:  rgba(61,59,57,0.08);
+  --gris-fonce-10:  rgba(61,59,57,0.10);
+  --gris-fonce-15:  rgba(61,59,57,0.15);
+  --gris-fonce-20:  rgba(61,59,57,0.20);
+  --gris-fonce-30:  rgba(61,59,57,0.30);
+  --gris-fonce-40:  rgba(61,59,57,0.40);
+  --gris-fonce-50:  rgba(61,59,57,0.50);
+  --gris-fonce-60:  rgba(61,59,57,0.60);
+  --gris-fonce-70:  rgba(61,59,57,0.70);
+  --gris-fonce-75:  rgba(61,59,57,0.75);
+  --gris-fonce-80:  rgba(61,59,57,0.80);
+  --gris-fonce-85:  rgba(61,59,57,0.85);
+  --gris-fonce-88:  rgba(61,59,57,0.88);
+  --gris-fonce-90:  rgba(61,59,57,0.90);
+
+  /* NOIR */
+  --noir-08:        rgba(0,0,0,0.08);
+  --noir-10:        rgba(0,0,0,0.10);
+  --noir-15:        rgba(0,0,0,0.15);
+  --noir-20:        rgba(0,0,0,0.20);
+  --noir-30:        rgba(0,0,0,0.30);
+  --noir-40:        rgba(0,0,0,0.40);
+  --noir-50:        rgba(0,0,0,0.50);
+  --noir-60:        rgba(0,0,0,0.60);
+  --noir-70:        rgba(0,0,0,0.70);
+  --noir-75:        rgba(0,0,0,0.75);
+  --noir-80:        rgba(0,0,0,0.80);
+  --noir-85:        rgba(0,0,0,0.85);
+  --noir-88:        rgba(0,0,0,0.88);
+  --noir-90:        rgba(0,0,0,0.90);
 }
 
 /* ═══════════════════════════════════════
@@ -570,7 +705,8 @@ footer {
 .accueil-gauche { display: flex; flex-direction: column; align-items: flex-start; justify-content: center; text-align: left; padding: 40px 64px; border-right: 1px solid var(--beige); gap: 4px; }
 .accueil-logo { max-width: 280px; width: 70%; height: auto; margin-bottom: 12px; }
 .accueil-bonjour { font-family: 'Birthstone', cursive; font-size: 3.5rem; color: var(--accent); line-height: 1; align-self: center; }
-.accueil-chantal { font-family: 'Playfair Display', serif; font-size: 2.2rem; color: var(--primary); font-weight: 400; line-height: 1; margin-bottom: 0; align-self: center; }.accueil-droite { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 3px; }
+.accueil-chantal { font-family: 'Playfair Display', serif; font-size: 2.2rem; color: var(--primary); font-weight: 400; line-height: 1; margin-bottom: 0; align-self: center; }
+.accueil-droite { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 3px; background: url('../Images/fondw.png') center center / cover no-repeat; }
 .accueil-tuile { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; font-family: 'DM Sans', sans-serif; font-size: 0.68rem; font-weight: 500; letter-spacing: 0.22em; text-transform: uppercase; color: white; cursor: pointer; border: none; transition: filter 0.4s ease; min-height: 0; }
 .accueil-tuile:hover { filter: brightness(1.04); }
 .tuile-icone { width: 70px; height: 70px; display: block; transition: transform 0.4s ease; }
@@ -578,11 +714,10 @@ footer {
 .accueil-tuile:hover .tuile-icone { transform: translateY(-5px); }
 .tuile-nom { position: relative; z-index: 1; }
 .tuile-nom::after { content: ''; display: block; width: 20px; height: 1px; background: rgba(255,255,255,0.45); margin: 8px auto 0; transition: width 0.3s ease; }
-.accueil-tuile:hover .tuile-nom::after { width: 38px; }
-.accueil-tuile-collections { background: var(--primary); }
-.accueil-tuile-recettes    { background: var(--accent); }
-.accueil-tuile-facture     { background: var(--gris); }
-.accueil-tuile-inventaire  { background: var(--gris-fonce); }
+.accueil-tuile-collections { background: rgba(90,138,58,0.72); }
+.accueil-tuile-recettes    { background: rgba(212,164,69,0.72); }
+.accueil-tuile-facture     { background: rgba(139,134,128,0.72); }
+.accueil-tuile-inventaire  { background: rgba(61,59,57,0.72); }
 
 /* ═══════════════════════════════════════
    ADMIN — FORM PANEL
