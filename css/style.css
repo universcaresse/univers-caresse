@@ -714,10 +714,10 @@ footer {
 .accueil-tuile:hover .tuile-icone { transform: translateY(-5px); }
 .tuile-nom { position: relative; z-index: 1; }
 .tuile-nom::after { content: ''; display: block; width: 20px; height: 1px; background: rgba(255,255,255,0.45); margin: 8px auto 0; transition: width 0.3s ease; }
-.accueil-tuile-collections { background: rgba(90,138,58,0.72); }
-.accueil-tuile-recettes    { background: rgba(212,164,69,0.72); }
-.accueil-tuile-facture     { background: rgba(139,134,128,0.72); }
-.accueil-tuile-inventaire  { background: rgba(61,59,57,0.72); }
+.accueil-tuile-collections { background: var(--primary-70); }
+.accueil-tuile-recettes    { background: var(--accent-70); }
+.accueil-tuile-facture     { background: var(--gris-70); }
+.accueil-tuile-inventaire  { background: var(--gris-fonce-70); }
 
 /* ═══════════════════════════════════════
    ADMIN — FORM PANEL
