@@ -279,7 +279,7 @@ async function sauvegarderCollection() {
       ligne,
       ingredients: ingredientsBase.map(i => ({ type: i.type, nom: i.nom, quantite_g: i.quantite }))
     });
-  const infoCol = donneesCollections.find(i => i.collection === col && !i.ligne);
+ const infoCol = donneesCollections.find(i => i.collection === col);
     const d = {
       collection:        col,
       ligne,
