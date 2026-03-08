@@ -467,7 +467,7 @@ function carteProduit(p) {
           <div class="carte-couleur-dot" style="background: ${p.couleur_hex};"></div>
         </div>
       </div>
-    <div class="carte-infos" style="background: ${p.couleur_hex}90; color: ${couleurTexteContraste(p.couleur_hex)};">
+  <div class="carte-infos ${couleurTexteContraste(p.couleur_hex) === '#f9f7f4' ? 'carte-texte-clair' : 'carte-texte-fonce'}" style="background: ${p.couleur_hex}90;">
         <span class="carte-collection-badge">${p.collection}</span>
         <div class="carte-nom">${p.nom}</div>
         <div class="carte-ligne">${p.ligne}</div>
