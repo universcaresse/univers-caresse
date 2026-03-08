@@ -182,8 +182,7 @@ function ouvrirFicheCollection(col) {
 
   const fiche = document.getElementById('fiche-collection');
   document.getElementById('fiche-collection-titre').textContent = col.toUpperCase();
-  document.getElementById('fiche-collection-bandeau').style.background =
-    `linear-gradient(145deg,${couleurs[0]},${couleurs[1]})`;
+document.getElementById('fiche-collection-bandeau').style.background = '';
   document.getElementById('fiche-collection-slogan').textContent = groupe.info.slogan || '';
   document.getElementById('fiche-collection-desc').textContent = groupe.info.description_collection || '';
   document.getElementById('fiche-collection-lignes').innerHTML = lignesHtml || '<p class="vide-desc">Aucune ligne</p>';
