@@ -137,7 +137,7 @@ async function chargerCollections() {
   Object.entries(groupes).forEach(([col, data]) => {
     const couleurs = couleurCollection(col, data.couleur_hex);
     const lignesHtml = data.lignes.map(item =>
-      `<span class="collection-carte-ligne-tag">${item.ligne.toUpperCase()}</span>`
+    `<span class="collection-carte-ligne-tag">${(item.ligne || '').toUpperCase()}</span>`
     ).join('');
     html += `
       <div class="collection-carte" onclick="ouvrirFicheCollection('${col.replace(/'/g, "\\'")}')">
