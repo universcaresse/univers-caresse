@@ -488,14 +488,11 @@ select.form-control, select.form-ctrl { cursor: pointer; }
    FOOTER
    ═══════════════════════════════════════ */
 footer {
-  background: url('../Images/fond.png') center center / cover no-repeat; color: var(--blanc-pur-50);
+  background: var(--gris-fonce); color: rgba(255,255,255,0.5);
   padding: 28px var(--padding-page);
   display: flex; justify-content: space-between; align-items: center;
   font-family: 'DM Sans', sans-serif; font-size: 0.78rem; letter-spacing: 0.06em;
-  position: relative;
 }
-footer::before { content: ''; position: absolute; inset: 0; background: var(--gris-fonce-88); z-index: 0; }
-footer > * { position: relative; z-index: 1; }
 .footer-logo { font-family: 'Playfair Display', serif; font-size: 1.3rem; color: white; font-weight: 400; letter-spacing: 0.04em; }
 .footer-tagline { font-family: 'Birthstone', cursive; font-size: 1.1rem; margin-top: 4px; color: var(--accent); }
 
