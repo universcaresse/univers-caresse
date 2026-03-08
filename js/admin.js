@@ -186,7 +186,14 @@ document.getElementById('fiche-collection-bandeau').style.background = '';
   document.getElementById('fiche-collection-slogan').textContent = groupe.info.slogan || '';
   document.getElementById('fiche-collection-desc').textContent = groupe.info.description_collection || '';
   document.getElementById('fiche-collection-lignes').innerHTML = lignesHtml || '<p class="vide-desc">Aucune ligne</p>';
-  document.getElementById('fiche-collection-modifier').onclick = () => modifierCollection(groupe.info.rowIndex);
+document.getElementById('fiche-collection-modifier').onclick = () => {
+    fermerFicheCollection();
+    modifierCollection(groupe.info.rowIndex);
+  };
+  document.getElementById('fiche-collection-ajouter-ligne').onclick = () => {
+    fermerFicheCollection();
+    ouvrirFormCollectionPour(col);
+  };
  fiche.classList.add('visible');
   window.scrollTo(0, 0);
 }
