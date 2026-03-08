@@ -461,7 +461,6 @@ function filtrerRecettes() {
 
    
 async function chargerCollectionsPourSelecteur() {
-  if (Object.keys(collectionsDisponibles).length > 0) return;
   const res = await appelAPI('getCollections');
   if (!res || !res.success) return;
   const sel = document.getElementById('fr-collection');
