@@ -505,25 +505,10 @@ async function chargerIngredientsBaseRecette() {
 
 
 function ouvrirFicheRecette(id) {
-  const rec = donneesRecettes.find(r => r.recette_id === id);
-  if (!rec) return;
-  document.getElementById('form-recettes-titre').textContent = rec.nom;
-  document.getElementById('fr-id').value           = rec.recette_id;
-  document.getElementById('fr-nom').value          = rec.nom || '';
-  document.getElementById('fr-couleur').value      = rec.couleur_hex || '';
-  document.getElementById('fr-format').value       = rec.format || '';
-  document.getElementById('fr-unites').value       = rec.nb_unites || '';
-  document.getElementById('fr-cure').value         = rec.cure || '';
-  document.getElementById('fr-prix').value         = rec.prix_vente || '';
-  document.getElementById('fr-description').value  = rec.description || '';
-  document.getElementById('fr-instructions').value = rec.instructions || '';
-  document.getElementById('fr-notes').value        = rec.notes || '';
-  document.getElementById('fr-collection').value   = rec.collection || '';
-  mettreAJourLignes();
-  document.getElementById('fr-ligne').value        = rec.ligne || '';
-  document.getElementById('form-recettes').classList.add('visible');
-  document.getElementById('fr-nom').focus();
+  modifierRecette(id);
 }
+
+
 function ouvrirFormRecette() {
   document.getElementById('form-recettes-titre').textContent = 'Nouvelle recette';
   document.getElementById('fr-id').value = '';
