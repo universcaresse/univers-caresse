@@ -540,9 +540,12 @@ function modifierRecette(id) {
   document.getElementById('fr-instructions').value = rec.instructions || '';
   document.getElementById('fr-notes').value        = rec.notes || '';
   document.getElementById('fr-statut').value       = rec.statut || 'test';
-  document.getElementById('fr-collection').value   = rec.collection || '';
+document.getElementById('fr-collection').value   = rec.collection || '';
   mettreAJourLignes();
   document.getElementById('fr-ligne').value        = rec.ligne || '';
+  document.getElementById('fr-image-url').value    = rec.image_url || '';
+  const preview = document.getElementById('fr-image-preview');
+  if (preview) preview.innerHTML = rec.image_url ? `<img src="${rec.image_url}" class="photo-preview">` : '';
   document.getElementById('form-recettes').classList.add('visible');
   document.getElementById('fr-nom').focus();
 }
