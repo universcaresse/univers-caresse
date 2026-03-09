@@ -784,8 +784,9 @@ async function supprimerRecette(id) {
   if (!confirm('Supprimer cette recette ?')) return;
   const res = await appelAPIPost('deleteRecette', { recette_id: id });
   if (res && res.success) {
+    fermerFicheRecette();
     afficherMsg('recettes', 'Recette supprimée.');
-    chargerRecettes();
+    await chargerRecettes();
   } else {
     afficherMsg('recettes', 'Erreur.', 'erreur');
   }
