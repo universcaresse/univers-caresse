@@ -347,6 +347,7 @@ async function supprimerLigne(rowIndex) {
    RECETTES
 ════════════════════════════════ */
 let donneesRecettes = [];
+let recetteActive = null;
 let collectionsDisponibles = {};
 
 async function chargerRecettes() {
@@ -365,7 +366,7 @@ async function chargerRecettes() {
  loading.style.display = 'none';
   if (!res || !res.success) { afficherMsg('recettes', 'Erreur.', 'erreur'); return; }
   donneesRecettes = (res.recettes || []).sort((a, b) =>
-    (a.collection || '').localeCompare(b.collection || '') ||
+    (parseInt(a.rang) || 99) - (parseInt(b.rang) || 99) ||
     (a.ligne || '').localeCompare(b.ligne || '') ||
     (a.nom || '').localeCompare(b.nom || '')
   );
