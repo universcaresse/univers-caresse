@@ -211,6 +211,7 @@ async function appelAPI(action, params = {}) {
     const url = new URL(CONFIG.APPS_SCRIPT_URL);
     url.searchParams.set('action', action);
     Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
+    url.searchParams.set('t', Date.now());
     const response = await fetch(url.toString());
     if (!response.ok) throw new Error('Erreur réseau');
     return await response.json();
