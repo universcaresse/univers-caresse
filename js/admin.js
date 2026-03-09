@@ -63,6 +63,17 @@ function initBurgerAdmin() {
   if (overlay) overlay.addEventListener('click', fermerSidebarMobile);
   const burger = document.getElementById('burger-admin');
   if (burger) burger.addEventListener('click', function(e) { e.stopPropagation(); });
+  let dernierScroll = 0;
+  window.addEventListener('scroll', () => {
+    if (!burger || window.innerWidth > 900) return;
+    const scrollActuel = window.scrollY;
+    if (scrollActuel > dernierScroll && scrollActuel > 60) {
+      burger.classList.add('cache-scroll');
+    } else {
+      burger.classList.remove('cache-scroll');
+    }
+    dernierScroll = scrollActuel;
+  });
 }
 
 function toggleSidebarAdmin() {
