@@ -828,6 +828,7 @@ tr:hover td { background: rgba(232,220,200,0.15); }
 
 
 .fiche-grille { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 16px; margin-bottom: 24px; }
+.fiche-visuel { width: 100%; height: 180px; margin-bottom: 24px; }
 .fiche-champ { display: flex; flex-direction: column; gap: 4px; }
 .fiche-label { font-family: 'DM Sans', sans-serif; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--gris); }
 .fiche-valeur { font-family: 'DM Sans', sans-serif; font-size: 0.95rem; color: var(--gris-fonce); }
