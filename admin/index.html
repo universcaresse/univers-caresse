@@ -1049,6 +1049,10 @@
                   <option value="kg">kg</option>
                 </select>
               </div>
+              <div class="form-groupe">
+                <label class="form-label">Marge de perte (%)</label>
+                <input type="text" inputmode="numeric" class="form-ctrl" id="fd-marge-perte">
+              </div>
             </div>
             <div class="form-actions">
               <button class="btn btn-primary" onclick="sauvegarderDensite()">Enregistrer</button>
@@ -1059,7 +1063,7 @@
         <div class="chargement" id="loading-densites"><span class="spinner"></span>Chargement...</div>
         <table id="tableau-densites" style="display:none">
           <thead>
-            <tr><th>Type d'ingrédient</th><th>Densité (g/ml)</th><th>Unité source</th><th></th></tr>
+            <tr><th>Type d'ingrédient</th><th>Densité (g/ml)</th><th>Unité source</th><th>Marge perte (%)</th><th></th></tr>
           </thead>
           <tbody id="tbody-densites"></tbody>
         </table>

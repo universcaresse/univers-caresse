@@ -1271,13 +1271,16 @@ loading.style.display = 'none';
   tbody.innerHTML = '';
   donneesDensites.forEach(d => {
     const tr = document.createElement('tr');
+    tr.style.cursor = 'pointer';
+    tr.onclick = () => modifierDensite(d.type);
     tr.innerHTML = `
-      <td style="font-weight:500">${d.type}</td>
+      <td>${d.type}</td>
       <td>${parseFloat(d.densite).toFixed(3)}</td>
       <td>${d.unite}</td>
+      <td>${d.marge_perte_pct ? parseFloat(d.marge_perte_pct).toFixed(1) + ' %' : '—'}</td>
       <td>
         <div class="td-actions">
-          <button class="btn-edit" onclick="modifierDensite('${d.type.replace(/'/g, "\\'")}')">Modifier</button>
+          <button class="btn-edit" onclick="event.stopPropagation(); modifierDensite('${d.type.replace(/'/g, "\\'")}')">Modifier</button>
         </div>
       </td>`;
     tbody.appendChild(tr);
@@ -1287,11 +1290,12 @@ loading.style.display = 'none';
 
 function ouvrirFormDensite() {
   document.getElementById('form-densites-titre').textContent = 'Nouveau type';
-  document.getElementById('fd-mode').value    = 'ajout';
-  document.getElementById('fd-type').value    = '';
-  document.getElementById('fd-densite').value = '';
-  document.getElementById('fd-unite').value   = 'ml';
-  document.getElementById('fd-type').readOnly = false;
+  document.getElementById('fd-mode').value         = 'ajout';
+  document.getElementById('fd-type').value         = '';
+  document.getElementById('fd-densite').value      = '';
+  document.getElementById('fd-unite').value        = 'ml';
+  document.getElementById('fd-marge-perte').value  = '';
+  document.getElementById('fd-type').readOnly      = false;
   document.getElementById('form-densites').classList.add('visible');
   document.getElementById('fd-type').focus();
 }
@@ -1304,11 +1308,12 @@ function modifierDensite(type) {
   const d = donneesDensites.find(x => x.type === type);
   if (!d) return;
   document.getElementById('form-densites-titre').textContent = 'Modifier la densité';
-  document.getElementById('fd-mode').value    = 'modif';
-  document.getElementById('fd-type').value    = d.type;
-  document.getElementById('fd-densite').value = d.densite;
-  document.getElementById('fd-unite').value   = d.unite;
-  document.getElementById('fd-type').readOnly = true;
+  document.getElementById('fd-mode').value         = 'modif';
+  document.getElementById('fd-type').value         = d.type;
+  document.getElementById('fd-densite').value      = d.densite;
+  document.getElementById('fd-unite').value        = d.unite;
+  document.getElementById('fd-marge-perte').value  = d.marge_perte_pct || '';
+  document.getElementById('fd-type').readOnly      = true;
   document.getElementById('form-densites').classList.add('visible');
   document.getElementById('fd-densite').focus();
 }
@@ -1320,8 +1325,9 @@ async function sauvegarderDensite() {
   const unite   = document.getElementById('fd-unite').value;
   if (!type) { afficherMsg('densites', 'Le type est requis.', 'erreur'); return; }
   if (isNaN(densite) || densite <= 0) { afficherMsg('densites', 'Densité invalide.', 'erreur'); return; }
+  const marge_perte_pct = parseFloat(document.getElementById('fd-marge-perte').value) || 0;
   const action = mode === 'modif' ? 'saveDensity' : 'addDensityType';
-  const res = await appelAPIPost(action, { type, densite, unite });
+  const res = await appelAPIPost(action, { type, densite, unite, marge_perte_pct });
   if (res && res.success) {
     fermerFormDensite();
     afficherMsg('densites', mode === 'modif' ? 'Densité mise à jour.' : 'Type ajouté.');
