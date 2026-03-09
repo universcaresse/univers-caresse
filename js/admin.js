@@ -4,7 +4,7 @@
 
 // ─── INITIALISATION ───
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   const session = sessionStorage.getItem('uc_admin');
   if (session !== 'true') {
     window.location.href = '/univers-caresse/admin/login.html';
