@@ -364,7 +364,11 @@ async function chargerRecettes() {
 
  loading.style.display = 'none';
   if (!res || !res.success) { afficherMsg('recettes', 'Erreur.', 'erreur'); return; }
-  donneesRecettes = res.recettes || [];
+  donneesRecettes = (res.recettes || []).sort((a, b) =>
+    (a.collection || '').localeCompare(b.collection || '') ||
+    (a.ligne || '').localeCompare(b.ligne || '') ||
+    (a.nom || '').localeCompare(b.nom || '')
+  );
   await chargerCollectionsPourSelecteur();
 
   if (!donneesRecettes.length) { vide.style.display = 'block'; return; }
