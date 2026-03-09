@@ -1034,7 +1034,7 @@ tr:hover td { background: rgba(232,220,200,0.15); }
 .nav-admin-links { display: none; }
 
 @media (min-width: 1024px) {
-  #burger-admin { display: none !important; }
+  #burger-admin { display: none; }
 
   .nav-admin-links {
     display: flex;
