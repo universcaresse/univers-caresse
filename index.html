@@ -453,7 +453,7 @@ if (body) body.classList.remove('cache');
       return `
         <div class="ligne-groupe">
           ${ligne ? `<div class="ligne-groupe-entete">
-            <div class="ligne-groupe-nom">${ligne}</div>
+            <div class="ligne-groupe-nom">${ligne.toUpperCase()}</div>
             ${descLigne ? `<p class="ligne-groupe-desc">${descLigne}</p>` : ''}
           </div>` : ''}
           <div class="produits-grille">${prods.map(p => carteProduit(p)).join('')}</div>
@@ -463,7 +463,7 @@ if (body) body.classList.remove('cache');
     section.innerHTML = `
       <div class="collection-entete">
         <div>
-          <h2 class="collection-entete-nom">${col}</h2>
+          <h2 class="collection-entete-nom">${col.toUpperCase()}</h2>
           <p class="collection-entete-slogan">${infos.slogan || ''}</p>
           <p class="collection-entete-desc">${infos.desc_collection || ''}</p>
         </div>

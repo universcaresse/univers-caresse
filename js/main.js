@@ -464,22 +464,21 @@ function carteProduit(p) {
   const formats = Array.isArray(p.formats) ? p.formats : (p.format ? [p.format] : []);
   const image = p.image_url ? `<img src="${p.image_url}" alt="${p.nom}" onerror="this.style.display='none'">` : '';
   return `
-    <div class="carte-produit" data-produit="${btoa(unescape(encodeURIComponent(JSON.stringify(p))))}" onclick="ouvrirModalFromCard(this)">
+    <div class="carte-produit" data-produit="${btoa(unescape(encodeURIComponent(JSON.stringify(p))))}" onclick="ouvrirModalFromCard(this)" style="--col-hex: ${p.couleur_hex};">
       <div class="carte-visuel">
-        <div class="carte-couleur" style="background: ${p.couleur_hex};">
+        <div class="carte-couleur">
           ${image}
-          ${p.image_url ? `<div class="carte-couleur-overlay" style="background: linear-gradient(to top, ${p.couleur_hex}90 0%, ${p.couleur_hex}44 40%, transparent 70%);"></div>` : ''}
+          ${p.image_url ? `<div class="carte-couleur-overlay"></div>` : ''}
           ${!p.image_url ? `<div class="carte-photo-placeholder">
-
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
             Photo à venir</div>` : ''}
-          <div class="carte-couleur-dot" style="background: ${p.couleur_hex};"></div>
+          <div class="carte-couleur-dot"></div>
         </div>
       </div>
-<div class="carte-infos ${couleurTexteContraste(p.couleur_hex)}" style="background: ${p.couleur_hex}90;">
-        <span class="carte-collection-badge">${p.collection}</span>
-        <div class="carte-nom">${p.nom}</div>
-        <div class="carte-ligne">${p.ligne}</div>
+      <div class="carte-infos ${couleurTexteContraste(p.couleur_hex)}">
+        <span class="carte-collection-badge">${p.collection.toUpperCase()}</span>
+        <div class="carte-nom">${p.nom.toUpperCase()}</div>
+        <div class="carte-ligne">${p.ligne.toUpperCase()}</div>
         <div class="carte-bas">
           <span class="carte-prix">${prix}</span>
           <div class="carte-formats">${formats.map(f => `<span class="carte-format-tag">${f}</span>`).join('')}</div>
