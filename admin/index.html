@@ -349,6 +349,28 @@
           <label class="filtre-label">Par nom</label><input type="text" class="form-ctrl filtre-recherche" id="filtre-recette-nom" oninput="filtrerRecettes()">
           <button class="btn btn-outline btn-sm" onclick="reinitialiserFiltresRecettes()">Réinitialiser</button>
         </div>
+        <div class="form-panel" id="fiche-recette">
+          <div class="form-panel-header">
+            <div class="form-panel-titre" id="fiche-recette-titre"></div>
+            <div class="form-actions">
+              <button class="btn btn-sm btn-primary" onclick="basculerModeEditionRecette()">Modifier</button>
+              <button class="btn btn-sm btn-danger" onclick="supprimerRecetteActive()">Supprimer</button>
+              <button class="btn btn-sm btn-outline" onclick="fermerFicheRecette()">Fermer</button>
+            </div>
+          </div>
+          <div class="form-body" id="fiche-recette-contenu"></div>
+        </div>
+        <div class="form-panel" id="fiche-recette">
+          <div class="form-panel-header">
+            <div class="form-panel-titre" id="fiche-recette-titre"></div>
+            <div class="form-actions">
+              <button class="btn btn-sm btn-primary" onclick="basculerModeEditionRecette()">Modifier</button>
+              <button class="btn btn-sm btn-danger" onclick="supprimerRecetteActive()">Supprimer</button>
+              <button class="btn btn-sm btn-outline" onclick="fermerFicheRecette()">Fermer</button>
+            </div>
+          </div>
+          <div class="form-body" id="fiche-recette-contenu"></div>
+        </div>
         <div class="form-panel" id="form-recettes">
           <div class="form-panel-header">
             <div class="form-panel-titre" id="form-recettes-titre">Nouvelle recette</div>
