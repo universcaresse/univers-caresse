@@ -469,7 +469,8 @@ select.form-control, select.form-ctrl { cursor: pointer; }
 .modal-contenu { padding: 40px 32px; }
 .modal-collection { font-family: 'DM Sans', sans-serif; font-size: 0.68rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--accent); margin-bottom: 10px; }
 .modal-nom { font-family: 'Playfair Display', serif; font-size: 1.8rem; font-weight: 600; color: var(--gris-fonce); margin-bottom: 4px; }
-.modal-ligne { font-family: 'DM Sans', sans-serif; font-size: 0.78rem; color: var(--gris); margin-bottom: 20px; font-weight: 300; }
+.modal-ligne { font-family: 'DM Sans', sans-serif; font-size: 0.78rem; color: var(--gris); margin-bottom: 8px; font-weight: 300; }
+.modal-desc-ligne { font-family: 'DM Sans', sans-serif; font-size: 0.78rem; color: var(--gris); margin-bottom: 20px; font-weight: 300; font-style: italic; }
 .modal-desc { font-family: 'DM Sans', sans-serif; font-size: 0.85rem; line-height: 1.85; color: var(--gris); font-weight: 300; margin-bottom: 24px; }
 .modal-formats-titre { font-family: 'DM Sans', sans-serif; font-size: 0.68rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--gris); margin-bottom: 10px; }
 .modal-formats { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 24px; }
