@@ -675,13 +675,10 @@ function basculerModeFormCollection() {
 
 function apercuCouleurCollection(input) {
   const val = input.value.trim();
-  if (/^#[0-9a-fA-F]{6}$/.test(val)) {
-    input.style.backgroundColor = val;
-    input.style.color = '#fff';
-  } else {
-    input.style.backgroundColor = '';
-    input.style.color = '';
-  }
+  const apercuId = input.id === 'fc-couleur-hex' ? 'fc-couleur-apercu' : 'fc-couleur-apercu-ligne';
+  const apercu = document.getElementById(apercuId);
+  if (!apercu) return;
+  apercu.style.background = /^#[0-9a-fA-F]{6}$/.test(val) ? val : 'var(--beige)';
 }
 
 function apercuCouleurRecette(input) {
