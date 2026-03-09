@@ -334,18 +334,20 @@
           <button class="btn btn-primary" onclick="ouvrirFormRecette()">+ Nouvelle recette</button>
         </div>
        <div class="msg-zone" id="msg-recettes"></div>
-        <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:24px;align-items:center">
-          <select class="form-ctrl" id="filtre-recette-collection" style="width:auto;min-width:180px" onchange="onFiltreCollection()">
+        <div class="filtres-bar">
+          <select class="form-ctrl filtre-select" id="filtre-recette-collection" onchange="onFiltreCollection()">
             <option value="">Toutes les collections</option>
           </select>
-         <select class="form-ctrl" id="filtre-recette-ligne" style="width:auto;min-width:180px" onchange="filtrerRecettes()" disabled>
+          <select class="form-ctrl filtre-select" id="filtre-recette-ligne" onchange="filtrerRecettes()" disabled>
             <option value="">Toutes les lignes</option>
           </select>
-          <select class="form-ctrl" id="filtre-recette-statut" style="width:auto;min-width:150px" onchange="filtrerRecettes()">
+          <select class="form-ctrl filtre-select" id="filtre-recette-statut" onchange="filtrerRecettes()">
             <option value="">Tous les statuts</option>
             <option value="test">Test</option>
             <option value="public">Public</option>
           </select>
+          <input type="text" class="form-ctrl filtre-recherche" id="filtre-recette-nom" placeholder="" oninput="filtrerRecettes()">
+          <button class="btn btn-outline btn-sm" onclick="reinitialiserFiltresRecettes()">Réinitialiser</button>
         </div>
         <div class="form-panel" id="form-recettes">
           <div class="form-panel-header">

@@ -445,17 +445,30 @@ function filtrerRecettes() {
   const col    = document.getElementById('filtre-recette-collection').value;
   const ligne  = document.getElementById('filtre-recette-ligne').value;
   const statut = document.getElementById('filtre-recette-statut').value;
+  const nom    = (document.getElementById('filtre-recette-nom').value || '').toLowerCase().trim();
   const cartes = document.querySelectorAll('#grille-recettes .recette-carte');
   const vide   = document.getElementById('vide-recettes');
   let visible  = 0;
   cartes.forEach(carte => {
     const rec = donneesRecettes.find(r => r.nom === carte.querySelector('.recette-nom').textContent);
     if (!rec) return;
-    const ok = (!col || rec.collection === col) && (!ligne || rec.ligne === ligne) && (!statut || (rec.statut || 'test') === statut);
-    carte.style.display = ok ? '' : 'none';
+    const ok = (!col || rec.collection === col)
+            && (!ligne || rec.ligne === ligne)
+            && (!statut || (rec.statut || 'test') === statut)
+            && (!nom || rec.nom.toLowerCase().includes(nom));
+    carte.classList.toggle('cache', !ok);
     if (ok) visible++;
   });
   vide.style.display = visible === 0 ? 'block' : 'none';
+}
+
+function reinitialiserFiltresRecettes() {
+  document.getElementById('filtre-recette-collection').value = '';
+  document.getElementById('filtre-recette-ligne').value = '';
+  document.getElementById('filtre-recette-statut').value = '';
+  document.getElementById('filtre-recette-nom').value = '';
+  document.getElementById('filtre-recette-ligne').disabled = true;
+  filtrerRecettes();
 }
 
 
@@ -681,10 +694,9 @@ function apercuCouleurCollection(input) {
   if (!apercu) return;
   apercu.style.background = /^#[0-9a-fA-F]{6}$/.test(val) ? val : 'var(--beige)';
 }
-
 function apercuCouleurRecette(input) {
   const apercu = document.getElementById('fr-couleur-apercu');
-  if (apercu) apercu.style.background = input.value || '';
+  if (apercu) apercu.style.background = /^#[0-9a-fA-F]{6}$/.test(input.value.trim()) ? input.value.trim() : 'var(--beige)';
   document.getElementById('fr-couleur').value = input.value;
 }
 
