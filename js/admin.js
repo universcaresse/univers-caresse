@@ -434,6 +434,7 @@ async function chargerRecettes() {
                     </svg>
                     Photo à venir
                   </div>`}
+              <div class="recette-couleur-overlay"></div>
               <div class="recette-dot"></div>
             </div>
           </div>
