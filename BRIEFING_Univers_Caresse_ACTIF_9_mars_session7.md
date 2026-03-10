@@ -421,6 +421,17 @@ En bas de la sidebar, après `.sidebar-groupe` Système :
 - [ ] Corrections inventaire (ajustement manuel)
 - [ ] PWA Dionysos (caméra bloquée Google iframe)
 - [ ] Structure 4 niveaux : Collection → Ligne → Variante → Recette
+- **Mode saisonnier (ex: Noël)** : Ajouter colonne `image_url_noel` dans l'onglet Recettes du Sheet. Ajouter un champ `mode_actif` dans l'onglet Contenu (`normal` ou `noel`). Quand `mode_actif = noel`, le site utilise `image_url_noel` au lieu de `image_url` pour tous les produits automatiquement.
+- **Section Listes** : 4 listes tirées du Google Sheet, même pattern que Collections/Recettes
+  - **Les produits** : onglet Recettes — tous les produits avec collection, ligne, prix, statut
+  - **Inventaire** : onglet Stock/Inventaire
+  - **Vente** : onglet Ventes
+  - **Bilan** : calcul de totaux à partir de plusieurs onglets
+  - Flux : clic menu → `afficherSection` → `appelAPI` → `Code.gs` lit Sheet → tableau HTML
+  - Menu "Listes" déjà ajouté dans nav admin avec items en mode `bientot`
+
+
+
 
 ---
 
@@ -572,10 +583,6 @@ En bas de la sidebar, après `.sidebar-groupe` Système :
 - `.form-body` : padding haut ajouté — `padding: 28px 28px 28px` ✅
 - `.form-control` : padding ajusté — `padding: 14px 14px 10px` ✅
 
-
-## 🔜 À FAIRE
-
-- **Mode saisonnier (ex: Noël)** : Ajouter colonne `image_url_noel` dans l'onglet Recettes du Sheet. Ajouter un champ `mode_actif` dans l'onglet Contenu (`normal` ou `noel`). Quand `mode_actif = noel`, le site utilise `image_url_noel` au lieu de `image_url` pour tous les produits automatiquement.
 
 ## ⚠️ NOTES IMPORTANTES CODE.GS
 
