@@ -51,6 +51,13 @@ document.addEventListener('DOMContentLoaded', () => {
   chargerContenu();
 });
 
+window.addEventListener('resize', () => {
+  const liens = document.getElementById('nav-links');
+  if (liens && window.innerWidth > 900) liens.classList.remove('ouvert');
+  const filtres = document.getElementById('filtres-bar');
+  if (filtres) filtres.classList.remove('cache-scroll');
+});
+
 function initScrollAnimations() {
   const observer = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
@@ -144,7 +151,7 @@ function verifierSession() {
 
 function afficherConnexion() {
   document.getElementById('modal-connexion').classList.add('ouvert');
-  setTimeout(() => document.getElementById('input-mdp').focus(), 100);
+  setTimeout(() => { if (window.innerWidth > 900) document.getElementById('input-mdp').focus(); }, 100);
 }
 
 function fermerConnexion() {
