@@ -1017,14 +1017,14 @@ tr:hover td { background: rgba(232,220,200,0.15); }
     color: var(--beige);
     cursor: default;
     font-style: italic;
-  }
+  } 
   .nav-dropdown-item.bientot:hover {
     background: none;
     color: var(--beige);
     border-left-color: transparent;
   }
 }
-
+  
 /* ═══════════════════════════════════════
    RESPONSIVE
    ═══════════════════════════════════════ */
