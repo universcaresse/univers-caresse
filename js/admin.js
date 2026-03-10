@@ -1054,13 +1054,14 @@ function reinitialiserFormProduit() {
 
 function supprimerProduit(rowIndex) {
   confirmerAction('Supprimer ce produit ?', async () => {
-  const res = await appelAPIPost('deleteProduct', { numeroFacture: factureActive.numero, rowIndex });
-  if (res && res.success) {
-    await rechargerProduits();
-    afficherMsg('nouvelle-facture', 'Produit supprimé.');
-  } else {
-    afficherMsg('nouvelle-facture', 'Erreur.', 'erreur');
-  }
+    const res = await appelAPIPost('deleteProduct', { numeroFacture: factureActive.numero, rowIndex });
+    if (res && res.success) {
+      await rechargerProduits();
+      afficherMsg('nouvelle-facture', 'Produit supprimé.');
+    } else {
+      afficherMsg('nouvelle-facture', 'Erreur.', 'erreur');
+    }
+  });
 }
 
 
