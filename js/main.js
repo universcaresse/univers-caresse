@@ -202,10 +202,13 @@ function initNav() {
     const burger = document.getElementById('burger');
     if (burger && window.innerWidth <= 900) {
       const scrollActuel = window.scrollY;
+      const filtres = document.getElementById('filtres-bar');
       if (scrollActuel > dernierScroll && scrollActuel > 60) {
         burger.classList.add('cache-scroll');
+        if (filtres) filtres.classList.add('cache-scroll');
       } else {
         burger.classList.remove('cache-scroll');
+        if (filtres) filtres.classList.remove('cache-scroll');
       }
       dernierScroll = scrollActuel;
     }

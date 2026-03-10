@@ -479,6 +479,10 @@ if (body) body.classList.remove('cache');
       ${lignesHTML}`;
     body.appendChild(section);
   });
+  if (collectionEnAttente) {
+    filtrer(collectionEnAttente);
+    collectionEnAttente = null;
+  }
 }
 function fermerModal() {
   document.getElementById('modal-produit').classList.remove('ouvert');

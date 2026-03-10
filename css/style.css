@@ -1042,6 +1042,7 @@ tr:hover td { background: rgba(232,220,200,0.15); }
   }
   .burger-flottant span { background: white; }
   .burger-flottant.cache-scroll { opacity: 0; pointer-events: none; transform: translateY(-16px); }
+  #filtres-bar.cache-scroll { opacity: 0; pointer-events: none; transform: translateY(-16px); }
   .nav-links { display: none; }
   .nav-links.ouvert {
     display: flex; flex-direction: column;
