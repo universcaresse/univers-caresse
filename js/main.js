@@ -150,7 +150,7 @@ function afficherConnexion() {
 function fermerConnexion() {
   document.getElementById('modal-connexion').classList.remove('ouvert');
   document.getElementById('input-mdp').value = '';
-  document.getElementById('erreur-connexion').style.display = 'none';
+  document.getElementById('erreur-connexion').classList.add('cache');
 }
 
 function fermerModalConnexion(e) {
@@ -163,7 +163,7 @@ function validerConnexion() {
     sessionStorage.setItem('uc_admin', 'true');
     window.location.href = '/univers-caresse/admin/';
   } else {
-    document.getElementById('erreur-connexion').style.display = 'block';
+    document.getElementById('erreur-connexion').classList.remove('cache');
     document.getElementById('input-mdp').value = '';
     document.getElementById('input-mdp').focus();
   }
@@ -179,18 +179,18 @@ function afficherModeAdmin() {
   const btnConnexion  = document.getElementById('btn-connexion');
   const btnDeconnexion = document.getElementById('btn-deconnexion');
   const lienAdmin     = document.getElementById('nav-admin-link');
-  if (btnConnexion)  btnConnexion.style.display  = 'none';
-  if (btnDeconnexion) btnDeconnexion.style.display = 'inline-flex';
-  if (lienAdmin)     lienAdmin.style.display     = 'list-item';
+  if (btnConnexion)   btnConnexion.classList.add('cache');
+  if (btnDeconnexion) btnDeconnexion.classList.remove('cache');
+  if (lienAdmin)      lienAdmin.classList.remove('cache');
 }
 
 function afficherModePublic() {
   const btnConnexion  = document.getElementById('btn-connexion');
   const btnDeconnexion = document.getElementById('btn-deconnexion');
   const lienAdmin     = document.getElementById('nav-admin-link');
-  if (btnConnexion)  btnConnexion.style.display  = 'inline-flex';
-  if (btnDeconnexion) btnDeconnexion.style.display = 'none';
-  if (lienAdmin)     lienAdmin.style.display     = 'none';
+  if (btnConnexion)   btnConnexion.classList.remove('cache');
+  if (btnDeconnexion) btnDeconnexion.classList.add('cache');
+  if (lienAdmin)      lienAdmin.classList.add('cache');
 }
 
 // ─── NAVIGATION MOBILE ───
@@ -441,8 +441,8 @@ async function envoyerFormulaire() {
 
   if (!prenom || !nom || !courriel || !message) {
     msgErreur.textContent = 'Veuillez remplir tous les champs obligatoires.';
-    msgErreur.style.display = 'block';
-    msgSucces.style.display = 'none';
+    msgErreur.classList.remove('cache');
+    msgSucces.classList.add('cache');
     return;
   }
 
@@ -459,15 +459,15 @@ async function envoyerFormulaire() {
 
    console.log('result:', JSON.stringify(result));
     if (result && result.success) {
-     msgSucces.style.display = 'block';
-      msgErreur.style.display = 'none';
-      document.getElementById('formulaire-contact').style.display = 'none';
+      msgSucces.classList.remove('cache');
+      msgErreur.classList.add('cache');
+      document.getElementById('formulaire-contact').classList.add('cache');
     } else {
       throw new Error('Échec envoi');
     }
   } catch (err) {
     msgErreur.textContent = 'Une erreur s\'est produite. Veuillez réessayer ou nous écrire directement.';
-    msgErreur.style.display = 'block';
+    msgErreur.classList.remove('cache');
     btn.disabled = false;
     btn.textContent = 'Envoyer le message';
   }
@@ -537,8 +537,6 @@ function filtrer(collection) {
 
 
 
-
-
 function ouvrirModal(produit) {
   document.getElementById('modal-nom').textContent = produit.nom;
   document.getElementById('modal-collection').textContent = produit.collection;
@@ -551,14 +549,14 @@ function ouvrirModal(produit) {
 
   if (produit.image_url) {
     hex.style.background = `linear-gradient(145deg, ${produit.couleur_hex}dd, ${produit.couleur_hex}88)`;
-    hex.style.display = '';
+    hex.classList.remove('cache');
     photo.style.background = '';
     const img = document.createElement('img');
     img.src = produit.image_url;
     img.onerror = () => img.remove();
     photo.appendChild(img);
   } else {
-    hex.style.display = 'none';
+    hex.classList.add('cache');
     photo.style.background = `linear-gradient(145deg, ${produit.couleur_hex}dd, ${produit.couleur_hex}88)`;
   }
 
