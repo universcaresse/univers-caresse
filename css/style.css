@@ -689,7 +689,6 @@ footer > * { position: relative; z-index: 1; }
 .carte-infos { padding: 16px 16px 18px; background: color-mix(in srgb, var(--col-hex) 90%, transparent); }
 .carte-photo-placeholder { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; color: rgba(255,255,255,0.5); font-family: 'DM Sans', sans-serif; font-size: 0.62rem; letter-spacing: 0.1em; text-transform: uppercase; }
 .carte-photo-placeholder svg { width: 26px; height: 26px; opacity: 0.4; }
-.carte-infos { padding: 16px 16px 18px; }
 
 .carte-infos.carte-infos-clair .carte-collection-badge { color: var(--blanc-pur-75); }
 .carte-infos.carte-infos-clair .carte-nom { color: var(--blanc); }
@@ -824,22 +823,6 @@ tr:hover td { background: rgba(232,220,200,0.15); }
 .filtres-bar { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 24px; align-items: center; }
 .filtre-select { width: auto; min-width: 180px; }
 .filtre-recherche { width: auto; min-width: 200px; }
-.filtre-select { width: auto; min-width: 180px; }
-.filtre-recherche { width: auto; min-width: 200px; }
-.fiche-grille { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 16px; margin-bottom: 24px; }
-.fiche-champ { display: flex; flex-direction: column; gap: 4px; }
-.fiche-label { font-family: 'DM Sans', sans-serif; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--gris); }
-.fiche-valeur { font-family: 'DM Sans', sans-serif; font-size: 0.95rem; color: var(--gris-fonce); }
-.fiche-section-titre { font-family: 'Playfair Display', serif; font-size: 1rem; color: var(--gris-fonce); margin: 24px 0 8px; border-bottom: 1px solid var(--beige); padding-bottom: 6px; }
-.fiche-texte { font-family: 'DM Sans', sans-serif; font-size: 0.9rem; color: var(--gris-fonce); white-space: pre-line; }
-.fiche-ingredients { display: flex; flex-direction: column; gap: 6px; }
-.fiche-ingredient { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--beige); font-family: 'DM Sans', sans-serif; font-size: 0.9rem; }
-.fiche-ing-nom { color: var(--gris-fonce); }
-.fiche-ing-qte { color: var(--gris); }
-.fiche-vide { color: var(--gris); font-family: 'DM Sans', sans-serif; font-size: 0.9rem; }
-
-
-
 .fiche-grille { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 16px; margin-bottom: 24px; }
 .fiche-visuel { display: flex; gap: 16px; margin-bottom: 24px; align-items: flex-start; }
 .fiche-visuel-photo { width: 180px; height: 180px; object-fit: cover; flex-shrink: 0; }
@@ -854,95 +837,18 @@ tr:hover td { background: rgba(232,220,200,0.15); }
 .fiche-ing-nom { color: var(--gris-fonce); }
 .fiche-ing-qte { color: var(--gris); }
 .fiche-vide { color: var(--gris); font-family: 'DM Sans', sans-serif; font-size: 0.9rem; }
-.fiche-grille { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 16px; margin-bottom: 24px; }
-.fiche-champ { display: flex; flex-direction: column; gap: 4px; }
-.fiche-label { font-family: 'DM Sans', sans-serif; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--gris); }
-.fiche-valeur { font-family: 'DM Sans', sans-serif; font-size: 0.95rem; color: var(--gris-fonce); }
-.fiche-section-titre { font-family: 'Playfair Display', serif; font-size: 1rem; color: var(--gris-fonce); margin: 24px 0 8px; border-bottom: 1px solid var(--beige); padding-bottom: 6px; }
-.fiche-texte { font-family: 'DM Sans', sans-serif; font-size: 0.9rem; color: var(--gris-fonce); white-space: pre-line; }
-.fiche-ingredients { display: flex; flex-direction: column; gap: 6px; }
-.fiche-ingredient { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--beige); font-family: 'DM Sans', sans-serif; font-size: 0.9rem; }
-.fiche-ing-nom { color: var(--gris-fonce); }
-.fiche-ing-qte { color: var(--gris); }
-.fiche-vide { color: var(--gris); font-family: 'DM Sans', sans-serif; font-size: 0.9rem; }
-.fiche-grille { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 16px; margin-bottom: 24px; }
-.fiche-champ { display: flex; flex-direction: column; gap: 4px; }
-.fiche-label { font-family: 'DM Sans', sans-serif; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--gris); }
-.fiche-valeur { font-family: 'DM Sans', sans-serif; font-size: 0.95rem; color: var(--gris-fonce); }
-.fiche-section-titre { font-family: 'Playfair Display', serif; font-size: 1rem; color: var(--gris-fonce); margin: 24px 0 8px; border-bottom: 1px solid var(--beige); padding-bottom: 6px; }
-.fiche-texte { font-family: 'DM Sans', sans-serif; font-size: 0.9rem; color: var(--gris-fonce); white-space: pre-line; }
-.fiche-ingredients { display: flex; flex-direction: column; gap: 6px; }
-.fiche-ingredient { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--beige); font-family: 'DM Sans', sans-serif; font-size: 0.9rem; }
-.fiche-ing-nom { color: var(--gris-fonce); }
-.fiche-ing-qte { color: var(--gris); }
-.fiche-vide { color: var(--gris); font-family: 'DM Sans', sans-serif; font-size: 0.9rem; }
-.fiche-grille { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 16px; margin-bottom: 24px; }
-.fiche-champ { display: flex; flex-direction: column; gap: 4px; }
-.fiche-label { font-family: 'DM Sans', sans-serif; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--gris); }
-.fiche-valeur { font-family: 'DM Sans', sans-serif; font-size: 0.95rem; color: var(--gris-fonce); }
-.fiche-section-titre { font-family: 'Playfair Display', serif; font-size: 1rem; color: var(--gris-fonce); margin: 24px 0 8px; border-bottom: 1px solid var(--beige); padding-bottom: 6px; }
-.fiche-texte { font-family: 'DM Sans', sans-serif; font-size: 0.9rem; color: var(--gris-fonce); white-space: pre-line; }
-.fiche-ingredients { display: flex; flex-direction: column; gap: 6px; }
-.fiche-ingredient { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--beige); font-family: 'DM Sans', sans-serif; font-size: 0.9rem; }
-.fiche-ing-nom { color: var(--gris-fonce); }
-.fiche-ing-qte { color: var(--gris); }
-.fiche-vide { color: var(--gris); font-family: 'DM Sans', sans-serif; font-size: 0.9rem; }
-.fiche-grille { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 16px; margin-bottom: 24px; }
-.fiche-champ { display: flex; flex-direction: column; gap: 4px; }
-.fiche-label { font-family: 'DM Sans', sans-serif; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--gris); }
-.fiche-valeur { font-family: 'DM Sans', sans-serif; font-size: 0.95rem; color: var(--gris-fonce); }
-.fiche-section-titre { font-family: 'Playfair Display', serif; font-size: 1rem; color: var(--gris-fonce); margin: 24px 0 8px; border-bottom: 1px solid var(--beige); padding-bottom: 6px; }
-.fiche-texte { font-family: 'DM Sans', sans-serif; font-size: 0.9rem; color: var(--gris-fonce); white-space: pre-line; }
-.fiche-ingredients { display: flex; flex-direction: column; gap: 6px; }
-.fiche-ingredient { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--beige); font-family: 'DM Sans', sans-serif; font-size: 0.9rem; }
-.fiche-ing-nom { color: var(--gris-fonce); }
-.fiche-ing-qte { color: var(--gris); }
-.fiche-vide { color: var(--gris); font-family: 'DM Sans', sans-serif; font-size: 0.9rem; }
-.fiche-grille { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 16px; margin-bottom: 24px; }
-.fiche-champ { display: flex; flex-direction: column; gap: 4px; }
-.fiche-label { font-family: 'DM Sans', sans-serif; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--gris); }
-.fiche-valeur { font-family: 'DM Sans', sans-serif; font-size: 0.95rem; color: var(--gris-fonce); }
-.fiche-section-titre { font-family: 'Playfair Display', serif; font-size: 1rem; color: var(--gris-fonce); margin: 24px 0 8px; border-bottom: 1px solid var(--beige); padding-bottom: 6px; }
-.fiche-texte { font-family: 'DM Sans', sans-serif; font-size: 0.9rem; color: var(--gris-fonce); white-space: pre-line; }
-.fiche-ingredients { display: flex; flex-direction: column; gap: 6px; }
-.fiche-ingredient { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--beige); font-family: 'DM Sans', sans-serif; font-size: 0.9rem; }
-.fiche-ing-nom { color: var(--gris-fonce); }
-.fiche-ing-qte { color: var(--gris); }
-.fiche-vide { color: var(--gris); font-family: 'DM Sans', sans-serif; font-size: 0.9rem; }
-.fiche-grille { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 16px; margin-bottom: 24px; }
-.fiche-champ { display: flex; flex-direction: column; gap: 4px; }
-.fiche-label { font-family: 'DM Sans', sans-serif; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--gris); }
-.fiche-valeur { font-family: 'DM Sans', sans-serif; font-size: 0.95rem; color: var(--gris-fonce); }
-.fiche-section-titre { font-family: 'Playfair Display', serif; font-size: 1rem; color: var(--gris-fonce); margin: 24px 0 8px; border-bottom: 1px solid var(--beige); padding-bottom: 6px; }
-.fiche-texte { font-family: 'DM Sans', sans-serif; font-size: 0.9rem; color: var(--gris-fonce); white-space: pre-line; }
-.fiche-ingredients { display: flex; flex-direction: column; gap: 6px; }
-.fiche-ingredient { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--beige); font-family: 'DM Sans', sans-serif; font-size: 0.9rem; }
-.fiche-ing-nom { color: var(--gris-fonce); }
-.fiche-ing-qte { color: var(--gris); }
-.fiche-vide { color: var(--gris); font-family: 'DM Sans', sans-serif; font-size: 0.9rem; }
-.fiche-grille { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 16px; margin-bottom: 24px; }
-.fiche-champ { display: flex; flex-direction: column; gap: 4px; }
-.fiche-label { font-family: 'DM Sans', sans-serif; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--gris); }
-.fiche-valeur { font-family: 'DM Sans', sans-serif; font-size: 0.95rem; color: var(--gris-fonce); }
-.fiche-section-titre { font-family: 'Playfair Display', serif; font-size: 1rem; color: var(--gris-fonce); margin: 24px 0 8px; border-bottom: 1px solid var(--beige); padding-bottom: 6px; }
-.fiche-texte { font-family: 'DM Sans', sans-serif; font-size: 0.9rem; color: var(--gris-fonce); white-space: pre-line; }
-.fiche-ingredients { display: flex; flex-direction: column; gap: 6px; }
-.fiche-ingredient { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--beige); font-family: 'DM Sans', sans-serif; font-size: 0.9rem; }
-.fiche-ing-nom { color: var(--gris-fonce); }
-.fiche-ing-qte { color: var(--gris); }
-.fiche-vide { color: var(--gris); font-family: 'DM Sans', sans-serif; font-size: 0.9rem; }
-.fiche-grille { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 16px; margin-bottom: 24px; }
-.fiche-champ { display: flex; flex-direction: column; gap: 4px; }
-.fiche-label { font-family: 'DM Sans', sans-serif; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--gris); }
-.fiche-valeur { font-family: 'DM Sans', sans-serif; font-size: 0.95rem; color: var(--gris-fonce); }
-.fiche-section-titre { font-family: 'Playfair Display', serif; font-size: 1rem; color: var(--gris-fonce); margin: 24px 0 8px; border-bottom: 1px solid var(--beige); padding-bottom: 6px; }
-.fiche-texte { font-family: 'DM Sans', sans-serif; font-size: 0.9rem; color: var(--gris-fonce); white-space: pre-line; }
-.fiche-ingredients { display: flex; flex-direction: column; gap: 6px; }
-.fiche-ingredient { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--beige); font-family: 'DM Sans', sans-serif; font-size: 0.9rem; }
-.fiche-ing-nom { color: var(--gris-fonce); }
-.fiche-ing-qte { color: var(--gris); }
-.fiche-vide { color: var(--gris); font-family: 'DM Sans', sans-serif; font-size: 0.9rem; }
-.filtre-label { font-family: 'DM Sans', sans-serif; font-size: 0.85rem; color: var(--gris); white-space: nowrap; }
+
+
+
+
+
+
+
+
+
+
+
+
 /* ═══════════════════════════════════════
    ADMIN — CARTES RECETTES
    ═══════════════════════════════════════ */
@@ -1208,7 +1114,7 @@ tr:hover td { background: rgba(232,220,200,0.15); }
 .fiche-ligne-format { font-family: 'DM Sans', sans-serif; font-size: 0.75rem; color: var(--gris); display: block; margin-top: 2px; }
 .fiche-ligne-desc { font-family: 'DM Sans', sans-serif; font-size: 0.78rem; color: var(--gris); margin-top: 6px; line-height: 1.6; }
 .collection-carte-lignes { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; }
-.collection-carte-lignes-haut { position: absolute; top: 12px; left: 12px; right: 12px; display: flex; flex-direction: column; gap: 4px; z-index: 1; }.collection-carte-lignes-haut { position: absolute; top: 12px; left: 12px; right: 12px; display: flex; flex-wrap: wrap; gap: 4px; z-index: 1; }
+.collection-carte-lignes-haut { position: absolute; top: 12px; left: 12px; right: 12px; display: flex; flex-wrap: wrap; gap: 4px; z-index: 1; }
 .collection-carte-ligne-tag { font-family: 'DM Sans', sans-serif; font-size: 0.62rem; letter-spacing: 0.08em; color: #fff; background: rgba(0,0,0,0.3); padding: 2px 8px; display: block; width: fit-content;}
 .section-label { font-family: 'DM Sans', sans-serif; font-size: 0.72rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--gris); margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--beige); }
 
@@ -1233,7 +1139,7 @@ tr:hover td { background: rgba(232,220,200,0.15); }
 .cache { display: none !important; }
 .connexion-boite { display: flex; flex-direction: column; align-items: center; gap: 16px; width: 300px; padding: 48px 40px; background: white; border-radius: 12px; box-shadow: 0 4px 24px rgba(0,0,0,0.08); }
 .connexion-logo { width: 80px; margin-bottom: 8px; }
-.connexion-titre { font-family: 'Playfair Display', serif; font-size: 1.2rem; color: var(--gris-fonce); letter-spacing: 0.05em; }.connexion-titre { font-family: 'Playfair Display', serif; font-size: 1.4rem; color: var(--gris-fonce); letter-spacing: 0.05em; }
+.connexion-titre { font-family: 'Playfair Display', serif; font-size: 1.4rem; color: var(--gris-fonce); letter-spacing: 0.05em; }
 .connexion-erreur { color: var(--danger); font-size: 0.85rem; min-height: 20px; }
 .login-body { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--blanc); }
 .login-contenu { display: flex; flex-direction: column; align-items: center; padding: var(--padding-page); max-width: 600px; width: 100%; }
