@@ -1062,25 +1062,7 @@ function supprimerProduit(rowIndex) {
   }
 }
 
-function finaliserFacture() {
-  confirmerAction('Finaliser cette facture ?', async () => {
-    const st  = produitsFacture.reduce((acc, p) => acc + (p.prixTotal || 0), 0);
-    const tps = parseFloat(document.getElementById('nf-tps').value) || 0;
-    const tvq = parseFloat(document.getElementById('nf-tvq').value) || 0;
-    const res = await appelAPIPost('finalizeInvoice', {
-      numeroFacture: factureActive.numero,
-      sousTotal: st.toFixed(2),
-      tps:       tps.toFixed(2),
-      tvq:       tvq.toFixed(2)
-    });
-    if (res && res.success) {
-      afficherMsg('nouvelle-facture', `Facture finalisée. Total\u00a0: ${formaterPrix(parseFloat(res.total))}`);
-      reinitialiserNouvelleFacture();
-    } else {
-      afficherMsg('nouvelle-facture', 'Erreur.', 'erreur');
-    }
-  });
-}
+
 
 function reinitialiserNouvelleFacture() {
   factureActive = null;
