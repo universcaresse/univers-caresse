@@ -1029,7 +1029,7 @@ tr:hover td { background: rgba(232,220,200,0.15); }
    RESPONSIVE
    ═══════════════════════════════════════ */
 @media (max-width: 900px) {
-  nav { background: none; box-shadow: none; border: none; }
+  nav { background: none; box-shadow: none; border: none; backdrop-filter: none; }
   nav .nav-actions { display: none; }
  .burger-flottant {
     display: flex;
