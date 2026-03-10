@@ -280,7 +280,7 @@ async function chargerCollections() {
     data.collections.forEach(col => {
       const couleurs = couleurCollection(col.nom, col.couleur_hex);
       strip.innerHTML += `
-        <a href="#catalogue" onclick="naviguer('catalogue'); setTimeout(() => filtrer('${col.nom}'), 300);" class="collection-tile" style="--col-hex-1: ${couleurs[0]}; --col-hex-2: ${couleurs[1]};">
+        <a href="#catalogue" onclick="naviguer('catalogue'); filtrerApresChargement('${col.nom}');" class="collection-tile" style="--col-hex-1: ${couleurs[0]}; --col-hex-2: ${couleurs[1]};">
           <div class="collection-tile-bg"></div>
           <div class="collection-tile-overlay"></div>
           <div class="collection-tile-content">
@@ -514,6 +514,18 @@ function carteProduit(p) {
 function ouvrirModalFromCard(el) {
   const produit = JSON.parse(decodeURIComponent(escape(atob(el.dataset.produit))));
   ouvrirModal(produit);
+}
+
+function filtrerApresChargement(collection) {
+  const verifier = (tentative) => {
+    const sections = document.querySelectorAll('.collection-section');
+    if (sections.length > 0) {
+      filtrer(collection);
+    } else if (tentative < 20) {
+      setTimeout(() => verifier(tentative + 1), 150);
+    }
+  };
+  verifier(0);
 }
 
 function filtrer(collection) {
