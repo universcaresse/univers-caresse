@@ -1160,8 +1160,7 @@ tr:hover td { background: rgba(232,220,200,0.15); }
   .catalogue-body { padding: 28px var(--padding-mobile) 60px; }
   .collection-entete { grid-template-columns: 1fr; }
   .collection-entete-visuel { display: none; }
-.modal-produit { grid-template-columns: 1fr; }
-  .modal-visuel-hex { min-height: 60px; }
+
 .modal-produit { grid-template-columns: 1fr 2fr; grid-template-rows: auto auto; max-height: 90vh; overflow-y: auto; }
  .modal-visuel-hex { min-height: 220px; grid-column: 1; grid-row: 1; }
   .modal-visuel-photo { min-height: 220px; grid-column: 2; grid-row: 1; }
