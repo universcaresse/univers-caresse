@@ -572,6 +572,14 @@ async function chargerCollectionsPourSelecteur() {
     const o = document.createElement('option');
     o.value = col; o.textContent = col; sel.appendChild(o);
   });
+  const selSec = document.getElementById('fr-collections-secondaires');
+  if (selSec) {
+    selSec.innerHTML = '';
+    Object.keys(collectionsDisponibles).sort().forEach(col => {
+      const o = document.createElement('option');
+      o.value = col; o.textContent = col; selSec.appendChild(o);
+    });
+  }
 }
 
 async function mettreAJourLignes() {
@@ -702,6 +710,12 @@ document.getElementById('fr-collection').value   = rec.collection || '';
   document.getElementById('fr-image-url').value    = rec.image_url || '';
   const preview = document.getElementById('fr-image-preview');
   if (preview) preview.innerHTML = rec.image_url ? `<img src="${rec.image_url}" class="photo-preview">` : '';
+  const selSec = document.getElementById('fr-collections-secondaires');
+  if (selSec) {
+    Array.from(selSec.options).forEach(opt => {
+      opt.selected = Array.isArray(rec.collections_secondaires) && rec.collections_secondaires.includes(opt.value);
+    });
+  }
   document.getElementById('filtres-bar').classList.add('cache');
   document.getElementById('grille-recettes').classList.add('cache');
   document.getElementById('form-recettes').classList.add('visible');
@@ -726,6 +740,7 @@ async function sauvegarderRecette() {
     notes:        document.getElementById('fr-notes').value,
     statut:       document.getElementById('fr-statut').value || 'test',
     image_url:    document.getElementById('fr-image-url').value,
+    collections_secondaires: Array.from(document.getElementById('fr-collections-secondaires')?.selectedOptions || []).map(o => o.value),
     ingredients:  []
   };
   if (!d.nom) { afficherMsg('recettes', 'Le nom est requis.', 'erreur'); return; }

@@ -410,6 +410,14 @@ if (body) body.classList.remove('cache');
   donneescatalogue.forEach(p => {
     if (!parCollection[p.collection]) parCollection[p.collection] = [];
     parCollection[p.collection].push(p);
+    if (Array.isArray(p.collections_secondaires)) {
+      p.collections_secondaires.forEach(colSec => {
+        if (!parCollection[colSec]) parCollection[colSec] = [];
+        if (!parCollection[colSec].find(x => x.recette_id === p.recette_id)) {
+          parCollection[colSec].push(p);
+        }
+      });
+    }
   });
 
   const ordre = collectionsOrdre.length ? collectionsOrdre : Object.keys(parCollection);
