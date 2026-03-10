@@ -404,35 +404,30 @@ async function chargerContenu() {
     set('contenu-valeur-04-desc', c.valeur_04_desc);
     set('contenu-citation-texte', c.citation_texte);
     set('contenu-citation-source', c.citation_source);
-    set('contenu-bas-engagement-01-titre', c.bas_engagement_01_titre);
-    set('contenu-bas-engagement-01-texte', c.bas_engagement_01_texte);
-    set('contenu-bas-engagement-02-titre', c.bas_engagement_02_titre);
-    set('contenu-bas-engagement-02-texte', c.bas_engagement_02_texte);
-    set('contenu-bas-engagement-03-titre', c.bas_engagement_03_titre);
-    set('contenu-bas-engagement-03-texte', c.bas_engagement_03_texte);
-    set('contenu-bas-engagement-04-titre', c.bas_engagement_04_titre);
-    set('contenu-bas-engagement-04-texte', c.bas_engagement_04_texte);
-    [1,2,3,4].forEach(n => {
-      if (!c[`bas_engagement_0${n}_titre`]) {
-        document.getElementById(`contenu-bas-engagement-0${n}-titre`)?.closest('.info-card')?.classList.add('cache');
-      }
+    [1,2,3,4,5].forEach(n => {
+      const nn = String(n).padStart(2,'0');
+      set(`contenu-bas-engagement-${nn}-titre`, c[`bas_engagement_${nn}_titre`]);
+      set(`contenu-bas-engagement-${nn}-texte`, c[`bas_engagement_${nn}_texte`]);
+      if (c[`bas_engagement_${nn}_titre`]) document.getElementById(`card-bas-engagement-${nn}`)?.classList.remove('cache');
     });
-    ['conservation', 'cure', 'usage', 'commande', 'demande'].forEach(cle => {
-      if (!c[`bas_${cle}_titre`]) {
-        document.getElementById(`contenu-bas-${cle}-titre`)?.closest('.info-card')?.classList.add('cache');
-      }
+    [1,2,3,4,5].forEach(n => {
+      const nn = String(n).padStart(2,'0');
+      set(`contenu-bas-note-${nn}-titre`, c[`bas_note_${nn}_titre`]);
+      set(`contenu-bas-note-${nn}-texte`, c[`bas_note_${nn}_texte`]);
+      if (c[`bas_note_${nn}_titre`]) document.getElementById(`card-bas-note-${nn}`)?.classList.remove('cache');
     });
-    set('contenu-bas-allergenes', c.bas_allergenes);
-    set('contenu-bas-conservation-titre', c.bas_conservation_titre);
-    set('contenu-bas-conservation-texte', c.bas_conservation_texte);
-    set('contenu-bas-cure-titre', c.bas_cure_titre);
-    set('contenu-bas-cure-texte', c.bas_cure_texte);
-    set('contenu-bas-usage-titre', c.bas_usage_titre);
-    set('contenu-bas-usage-texte', c.bas_usage_texte);
-    set('contenu-bas-commande-titre', c.bas_commande_titre);
-    set('contenu-bas-commande-texte', c.bas_commande_texte);
-    set('contenu-bas-demande-titre', c.bas_demande_titre);
-    set('contenu-bas-demande-texte', c.bas_demande_texte);
+    [1,2,3,4,5].forEach(n => {
+      const nn = String(n).padStart(2,'0');
+      set(`contenu-bas-conservation-${nn}-titre`, c[`bas_conservation_${nn}_titre`]);
+      set(`contenu-bas-conservation-${nn}-texte`, c[`bas_conservation_${nn}_texte`]);
+      if (c[`bas_conservation_${nn}_titre`]) document.getElementById(`card-bas-conservation-${nn}`)?.classList.remove('cache');
+    });
+    [1,2,3,4,5].forEach(n => {
+      const nn = String(n).padStart(2,'0');
+      set(`contenu-bas-commande-${nn}-titre`, c[`bas_commande_${nn}_titre`]);
+      set(`contenu-bas-commande-${nn}-texte`, c[`bas_commande_${nn}_texte`]);
+      if (c[`bas_commande_${nn}_titre`]) document.getElementById(`card-bas-commande-${nn}`)?.classList.remove('cache');
+    });
   } catch (err) {
     console.error('Erreur chargerContenu:', err);
   }
