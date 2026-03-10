@@ -402,6 +402,14 @@ async function chargerContenu() {
     set('contenu-bas-engagement-03-texte', c.bas_engagement_03_texte);
     set('contenu-bas-engagement-04-titre', c.bas_engagement_04_titre);
     set('contenu-bas-engagement-04-texte', c.bas_engagement_04_texte);
+    [1,2,3,4].forEach(n => {
+      const titre = document.getElementById(`contenu-bas-engagement-0${n}-titre`);
+      if (titre && !titre.textContent.trim()) titre.closest('.info-card')?.classList.add('cache');
+    });
+    ['conservation', 'cure', 'usage', 'commande', 'demande'].forEach(cle => {
+      const titre = document.getElementById(`contenu-bas-${cle}-titre`);
+      if (titre && !titre.textContent.trim()) titre.closest('.info-card')?.classList.add('cache');
+    });
     set('contenu-bas-allergenes', c.bas_allergenes);
     set('contenu-bas-conservation-titre', c.bas_conservation_titre);
     set('contenu-bas-conservation-texte', c.bas_conservation_texte);
