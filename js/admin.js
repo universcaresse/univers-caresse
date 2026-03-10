@@ -404,9 +404,10 @@ async function chargerRecettes() {
   );
   await chargerCollectionsPourSelecteur();
 
-  if (!donneesRecettes.length) { vide.classList.remove('cache'); return; }
+  if (!donneesRecettes.length) { loading.classList.add('cache'); vide.classList.remove('cache'); return; }
 
   grille.innerHTML = '';
+  loading.classList.add('cache');
   grille.classList.remove('cache');
 
   const parCollection = {};
