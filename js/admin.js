@@ -762,10 +762,10 @@ document.getElementById('fr-collection').value   = rec.collection || '';
       opt.selected = Array.isArray(rec.collections_secondaires) && rec.collections_secondaires.includes(opt.value);
     });
   }
- document.querySelector('#section-recettes .filtres-bar').classList.add('cache');
+ingredientsRecette = (rec.ingredients || []).map(i => ({ type: i.type, nom: i.nom, quantite: i.quantite_g }));
+  document.querySelector('#section-recettes .filtres-bar').classList.add('cache');
   document.getElementById('grille-recettes').classList.add('cache');
   document.getElementById('form-recettes').classList.add('visible');
- ingredientsRecette = (rec.ingredients || []).map(i => ({ type: i.type, nom: i.nom, quantite: i.quantite_g }));
   rafraichirListeIngredientsRecette();
   document.getElementById('fr-nom').focus();
 }
