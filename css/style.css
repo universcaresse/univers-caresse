@@ -1132,6 +1132,14 @@ tr:hover td { background: rgba(232,220,200,0.15); }
 .fiche-collection-bandeau .form-panel-titre { color: var(--gris-fonce); font-size: 1.3rem; display: block; }
 .fiche-collection-slogan { color: var(--gris);font-family: 'DM Sans', sans-serif; font-size: 0.82rem; display: block; margin-top: 4px; }
 .fiche-collection-desc { font-family: 'DM Sans', sans-serif; font-size: 0.88rem; color: var(--gris); line-height: 1.7; margin-bottom: 24px; }
+.fiche-collection-extras-wrap { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+.fiche-collection-couleur { width: 80px; height: 80px; border-radius: 6px; flex-shrink: 0; }
+.fiche-collection-photo img { width: 80px; height: 80px; object-fit: cover; border-radius: 6px; }
+.fiche-collection-rang { font-family: 'DM Sans', sans-serif; font-size: 0.82rem; color: var(--gris); }
+.fiche-collection-extras-wrap { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+.fiche-collection-couleur { width: 80px; height: 80px; border-radius: 6px; flex-shrink: 0; }
+.fiche-collection-photo img { width: 80px; height: 80px; object-fit: cover; border-radius: 6px; }
+.fiche-collection-rang { font-family: 'DM Sans', sans-serif; font-size: 0.82rem; color: var(--gris); }
 .fiche-ligne-item { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: 16px 0; border-bottom: 1px solid var(--beige); }
 .fiche-ligne-item:last-child { border-bottom: none; }
 .fiche-ligne-info { flex: 1; }
