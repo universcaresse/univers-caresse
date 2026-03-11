@@ -232,7 +232,9 @@ document.getElementById('fiche-collection-ajouter-ligne').onclick = () => {
     basculerModeFormCollection();
   };
  fiche.classList.add('visible');
-  window.scrollTo(0, 0);
+const conteneur = document.querySelector('.admin-contenu');
+  if (conteneur) conteneur.scrollTop = 0;
+}
 }
 
 function fermerFicheCollection() {
