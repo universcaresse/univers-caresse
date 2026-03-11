@@ -728,7 +728,7 @@ function ouvrirFormRecette() {
 
 function fermerFormRecette() {
   document.getElementById('form-recettes').classList.remove('visible');
-  document.getElementById('filtres-bar').classList.remove('cache');
+document.querySelector('#section-recettes .filtres-bar').classList.remove('cache');
   document.getElementById('grille-recettes').classList.remove('cache');
 }
 
