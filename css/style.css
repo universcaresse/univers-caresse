@@ -724,9 +724,9 @@ footer > * { position: relative; z-index: 1; }
    ADMIN — LAYOUT
    ═══════════════════════════════════════ */
 .admin-layout { display: flex; padding-top: var(--nav-h); height: 100vh; overflow: hidden; }
-.admin-contenu { flex: 1; margin-left: 0; padding: 48px 56px; min-width: 0; box-sizing: border-box; height: calc(100vh - var(--nav-h)); overflow: hidden; }
+.admin-contenu { flex: 1; margin-left: 0; padding: 48px 56px; min-width: 0; box-sizing: border-box; height: calc(100vh - var(--nav-h)); overflow-y: auto; }
 .section-admin { display: none; }
-.section-admin.visible { display: block; height: 100%; }
+.section-admin.visible { display: block; }
 /* ═══════════════════════════════════════
    ADMIN — SIDEBAR
    ═══════════════════════════════════════ */
