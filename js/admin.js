@@ -278,11 +278,11 @@ function ouvrirFormCollection() {
 function confirmerAction(message, callback) {
   document.getElementById('modal-confirm-message').textContent = message;
   document.getElementById('modal-confirm-btn').onclick = () => { fermerModalConfirm(); callback(); };
-  document.getElementById('modal-confirm').classList.remove('cache');
+  document.getElementById('modal-confirm').classList.add('ouvert');
 }
 
 function fermerModalConfirm() {
-  document.getElementById('modal-confirm').classList.add('cache');
+  document.getElementById('modal-confirm').classList.remove('ouvert');
 }
 
 function fermerFormCollection() {
