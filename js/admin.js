@@ -308,7 +308,7 @@ async function modifierLigneProduit(rowIndex) {
   apercuCouleurCollection(document.getElementById('fc-couleur-hex-ligne'));
   document.getElementById('contenu-collections').classList.add('cache');
   document.getElementById('form-collections').classList.add('visible');
-  document.getElementById('fc-ligne').focus();
+ 
 }
 
 async function modifierCollection(rowIndex) {
