@@ -1,6 +1,8 @@
-/* UNIVERS CARESSE — admin.js */
+/* ═══════════════════════════════════════
+   UNIVERS CARESSE — admin.js
+   ═══════════════════════════════════════ */
 
-// INITIALISATION
+// ─── INITIALISATION ───
 
 document.addEventListener('DOMContentLoaded', async () => {
   const session = sessionStorage.getItem('uc_admin');
@@ -16,7 +18,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   await chargerCollections();
 });
 
-// NAVIGATION SIDEBAR
+// ─── NAVIGATION SIDEBAR ───
 function toggleDropdownAdmin(el) {
   const item = el.closest('.nav-admin-item');
   const estOuvert = item.classList.contains('ouvert');
@@ -49,7 +51,7 @@ if (id === 'collections')    { chargerCollections(); chargerListesFournisseurs()
 if (id === 'contenu-site')    chargerContenuSite();
 }
 
-// STATS ACCUEIL
+// ─── STATS ACCUEIL ───
 async function chargerStatsAccueil() {
   try {
    const resCol = await appelAPI('getCollectionsPublic');
@@ -64,7 +66,7 @@ async function chargerStatsAccueil() {
   } catch(err) {}
 }
 
-// BURGER MOBILE
+// ─── BURGER MOBILE ───
 function initBurgerAdmin() {
   const overlay = document.getElementById('sidebar-overlay');
   if (overlay) overlay.addEventListener('click', fermerSidebarMobile);
@@ -96,7 +98,7 @@ function fermerSidebarMobile() {
   if (overlay) overlay.classList.remove('visible');
 }
 
-// MESSAGES
+// ─── MESSAGES ───
 function afficherMsg(zone, texte, type = 'succes') {
   const el = document.getElementById('msg-' + zone);
   if (el) {
@@ -116,7 +118,7 @@ function afficherMsg(zone, texte, type = 'succes') {
   setTimeout(() => toast.classList.remove('visible'), 3000);
 }
 
-// COULEUR PAR NOM
+// ─── COULEUR PAR NOM ───
 function couleurTexteContraste(hex) {
   if (!hex || !hex.startsWith('#')) return 'carte-infos-clair';
   const r = parseInt(hex.slice(1,3), 16);
@@ -133,7 +135,9 @@ function stringToColor(str) {
   return palette[Math.abs(h) % palette.length];
 }
 
-// COLLECTIONS
+/* ════════════════════════════════
+   COLLECTIONS
+════════════════════════════════ */
 let donneesCollections = [];
  
 async function chargerCollections() {
@@ -212,13 +216,12 @@ document.getElementById('fiche-collection-bandeau').style.background = '';
  document.getElementById('fiche-collection-desc').textContent = groupe.info.description_collection || '';
   const couleur = groupe.info.couleur_hex || '';
   const photo   = groupe.info.photo_url   || '';
-  const rang = groupe.info.rang || '';
+  const rang    = groupe.info.rang || '';
   let ficheExtrasHtml = '';
   let wrapHtml = '';
-  if (couleur) wrapHtml += `<div class="fiche-collection-couleur" style="background:${couleur}"></div>`;
+  if (couleur) wrapHtml += `<div class="fiche-collection-couleur" style="background:${couleur}">${rang}</div>`;
   if (photo)   wrapHtml += `<div class="fiche-collection-photo"><img src="${photo}" alt="Photo collection"></div>`;
   if (wrapHtml) ficheExtrasHtml += `<div class="fiche-collection-extras-wrap">${wrapHtml}</div>`;
-  if (rang)    ficheExtrasHtml += `<div class="fiche-collection-rang">Rang : ${rang}</div>`;
   const ficheExtras = document.getElementById('fiche-collection-extras');
   if (ficheExtras) ficheExtras.innerHTML = ficheExtrasHtml;
   document.getElementById('fiche-collection-lignes').innerHTML = lignesHtml || '<p class="vide-desc">Aucune ligne</p>';
@@ -393,7 +396,9 @@ function supprimerLigne(rowIndex) {
   });
 }
 
-// RECETTES
+/* ════════════════════════════════
+   RECETTES
+════════════════════════════════ */
 let donneesRecettes = [];
 let recetteActive = null;
 let collectionsDisponibles = {};
@@ -772,7 +777,7 @@ if (res && res.success) {
   }
 }
 
-// CLOUDINARY
+// ─── CLOUDINARY ───
 function ouvrirCloudinary() {
   cloudinary.openUploadWidget({
     cloudName: 'dfasrauyy',
@@ -867,7 +872,7 @@ function apercuCouleurRecette(input) {
   document.getElementById('fr-couleur').value = input.value;
 }
 
-// INGRÉDIENTS DE BASE
+// ─── INGRÉDIENTS DE BASE ───
 let ingredientsBase = [];
 
 function ajouterIngredientBase(type='', nom='', quantite=0) {
@@ -913,7 +918,9 @@ function supprimerRecette(id) {
   });
 }
 
-// NOUVELLE FACTURE
+/* ════════════════════════════════
+   NOUVELLE FACTURE
+════════════════════════════════ */
 let factureActive = null;
 let produitsFacture = [];
 
@@ -1091,7 +1098,9 @@ function reinitialiserNouvelleFacture() {
   document.getElementById('nf-date').value = new Date().toISOString().split('T')[0];
 }
 
-// FACTURES
+/* ════════════════════════════════
+   FACTURES
+════════════════════════════════ */
 let toutesFactures = [];
 
 async function chargerFactures() {
@@ -1232,7 +1241,9 @@ function supprimerFacture(numero) {
   });
 }
 
-// INVENTAIRE
+/* ════════════════════════════════
+   INVENTAIRE
+════════════════════════════════ */
 async function chargerInventaire() {
   const loading = document.getElementById('loading-inventaire');
   const contenu = document.getElementById('contenu-inventaire');
@@ -1295,7 +1306,9 @@ async function chargerInventaire() {
   contenu.innerHTML = html;
 }
 
-// DENSITÉS
+/* ════════════════════════════════
+   DENSITÉS
+════════════════════════════════ */
 let donneesDensites = [];
 
 async function chargerDensites() {
@@ -1386,7 +1399,9 @@ async function sauvegarderDensite() {
   }
 }
 
-// NOUVELLE FACTURE — WIZARD
+/* ════════════════════════════════
+   NOUVELLE FACTURE — WIZARD
+════════════════════════════════ */
 
 let listesDropdown = { types: [], fullData: [], fournisseurs: [] };
 
@@ -1697,7 +1712,7 @@ function validerConnexionAdmin() {
   }
 }
 
-// CONTENU DU SITE
+// ─── CONTENU DU SITE ───
 async function chargerContenuSite() {
   const loading = document.getElementById('loading-contenu-site');
   const corps = document.getElementById('corps-contenu-site');
