@@ -235,7 +235,7 @@ document.getElementById('fiche-collection-ajouter-ligne').onclick = () => {
 const conteneur = document.querySelector('.admin-contenu');
   if (conteneur) conteneur.scrollTop = 0;
 }
-}
+
 
 function fermerFicheCollection() {
   document.getElementById('fiche-collection').classList.remove('visible');
