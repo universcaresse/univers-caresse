@@ -26,8 +26,8 @@
       <li class="nav-admin-item">
         <button class="nav-admin-btn" onclick="afficherSection('accueil', null)">Accueil</button>
       </li>
-         <li class="nav-admin-item">
-        <button class="nav-admin-btn">Création <svg viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 1l4 4 4-4"/></svg></button>
+      <li class="nav-admin-item">
+        <button class="nav-admin-btn" onclick="toggleDropdownAdmin(this)">Création <svg viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 1l4 4 4-4"/></svg></button>
         <div class="nav-dropdown">
           <button class="nav-dropdown-item" onclick="afficherSection('collections', null)">Collections</button>
           <button class="nav-dropdown-item" onclick="afficherSection('recettes', null)">Recettes</button>
@@ -35,7 +35,7 @@
         </div>
       </li>
       <li class="nav-admin-item">
-        <button class="nav-admin-btn">Achats <svg viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 1l4 4 4-4"/></svg></button>
+        <button class="nav-admin-btn" onclick="toggleDropdownAdmin(this)">Achats <svg viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 1l4 4 4-4"/></svg></button>
         <div class="nav-dropdown">
           <button class="nav-dropdown-item" onclick="afficherSection('nouvelle-facture', null)">Nouvelle facture</button>
           <button class="nav-dropdown-item" onclick="afficherSection('factures', null)">Les factures</button>
@@ -43,14 +43,14 @@
         </div>
       </li>
       <li class="nav-admin-item">
-        <button class="nav-admin-btn">Production <svg viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 1l4 4 4-4"/></svg></button>
+        <button class="nav-admin-btn" onclick="toggleDropdownAdmin(this)">Production <svg viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 1l4 4 4-4"/></svg></button>
         <div class="nav-dropdown">
           <button class="nav-dropdown-item bientot">Confection</button>
           <button class="nav-dropdown-item bientot">Ventes</button>
         </div>
       </li>
       <li class="nav-admin-item">
-        <button class="nav-admin-btn">Listes <svg viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 1l4 4 4-4"/></svg></button>
+        <button class="nav-admin-btn" onclick="toggleDropdownAdmin(this)">Listes <svg viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 1l4 4 4-4"/></svg></button>
         <div class="nav-dropdown">
           <button class="nav-dropdown-item bientot">Les produits</button>
           <button class="nav-dropdown-item bientot">Inventaire</button>
@@ -59,7 +59,7 @@
         </div>
       </li>
       <li class="nav-admin-item">
-        <button class="nav-admin-btn">Système <svg viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 1l4 4 4-4"/></svg></button>
+        <button class="nav-admin-btn" onclick="toggleDropdownAdmin(this)">Système <svg viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 1l4 4 4-4"/></svg></button>
         <div class="nav-dropdown">
           <button class="nav-dropdown-item" onclick="afficherSection('densites', null)">Densité</button>
           <button class="nav-dropdown-item" onclick="afficherSection('contenu-site', null)">Contenu du site</button>
@@ -130,7 +130,7 @@
         <div class="accueil-admin">
       <div class="accueil-gauche">
                     <img src="../Images/Logofinal.png" alt="Univers Caresse" class="hero-logo-img fade-in delay-2">
-            <div class="accueil-chantal fade-in delay-3">Bonjouraa <span class="accueil-bonjour">Chantal</span></div>
+            <div class="accueil-chantal fade-in delay-3">Bonjouraaa <span class="accueil-bonjour">Chantal</span></div>
             <div class="hero-stats fade-in delay-5">
                 <div>
                 <div class="hero-stat-num" id="admin-stat-collections">—</div>

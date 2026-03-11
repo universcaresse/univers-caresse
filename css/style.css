@@ -992,7 +992,7 @@ tr:hover td { background: rgba(232,220,200,0.15); }
   }
   .nav-admin-btn:hover { color: var(--primary); }
   .nav-admin-btn svg { width: 10px; height: 10px; transition: transform 0.2s; }
-  .nav-admin-item:hover .nav-admin-btn svg { transform: rotate(180deg); }
+  .nav-admin-item.ouvert .nav-admin-btn svg { transform: rotate(180deg); }
 
 .nav-dropdown {
     display: none;
@@ -1006,7 +1006,7 @@ tr:hover td { background: rgba(232,220,200,0.15); }
     min-width: 180px;
     z-index: 150;
   }
-  .nav-admin-item:hover .nav-dropdown { display: block; }
+  .nav-admin-item.ouvert .nav-dropdown { display: block; }
 
   .nav-dropdown-item {
     display: block;

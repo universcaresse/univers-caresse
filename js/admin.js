@@ -19,8 +19,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 // ─── NAVIGATION SIDEBAR ───
+function toggleDropdownAdmin(el) {
+  const item = el.closest('.nav-admin-item');
+  const estOuvert = item.classList.contains('ouvert');
+  document.querySelectorAll('.nav-admin-item.ouvert').forEach(i => i.classList.remove('ouvert'));
+  if (!estOuvert) item.classList.add('ouvert');
+}
+
 function afficherSection(id, bouton) {
-  if (document.activeElement) document.activeElement.blur();
+  document.querySelectorAll('.nav-admin-item.ouvert').forEach(i => i.classList.remove('ouvert'));
   document.querySelectorAll('.section-admin').forEach(s => s.classList.remove('visible'));
   document.querySelectorAll('.sidebar-lien').forEach(l => l.classList.remove('actif'));
   fermerFicheCollection();
