@@ -20,6 +20,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 // ─── NAVIGATION SIDEBAR ───
 function afficherSection(id, bouton) {
+  if (document.activeElement) document.activeElement.blur();
   document.querySelectorAll('.section-admin').forEach(s => s.classList.remove('visible'));
   document.querySelectorAll('.sidebar-lien').forEach(l => l.classList.remove('actif'));
   fermerFicheCollection();
@@ -27,6 +28,7 @@ function afficherSection(id, bouton) {
   if (s) s.classList.add('visible');
   if (bouton) bouton.classList.add('actif');
   fermerSidebarMobile();
+  document.querySelectorAll('.nav-admin-btn').forEach(b => b.blur());
   window.scrollTo(0, 0);
   document.body.scrollTop = 0;
   document.documentElement.scrollTop = 0;
