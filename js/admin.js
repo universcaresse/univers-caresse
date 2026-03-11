@@ -265,6 +265,9 @@ function ouvrirFormCollection() {
   ['fc-photo-preview','fc-photo-preview-ligne'].forEach(id => {
     const e = document.getElementById(id); if (e) e.innerHTML = '';
   });
+  ['fc-couleur-apercu','fc-couleur-apercu-ligne'].forEach(id => {
+    const e = document.getElementById(id); if (e) e.style.background = '';
+  });
   ingredientsBase = [];
   rafraichirListeIngredientsBase();
   document.getElementById('contenu-collections').classList.add('cache');
