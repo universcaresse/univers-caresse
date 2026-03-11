@@ -43,7 +43,7 @@ function afficherSection(id, bouton) {
   if (contenu) contenu.scrollTop = 0;
 if (id === 'accueil')        chargerStatsAccueil();
 if (id === 'collections')    { chargerCollections(); chargerListesFournisseurs(); }
-  if (id === 'recettes')       chargerRecettes();
+ if (id === 'recettes')       { chargerRecettes(); chargerListesFournisseurs(); }
   if (id === 'densites')       chargerDensites();
   if (id === 'inventaire')     chargerInventaire();
   if (id === 'factures')       chargerFactures();
