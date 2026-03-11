@@ -218,6 +218,8 @@ document.getElementById('fiche-collection-bandeau').style.background = '';
   const photo   = groupe.info.photo_url   || '';
   let ficheExtrasHtml = '';
   if (couleur) ficheExtrasHtml += `<div class="fiche-collection-couleur"><span class="couleur-apercu" style="background:${couleur}"></span> ${couleur}</div>`;
+  const rang = groupe.info.rang || '';
+  if (rang)    ficheExtrasHtml += `<div class="fiche-collection-rang"><strong>Rang :</strong> ${rang}</div>`;
   if (photo)   ficheExtrasHtml += `<div class="fiche-collection-photo"><img src="${photo}" alt="Photo collection"></div>`;
   const ficheExtras = document.getElementById('fiche-collection-extras');
   if (ficheExtras) ficheExtras.innerHTML = ficheExtrasHtml;
