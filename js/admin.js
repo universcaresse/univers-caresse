@@ -1,1192 +1,1731 @@
-/* ═══════════════════════════════════════
-   UNIVERS CARESSE — style.css
-   Source unique — public + admin
-   Mis à jour : 5 mars 2026
-   ═══════════════════════════════════════ */
+/* UNIVERS CARESSE — admin.js */
 
-/* ═══════════════════════════════════════
-   VARIABLES
-   ═══════════════════════════════════════ */
+// INITIALISATION
+
+document.addEventListener('DOMContentLoaded', async () => {
+  const session = sessionStorage.getItem('uc_admin');
+  if (session !== 'true') {
+    window.location.href = '/univers-caresse/admin/login.html';
+    return;
+  }
+  document.getElementById('ecran-connexion').classList.add('cache');
+  chargerStatsAccueil();
+  const dateField = document.getElementById('nf-date');
+  if (dateField) dateField.value = new Date().toISOString().split('T')[0];
+  initBurgerAdmin();
+  await chargerCollections();
+});
+
+// NAVIGATION SIDEBAR
+function toggleDropdownAdmin(el) {
+  const item = el.closest('.nav-admin-item');
+  const estOuvert = item.classList.contains('ouvert');
+  document.querySelectorAll('.nav-admin-item.ouvert').forEach(i => i.classList.remove('ouvert'));
+  if (!estOuvert) item.classList.add('ouvert');
+}
+
+function afficherSection(id, bouton) {
+  document.querySelectorAll('.nav-admin-item.ouvert').forEach(i => i.classList.remove('ouvert'));
+  document.querySelectorAll('.section-admin').forEach(s => s.classList.remove('visible'));
+  document.querySelectorAll('.sidebar-lien').forEach(l => l.classList.remove('actif'));
+  fermerFicheCollection();
+   const s = document.getElementById('section-' + id);
+  if (s) s.classList.add('visible');
+  if (bouton) bouton.classList.add('actif');
+  fermerSidebarMobile();
+  document.querySelectorAll('.nav-admin-btn').forEach(b => b.blur());
+  window.scrollTo(0, 0);
+  document.body.scrollTop = 0;
+  document.documentElement.scrollTop = 0;
+  const contenu = document.querySelector('.admin-contenu');
+  if (contenu) contenu.scrollTop = 0;
+if (id === 'accueil')        chargerStatsAccueil();
+if (id === 'collections')    { chargerCollections(); chargerListesFournisseurs(); }
+  if (id === 'recettes')       chargerRecettes();
+  if (id === 'densites')       chargerDensites();
+  if (id === 'inventaire')     chargerInventaire();
+  if (id === 'factures')       chargerFactures();
+ if (id === 'nouvelle-facture' && !factureActive) initialiserNouvelleFacture();
+if (id === 'contenu-site')    chargerContenuSite();
+}
+
+// STATS ACCUEIL
+async function chargerStatsAccueil() {
+  try {
+   const resCol = await appelAPI('getCollectionsPublic');
+    if (resCol && resCol.collections) {
+      document.getElementById('admin-stat-collections').textContent = resCol.collections.length;
+    }
+    const resRec = await appelAPI('getRecettes');
+    if (resRec && resRec.recettes) {
+      const nb = resRec.recettes.filter(r => r.statut === 'public').length;
+      document.getElementById('admin-stat-produits').textContent = nb + '+';
+    }
+  } catch(err) {}
+}
+
+// BURGER MOBILE
+function initBurgerAdmin() {
+  const overlay = document.getElementById('sidebar-overlay');
+  if (overlay) overlay.addEventListener('click', fermerSidebarMobile);
+  const burger = document.getElementById('burger-admin');
+  if (burger) burger.addEventListener('click', function(e) { e.stopPropagation(); });
+  let dernierScroll = 0;
+  window.addEventListener('scroll', () => {
+    if (!burger || window.innerWidth > 900) return;
+    const scrollActuel = window.scrollY;
+    if (scrollActuel > dernierScroll && scrollActuel > 60) {
+      burger.classList.add('cache-scroll');
+    } else {
+      burger.classList.remove('cache-scroll');
+    }
+    dernierScroll = scrollActuel;
+  });
+}
+
+function toggleSidebarAdmin() {
+ 
+  document.getElementById('sidebar-admin').classList.toggle('ouvert');
+  document.getElementById('sidebar-overlay').classList.toggle('visible');
+}
+
+function fermerSidebarMobile() {
+  const sidebar = document.getElementById('sidebar-admin');
+  const overlay = document.getElementById('sidebar-overlay');
+  if (sidebar) sidebar.classList.remove('ouvert');
+  if (overlay) overlay.classList.remove('visible');
+}
+
+// MESSAGES
+function afficherMsg(zone, texte, type = 'succes') {
+  const el = document.getElementById('msg-' + zone);
+  if (el) {
+    el.innerHTML = `<div class="msg msg-${type}">${texte}</div>`;
+    setTimeout(() => { el.innerHTML = ''; }, 4000);
+  }
+  let toast = document.getElementById('toast-global');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'toast-global';
+    toast.className = 'toast';
+    document.body.appendChild(toast);
+  }
+  toast.textContent = texte;
+  toast.className = `toast toast-${type}`;
+  setTimeout(() => toast.classList.add('visible'), 10);
+  setTimeout(() => toast.classList.remove('visible'), 3000);
+}
+
+// COULEUR PAR NOM
+function couleurTexteContraste(hex) {
+  if (!hex || !hex.startsWith('#')) return 'carte-infos-clair';
+  const r = parseInt(hex.slice(1,3), 16);
+  const g = parseInt(hex.slice(3,5), 16);
+  const b = parseInt(hex.slice(5,7), 16);
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  return luminance > 0.6 ? 'carte-infos-fonce' : 'carte-infos-clair';
+}
+
+function stringToColor(str) {
+  const palette = ['#5a8a3a','#4a7c9e','#9b6b9b','#c4773a','#3a8a7a','#8a5a3a','#6b7a3a','#9b3a5a','#3a5a8a'];
+  let h = 0;
+  for (let i = 0; i < str.length; i++) h = str.charCodeAt(i) + ((h << 5) - h);
+  return palette[Math.abs(h) % palette.length];
+}
+
+// COLLECTIONS
+let donneesCollections = [];
+ 
+async function chargerCollections() {
+  const loading = document.getElementById('loading-collections');
+  const contenu = document.getElementById('contenu-collections');
+  const vide    = document.getElementById('vide-collections');
+  loading.classList.remove('cache');
+  contenu.innerHTML = '';
+  vide.classList.add('cache');
+
+  const res = await appelAPI('getCollections');
+  loading.classList.add('cache');
+  if (!res || !res.success) { afficherMsg('collections', 'Erreur lors du chargement.', 'erreur'); return; }
+  donneesCollections = res.items || [];
+  if (!donneesCollections.length) { vide.classList.remove('cache'); return; }
+
+  const groupes = {};
+  donneesCollections.forEach(item => {
+    if (!groupes[item.collection]) {
+      groupes[item.collection] = { slogan: item.slogan, couleur_hex: item.couleur_hex, lignes: [] };
+    }
+    if (item.ligne) groupes[item.collection].lignes.push(item);
+  });
+
+  let html = '<div class="collections-grille">';
+  Object.entries(groupes).forEach(([col, data]) => {
+    const couleurs = couleurCollection(col, data.couleur_hex);
+    const lignesHtml = data.lignes.map(item =>
+ `<span class="collection-carte-ligne-tag">${String(item.ligne || '').toUpperCase()}</span>`
+    ).join('');
+    html += `
+      <div class="collection-carte" onclick="ouvrirFicheCollection('${col.replace(/'/g, "\\'")}')">
+        <div class="collection-carte-bg" style="background:linear-gradient(145deg,${couleurs[0]},${couleurs[1]});"></div>
+        <div class="collection-carte-overlay"></div>
+   <div class="collection-carte-lignes-haut">${lignesHtml}</div>
+        <div class="collection-carte-contenu">
+          <span class="collection-carte-nom">${col.toUpperCase()}</span>
+          <span class="collection-carte-slogan">${data.slogan || ''}</span>
+        </div>
+      </div>`;
+  });
+  html += '</div>';
+  contenu.innerHTML = html;
+}
+
+function ouvrirFicheCollection(col) {
+  const groupe = {};
+  donneesCollections.forEach(item => {
+    if (item.collection === col) {
+      if (!groupe.info) {
+        groupe.info = item;
+      }
+      if (item.ligne) {
+        if (!groupe.lignes) groupe.lignes = [];
+        groupe.lignes.push(item);
+      }
+    }
+  });
+  if (!groupe.info) return;
+
+  const couleurs = couleurCollection(col, groupe.info.couleur_hex);
+  const lignesHtml = (groupe.lignes || []).map(item => `
+    <div class="fiche-ligne-item">
+      <div class="fiche-ligne-info">
+        <span class="fiche-ligne-nom">${item.ligne.toUpperCase()}</span>
+        ${item.format ? `<span class="fiche-ligne-format">${item.format}</span>` : ''}
+        ${item.description_ligne ? `<p class="fiche-ligne-desc">${item.description_ligne}</p>` : ''}
+      </div>
+      <button class="btn btn-sm btn-edit" onclick="modifierCollection(${item.rowIndex})">Modifier</button>
+    </div>`).join('');
+
+  const fiche = document.getElementById('fiche-collection');
+  document.getElementById('fiche-collection-titre').textContent = col.toUpperCase();
+document.getElementById('fiche-collection-bandeau').style.background = '';
+  document.getElementById('fiche-collection-slogan').textContent = groupe.info.slogan || '';
+ document.getElementById('fiche-collection-desc').textContent = groupe.info.description_collection || '';
+  const couleur = groupe.info.couleur_hex || '';
+  const photo   = groupe.info.photo_url   || '';
+  const rang = groupe.info.rang || '';
+  let ficheExtrasHtml = '';
+  let wrapHtml = '';
+  if (couleur) wrapHtml += `<div class="fiche-collection-couleur" style="background:${couleur}"></div>`;
+  if (photo)   wrapHtml += `<div class="fiche-collection-photo"><img src="${photo}" alt="Photo collection"></div>`;
+  if (wrapHtml) ficheExtrasHtml += `<div class="fiche-collection-extras-wrap">${wrapHtml}</div>`;
+  if (rang)    ficheExtrasHtml += `<div class="fiche-collection-rang">Rang : ${rang}</div>`;
+  const ficheExtras = document.getElementById('fiche-collection-extras');
+  if (ficheExtras) ficheExtras.innerHTML = ficheExtrasHtml;
+  document.getElementById('fiche-collection-lignes').innerHTML = lignesHtml || '<p class="vide-desc">Aucune ligne</p>';
+document.getElementById('fiche-collection-modifier').onclick = () => {
+    fermerFicheCollection();
+    modifierCollection(groupe.info.rowIndex);
+  };
+document.getElementById('fiche-collection-ajouter-ligne').onclick = () => {
+    fermerFicheCollection();
+    ouvrirFormCollectionPour(col);
+    basculerModeFormCollection();
+  };
+ fiche.classList.add('visible');
+const conteneur = document.querySelector('.admin-contenu');
+  if (conteneur) conteneur.scrollTop = 0;
+}
+
+function fermerFicheCollection() {
+  document.getElementById('fiche-collection').classList.remove('visible');
+}
+
+
+
+
+
+function ouvrirFormCollectionPour(col) {
+  ouvrirFormCollection();
+  document.getElementById('fc-collection').value = col;
+}
+
+function ouvrirFormCollection() {
+  document.getElementById('form-collections-titre').textContent = 'Nouvelle collection';
+  document.getElementById('fc-rowIndex').value = '';
+  document.getElementById('fc-mode').value = 'collection';
+  document.getElementById('fc-bloc-collection').classList.remove('cache');
+  document.getElementById('fc-bloc-ligne').classList.add('cache');
+  document.getElementById('fc-toggle-mode').textContent = '+ Ajouter une ligne';
+  ['fc-rang','fc-collection','fc-slogan','fc-desc-col','fc-couleur-hex','fc-photo-url',
+   'fc-ligne','fc-format','fc-desc-ligne','fc-couleur-hex-ligne','fc-photo-url-ligne','fc-collection-ligne']
+    .forEach(id => { const e = document.getElementById(id); if (e) e.value = ''; });
+  ['fc-photo-preview','fc-photo-preview-ligne'].forEach(id => {
+    const e = document.getElementById(id); if (e) e.innerHTML = '';
+  });
+  ingredientsBase = [];
+  rafraichirListeIngredientsBase();
+  document.getElementById('contenu-collections').classList.add('cache');
+  document.getElementById('form-collections').classList.add('visible');
+  document.getElementById('fc-rang').focus();
+}
+function confirmerAction(message, callback) {
+  document.getElementById('modal-confirm-message').textContent = message;
+  document.getElementById('modal-confirm-btn').onclick = () => { fermerModalConfirm(); callback(); };
+  document.getElementById('modal-confirm').classList.remove('cache');
+}
+
+function fermerModalConfirm() {
+  document.getElementById('modal-confirm').classList.add('cache');
+}
+
+function fermerFormCollection() {
+  document.getElementById('contenu-collections').classList.remove('cache');
+  document.getElementById('form-collections').classList.remove('visible');
+}
+
+async function modifierCollection(rowIndex) {
+  const item = donneesCollections.find(i => i.rowIndex === rowIndex);
+  if (!item) return;
+  document.getElementById('form-collections-titre').textContent = 'Modifier l\'entrée';
+  document.getElementById('fc-rowIndex').value          = rowIndex;
+  document.getElementById('fc-rang').value              = item.rang || '';
+  document.getElementById('fc-collection').value        = item.collection || '';
+  document.getElementById('fc-slogan').value            = item.slogan || '';
+  document.getElementById('fc-desc-col').value          = item.description_collection || '';
+  document.getElementById('fc-ligne').value             = item.ligne || '';
+  document.getElementById('fc-format').value            = item.format || '';
+  document.getElementById('fc-desc-ligne').value        = item.description_ligne || '';
+document.getElementById('fc-couleur-hex').value       = item.couleur_hex || 'var(--gris)';
+  apercuCouleurCollection(document.getElementById('fc-couleur-hex'));
+  document.getElementById('fc-photo-url').value         = item.photo_url || '';
+  const preview = document.getElementById('fc-photo-preview');
+  if (preview) preview.innerHTML = item.photo_url ? `<img src="${item.photo_url}" class="photo-preview">` : '';
+  const res = await appelAPI('getRecettesBase');
+  ingredientsBase = (res && res.items ? res.items : [])
+    .filter(i => i.collection === item.collection && i.ligne === item.ligne)
+    .map(i => ({ type: i.ingredient_type, nom: i.ingredient_nom, quantite: i.quantite_g }));
+  rafraichirListeIngredientsBase();
+  document.getElementById('form-collections').classList.add('visible');
+  document.getElementById('fc-collection').focus();
+}
+
+
+async function sauvegarderCollection() {
+  const btnSauvegarder = document.querySelector('#form-collections .btn-primary');
+  if (btnSauvegarder) { btnSauvegarder.disabled = true; btnSauvegarder.innerHTML = '<span class="spinner"></span> Sauvegarde…'; }
+  const rowIndex = document.getElementById('fc-rowIndex').value;
+  const mode     = document.getElementById('fc-mode').value;
+
+  if (mode === 'ligne') {
+    const col   = document.getElementById('fc-collection-ligne').value;
+    const ligne = document.getElementById('fc-ligne').value.toUpperCase();
+    if (!col || !ligne) {
+      if (btnSauvegarder) { btnSauvegarder.disabled = false; btnSauvegarder.innerHTML = 'Enregistrer'; }
+      afficherMsg('collections', 'Le nom de la ligne est requis.', 'erreur');
+      return;
+    }
+    await appelAPIPost('saveRecetteBase', {
+      collection: col,
+      ligne,
+      ingredients: ingredientsBase.map(i => ({ type: i.type, nom: i.nom, quantite_g: i.quantite }))
+    });
+ const infoCol = donneesCollections.find(i => i.collection === col);
+    const d = {
+      collection:        col,
+      ligne,
+      format:            document.getElementById('fc-format').value,
+      description_ligne: document.getElementById('fc-desc-ligne').value,
+      couleur_hex:       document.getElementById('fc-couleur-hex-ligne').value,
+      photo_url:         document.getElementById('fc-photo-url-ligne').value,
+      rang:              infoCol ? infoCol.rang : '',
+      slogan:            infoCol ? infoCol.slogan : '',
+      description_collection: infoCol ? infoCol.description_collection : ''
+    };
+    const res = await appelAPIPost('addCollectionItem', d);
+    if (res && res.success) {
+      if (btnSauvegarder) { btnSauvegarder.disabled = false; btnSauvegarder.innerHTML = 'Enregistrer'; }
+      fermerFormCollection();
+      afficherMsg('collections', 'Ligne ajoutée.');
+       await chargerCollections();
+    } else {
+      afficherMsg('collections', 'Erreur lors de la sauvegarde.', 'erreur');
+      if (btnSauvegarder) { btnSauvegarder.disabled = false; btnSauvegarder.innerHTML = 'Enregistrer'; }
+    }
+    return;
+  }
+
+  const d = {
+    rang:                   document.getElementById('fc-rang').value,
+    collection:             document.getElementById('fc-collection').value.toUpperCase(),
+    slogan:                 document.getElementById('fc-slogan').value,
+    description_collection: document.getElementById('fc-desc-col').value,
+    couleur_hex:            document.getElementById('fc-couleur-hex').value,
+    photo_url:              document.getElementById('fc-photo-url').value,
+  };
+  if (!d.collection) {
+    if (btnSauvegarder) { btnSauvegarder.disabled = false; btnSauvegarder.innerHTML = 'Enregistrer'; }
+    afficherMsg('collections', 'Le nom de la collection est requis.', 'erreur');
+    return;
+  }
+  const res = rowIndex
+    ? await appelAPIPost('updateCollectionItem', { ...d, rowIndex: parseInt(rowIndex) })
+    : await appelAPIPost('addCollectionItem', d);
+  if (res && res.success) {
+    if (btnSauvegarder) { btnSauvegarder.disabled = false; btnSauvegarder.innerHTML = 'Enregistrer'; }
+    fermerFormCollection();
+    afficherMsg('collections', rowIndex ? 'Entrée mise à jour.' : 'Entrée ajoutée.');
+    chargerCollections();
+  } else {
+    afficherMsg('collections', 'Erreur lors de la sauvegarde.', 'erreur');
+    if (btnSauvegarder) { btnSauvegarder.disabled = false; btnSauvegarder.innerHTML = 'Enregistrer'; }
+  }
+}
+
+function supprimerLigne(rowIndex) {
+  confirmerAction('Supprimer cette ligne ?', async () => {
+    const res = await appelAPIPost('deleteCollectionItem', { rowIndex });
+    if (res && res.success) {
+      afficherMsg('collections', 'Ligne supprimée.');
+      await chargerCollections();
+    } else {
+      afficherMsg('collections', 'Erreur.', 'erreur');
+    }
+  });
+}
+
+// RECETTES
+let donneesRecettes = [];
+let recetteActive = null;
+let collectionsDisponibles = {};
+
+async function chargerRecettes() {
+  const loading = document.getElementById('loading-recettes');
+  const grille  = document.getElementById('grille-recettes');
+  const vide    = document.getElementById('vide-recettes');
+  loading.classList.remove('cache');
+  grille.classList.add('cache');
+  vide.classList.add('cache');
+  document.getElementById('filtre-recette-collection').value = '';
+  document.getElementById('filtre-recette-ligne').innerHTML  = '<option value="">Toutes les lignes</option>';
+  document.getElementById('filtre-recette-ligne').disabled   = true;
+
+   const res = await appelAPI('getRecettes');
+
+ if (!res || !res.success) { loading.classList.add('cache'); afficherMsg('recettes', 'Erreur.', 'erreur'); return; }
+  donneesRecettes = (res.recettes || []).sort((a, b) =>
+    (parseInt(a.rang) || 99) - (parseInt(b.rang) || 99) ||
+    (a.ligne || '').localeCompare(b.ligne || '') ||
+    (a.nom || '').localeCompare(b.nom || '')
+  );
+  await chargerCollectionsPourSelecteur();
+
+  if (!donneesRecettes.length) { loading.classList.add('cache'); vide.classList.remove('cache'); return; }
+
+  grille.innerHTML = '';
+  loading.classList.add('cache');
+  grille.classList.remove('cache');
+
+  const parCollection = {};
+  const ordreCollections = [];
+  donneesRecettes.forEach(rec => {
+    const col = rec.collection || '—';
+    if (!parCollection[col]) { parCollection[col] = {}; ordreCollections.push(col); }
+    const ligne = rec.ligne || '';
+    if (!parCollection[col][ligne]) parCollection[col][ligne] = [];
+    parCollection[col][ligne].push(rec);
+  });
+
+  ordreCollections.forEach(col => {
+    const secCol = document.createElement('div');
+    secCol.className = 'recette-section-collection';
+    secCol.dataset.collection = col;
+    secCol.innerHTML = `<div class="recette-collection-titre">${col.toUpperCase()}</div>`;
+
+    const lignes = parCollection[col];
+    Object.keys(lignes).forEach(ligne => {
+      const secLigne = document.createElement('div');
+      secLigne.className = 'recette-section-ligne';
+      secLigne.dataset.ligne = ligne;
+      if (ligne) {
+        secLigne.innerHTML = `<div class="recette-ligne-titre">${ligne.toUpperCase()}</div>`;
+      }
+      const grilleInner = document.createElement('div');
+      grilleInner.className = 'recette-cartes-grille';
+
+      lignes[ligne].forEach(rec => {
+        const couleur = rec.couleur_hex || 'var(--gris)';
+        const div = document.createElement('div');
+        div.className = 'recette-carte';
+        div.onclick = () => ouvrirFicheRecette(rec.recette_id);
+        div.style.setProperty('--col-hex', couleur);
+        div.innerHTML = `
+          <div class="recette-visuel">
+            <div class="recette-couleur">
+              ${rec.image_url
+                ? `<img src="${rec.image_url}" alt="${rec.nom}" onerror="this.style.display='none'">`
+                : `<div class="recette-photo-placeholder">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                      <rect x="3" y="3" width="18" height="18" rx="2"/>
+                      <circle cx="8.5" cy="8.5" r="1.5"/>
+                      <polyline points="21 15 16 10 5 21"/>
+                    </svg>
+                    Photo à venir
+                  </div>`}
+              <div class="recette-couleur-overlay"></div>
+              <div class="recette-dot"></div>
+            </div>
+          </div>
+          <div class="recette-infos ${couleurTexteContraste(couleur)}">
+            <span class="recette-badge">${rec.collection || '—'}</span>
+            <span class="recette-statut-badge recette-statut-${rec.statut || 'test'}">${rec.statut === 'public' ? 'Public' : 'Test'}</span>
+            <div class="recette-nom">${rec.nom || '—'}</div>
+            <div class="recette-ligne">${rec.ligne || ''}</div>
+            <div class="recette-bas">
+              <span class="recette-prix">${rec.prix_vente ? formaterPrix(rec.prix_vente) : '—\u00a0$'}</span>
+              ${rec.format ? `<span class="recette-format">${rec.format}</span>` : ''}
+            </div>
+          </div>`;
+        grilleInner.appendChild(div);
+      });
+
+      secLigne.appendChild(grilleInner);
+      secCol.appendChild(secLigne);
+    });
+
+    grille.appendChild(secCol);
+  });
+  peuplerFiltresRecettes();
+}
+
+function peuplerFiltresRecettes() {
+  const sel = document.getElementById('filtre-recette-collection');
+  const valActuelle = sel.value;
+  sel.innerHTML = '<option value="">Toutes les collections</option>';
+  const collections = [...new Set(donneesRecettes.map(r => r.collection).filter(Boolean))].sort();
+  collections.forEach(col => {
+    const opt = document.createElement('option');
+    opt.value = col; opt.textContent = col;
+    sel.appendChild(opt);
+  });
+  sel.value = valActuelle;
+}
+
+function onFiltreCollection() {
+  const col = document.getElementById('filtre-recette-collection').value;
+  const selLigne = document.getElementById('filtre-recette-ligne');
+  selLigne.innerHTML = '<option value="">Toutes les lignes</option>';
+  if (col) {
+    const lignes = [...new Set(donneesRecettes.filter(r => r.collection === col).map(r => r.ligne).filter(Boolean))].sort();
+    lignes.forEach(l => {
+      const opt = document.createElement('option');
+      opt.value = l; opt.textContent = l;
+      selLigne.appendChild(opt);
+    });
+    selLigne.disabled = false;
+  } else {
+    selLigne.disabled = true;
+  }
+  filtrerRecettes();
+}
+
+function filtrerRecettes() {
+  const col    = document.getElementById('filtre-recette-collection').value;
+  const ligne  = document.getElementById('filtre-recette-ligne').value;
+  const statut = document.getElementById('filtre-recette-statut').value;
+  const nom    = (document.getElementById('filtre-recette-nom').value || '').toLowerCase().trim();
+  const cartes = document.querySelectorAll('#grille-recettes .recette-carte');
+  const vide   = document.getElementById('vide-recettes');
+  let visible  = 0;
+  cartes.forEach(carte => {
+    const rec = donneesRecettes.find(r => r.nom === carte.querySelector('.recette-nom').textContent);
+    if (!rec) return;
+    const ok = (!col || rec.collection === col)
+            && (!ligne || rec.ligne === ligne)
+            && (!statut || (rec.statut || 'test') === statut)
+            && (!nom || rec.nom.toLowerCase().includes(nom));
+    carte.classList.toggle('cache', !ok);
+    if (ok) visible++;
+  });
+  vide.classList.toggle('cache', visible !== 0);
+
+  document.querySelectorAll('#grille-recettes .recette-section-collection').forEach(sec => {
+    const ok = !col || sec.dataset.collection === col;
+    sec.classList.toggle('cache', !ok);
+  });
+
+  document.querySelectorAll('#grille-recettes .recette-section-ligne').forEach(sec => {
+    const secCol = sec.closest('.recette-section-collection');
+    const okCol = !col || secCol?.dataset.collection === col;
+    const okLigne = !ligne || sec.dataset.ligne === ligne;
+    sec.classList.toggle('cache', !(okCol && okLigne));
+  });
+}
+
+function reinitialiserFiltresRecettes() {
+  document.getElementById('filtre-recette-collection').value = '';
+  document.getElementById('filtre-recette-ligne').value = '';
+  document.getElementById('filtre-recette-statut').value = '';
+  document.getElementById('filtre-recette-nom').value = '';
+  document.getElementById('filtre-recette-ligne').disabled = true;
+  filtrerRecettes();
+}
+
+
+
    
-:root {
-  --primary:        #5a8a3a;
-  --primary-dark:   #4a6e2e;
-  --accent:         #d4a445;
-  --danger:         #c44536;
-  --blanc:          #f9f7f4;
-  --beige:          #e8dcc8;
-  --gris:           #8b8680;
-  --gris-fonce:     #3d3b39;
-  --logo:           #333333;
-  --nav-h:          72px;
-  --padding-page:   80px;
-  --padding-mobile: 20px;
-
-  /* PRIMARY */
-  --primary-04:    rgba(90,138,58,0.04);
-  --primary-05:     rgba(90,138,58,0.05);
-  --primary-06:     rgba(90,138,58,0.06);
-  --primary-08:     rgba(90,138,58,0.08);
-  --primary-10:     rgba(90,138,58,0.10);
-  --primary-12:     rgba(90,138,58,0.12);
-  --primary-15:     rgba(90,138,58,0.15);
-  --primary-16:     rgba(90,138,58,0.16);
-  --primary-18:     rgba(90,138,58,0.18);
-  --primary-20:     rgba(90,138,58,0.20);
-  --primary-30:     rgba(90,138,58,0.30);
-  --primary-40:     rgba(90,138,58,0.40);
-  --primary-50:     rgba(90,138,58,0.50);
-  --primary-60:     rgba(90,138,58,0.60);
-  --primary-70:     rgba(90,138,58,0.70);
-  --primary-75:     rgba(90,138,58,0.75);
-  --primary-80:     rgba(90,138,58,0.80);
-  --primary-85:     rgba(90,138,58,0.85);
-  --primary-88:     rgba(90,138,58,0.88);
-  --primary-90:     rgba(90,138,58,0.90);
-
-  /* DANGER */
-  --danger-06:      rgba(196,69,54,0.06);
-  --danger-08:      rgba(196,69,54,0.08);
-  --danger-10:      rgba(196,69,54,0.10);
-  --danger-15:      rgba(196,69,54,0.15);
-  --danger-16:      rgba(196,69,54,0.16);
-  --danger-20:      rgba(196,69,54,0.20);
-  --danger-30:      rgba(196,69,54,0.30);
-  --danger-40:      rgba(196,69,54,0.40);
-  --danger-50:      rgba(196,69,54,0.50);
-  --danger-60:      rgba(196,69,54,0.60);
-  --danger-70:      rgba(196,69,54,0.70);
-  --danger-75:      rgba(196,69,54,0.75);
-  --danger-80:      rgba(196,69,54,0.80);
-  --danger-85:      rgba(196,69,54,0.85);
-  --danger-88:      rgba(196,69,54,0.88);
-  --danger-90:      rgba(196,69,54,0.90);
-
-  /* ACCENT */
-  --accent-08:      rgba(212,164,69,0.08);
-  --accent-10:      rgba(212,164,69,0.10);
-  --accent-12:      rgba(212,164,69,0.12);
-  --accent-15:      rgba(212,164,69,0.15);
-  --accent-20:      rgba(212,164,69,0.20);
-  --accent-30:      rgba(212,164,69,0.30);
-  --accent-40:      rgba(212,164,69,0.40);
-  --accent-50:      rgba(212,164,69,0.50);
-  --accent-60:      rgba(212,164,69,0.60);
-  --accent-70:      rgba(212,164,69,0.70);
-  --accent-75:      rgba(212,164,69,0.75);
-  --accent-80:      rgba(212,164,69,0.80);
-  --accent-85:      rgba(212,164,69,0.85);
-  --accent-88:      rgba(212,164,69,0.88);
-  --accent-90:      rgba(212,164,69,0.90);
-
-  /* BEIGE */
-  --beige-08:       rgba(232,220,200,0.08);
-  --beige-10:       rgba(232,220,200,0.10);
-  --beige-15:       rgba(232,220,200,0.15);
-  --beige-20:       rgba(232,220,200,0.20);
-  --beige-30:       rgba(232,220,200,0.30);
-  --beige-40:       rgba(232,220,200,0.40);
-  --beige-50:       rgba(232,220,200,0.50);
-  --beige-60:       rgba(232,220,200,0.60);
-  --beige-70:       rgba(232,220,200,0.70);
-  --beige-75:       rgba(232,220,200,0.75);
-  --beige-80:       rgba(232,220,200,0.80);
-  --beige-85:       rgba(232,220,200,0.85);
-  --beige-88:       rgba(232,220,200,0.88);
-  --beige-90:       rgba(232,220,200,0.90);
-
-  /* BLANC */
-  --blanc-15:       rgba(249,247,244,0.15);
-  --blanc-20:       rgba(249,247,244,0.20);
-  --blanc-30:       rgba(249,247,244,0.30);
-  --blanc-40:       rgba(249,247,244,0.40);
-  --blanc-50:       rgba(249,247,244,0.50);
-  --blanc-60:       rgba(249,247,244,0.60);
-  --blanc-70:       rgba(249,247,244,0.70);
-  --blanc-75:       rgba(249,247,244,0.75);
-  --blanc-80:       rgba(249,247,244,0.80);
-  --blanc-85:       rgba(249,247,244,0.85);
-  --blanc-88:       rgba(249,247,244,0.88);
-  --blanc-90:       rgba(249,247,244,0.90);
-  --blanc-92:       rgba(249,247,244,0.92);
-
-  /* BLANC PUR */
-  --blanc-pur-15:   rgba(255,255,255,0.15);
-  --blanc-pur-45:   rgba(255,255,255,0.45);
-  --blanc-pur-50:   rgba(255,255,255,0.50);
-  --blanc-pur-60:   rgba(255,255,255,0.60);
-  --blanc-pur-65:   rgba(255,255,255,0.65);
-  --blanc-pur-70:   rgba(255,255,255,0.70);
-  --blanc-pur-75:   rgba(255,255,255,0.75);
-  --blanc-pur-80:   rgba(255,255,255,0.80);
-  --blanc-pur-85:   rgba(255,255,255,0.85);
-  --blanc-pur-88:   rgba(255,255,255,0.88);
-  --blanc-pur-90:   rgba(255,255,255,0.90);
-
-  /* GRIS */
-  --gris-08:        rgba(139,134,128,0.08);
-  --gris-10:        rgba(139,134,128,0.10);
-  --gris-15:        rgba(139,134,128,0.15);
-  --gris-20:        rgba(139,134,128,0.20);
-  --gris-30:        rgba(139,134,128,0.30);
-  --gris-40:        rgba(139,134,128,0.40);
-  --gris-50:        rgba(139,134,128,0.50);
-  --gris-60:        rgba(139,134,128,0.60);
-  --gris-70:        rgba(139,134,128,0.70);
-  --gris-75:        rgba(139,134,128,0.75);
-  --gris-80:        rgba(139,134,128,0.80);
-  --gris-85:        rgba(139,134,128,0.85);
-  --gris-88:        rgba(139,134,128,0.88);
-  --gris-90:        rgba(139,134,128,0.90);
-
-  /* GRIS FONCÉ */
-  --gris-fonce-08:  rgba(61,59,57,0.08);
-  --gris-fonce-10:  rgba(61,59,57,0.10);
-  --gris-fonce-15:  rgba(61,59,57,0.15);
-  --gris-fonce-20:  rgba(61,59,57,0.20);
-  --gris-fonce-30:  rgba(61,59,57,0.30);
-  --gris-fonce-40:  rgba(61,59,57,0.40);
-  --gris-fonce-50:  rgba(61,59,57,0.50);
-  --gris-fonce-60:  rgba(61,59,57,0.60);
-  --gris-fonce-70:  rgba(61,59,57,0.70);
-  --gris-fonce-75:  rgba(61,59,57,0.75);
-  --gris-fonce-80:  rgba(61,59,57,0.80);
-  --gris-fonce-85:  rgba(61,59,57,0.85);
-  --gris-fonce-88:  rgba(61,59,57,0.88);
-  --gris-fonce-90:  rgba(61,59,57,0.90);
-
-  /* NOIR */
-  --noir-08:        rgba(0,0,0,0.08);
-  --noir-10:        rgba(0,0,0,0.10);
-  --noir-15:        rgba(0,0,0,0.15);
-  --noir-20:        rgba(0,0,0,0.20);
-  --noir-30:        rgba(0,0,0,0.30);
-  --noir-40:        rgba(0,0,0,0.40);
-  --noir-50:        rgba(0,0,0,0.50);
-  --noir-60:        rgba(0,0,0,0.60);
-  --noir-70:        rgba(0,0,0,0.70);
-  --noir-75:        rgba(0,0,0,0.75);
-  --noir-80:        rgba(0,0,0,0.80);
-  --noir-85:        rgba(0,0,0,0.85);
-  --noir-88:        rgba(0,0,0,0.88);
-  --noir-90:        rgba(0,0,0,0.90);
-}
-
-/* ═══════════════════════════════════════
-   RESET
-   ═══════════════════════════════════════ */
-* { margin: 0; padding: 0; box-sizing: border-box; }
-html { scroll-behavior: smooth; }
-body {
-  font-family: 'DM Sans', sans-serif;
-  font-weight: 300;
-  background: var(--blanc);
-  color: var(--gris-fonce);
-  overflow-x: hidden;
-}
-
-/* ═══════════════════════════════════════
-   TYPOGRAPHIE
-   ═══════════════════════════════════════ */
-h1, h2, h3 { font-family: 'Playfair Display', serif; }
-p { white-space: pre-line; }
-
-/* ═══════════════════════════════════════
-   NAVIGATION
-   ═══════════════════════════════════════ */
-nav {
-  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-  height: var(--nav-h);
-display: flex; align-items: center; justify-content: flex-end;
-  padding: 0 48px;
-  background: rgba(249,247,244,0.92);
-  backdrop-filter: blur(12px);
-  border-bottom: none;
-  transition: box-shadow 0.3s;
-}
-nav.scrolled { box-shadow: 0 2px 20px rgba(90,138,58,0.08); }
-
-.nav-logo { display: flex; flex-direction: column; text-decoration: none; line-height: 1.1; }
-.logo-nom { font-family: 'Playfair Display', serif; font-size: 1.2rem; font-weight: 600; color: var(--logo); letter-spacing: 0.04em; }
-.logo-tagline { font-family: 'Birthstone', cursive; font-size: 0.95rem; color: var(--accent); line-height: 1.2; }
-.logo-sub { font-family: 'Playfair Display', serif; font-size: 0.6rem; font-weight: 400; color: var(--gris); letter-spacing: 0.18em; text-transform: lowercase; }
-
-.nav-links { display: flex; gap: 32px; list-style: none; margin-left: auto; }
-.nav-links a {
-  font-family: 'DM Sans', sans-serif;
-  font-size: 0.78rem; letter-spacing: 0.1em; text-transform: uppercase;
-  color: var(--gris); text-decoration: none; font-weight: 400;
-  transition: color 0.2s; position: relative;
-}
-.nav-links a::after {
-  content: ''; position: absolute; bottom: -4px; left: 0; right: 0;
-  height: 1px; background: var(--accent);
-  transform: scaleX(0); transition: transform 0.3s;
-}
-.nav-links a:hover { color: var(--primary); }
-.nav-links a:hover::after { transform: scaleX(1); }
-.nav-links a.active { color: var(--primary); }
-.nav-links a.active::after { transform: scaleX(1); }
-
-.nav-actions { display: flex; align-items: center; gap: 12px; margin-left: auto; }
-
-.btn-connexion {
-  font-family: 'DM Sans', sans-serif;
-  font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase;
-  padding: 8px 18px; border: 1px solid var(--beige);
-  background: transparent; color: var(--gris); cursor: pointer; transition: all 0.2s;
-}
-.btn-connexion:hover { border-color: var(--primary); color: var(--primary); }
-.btn-deconnexion { border-color: var(--danger); color: var(--danger); }
-.btn-deconnexion:hover { background: var(--danger); color: white; border-color: var(--danger); }
-
-.btn-nav-admin {
-  font-family: 'DM Sans', sans-serif;
-  font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase;
-  padding: 8px 18px; border: 1px solid var(--beige);
-  background: transparent; color: var(--gris); cursor: pointer; transition: all 0.2s;
-  text-decoration: none; display: inline-flex; align-items: center;
-}
-.btn-nav-admin:hover { border-color: var(--primary); color: var(--primary); }
-
-.nav-badge {
-  font-family: 'DM Sans', sans-serif;
-  font-size: 0.62rem; letter-spacing: 0.18em; text-transform: uppercase;
-  background: var(--primary); color: white; padding: 4px 12px;
-}
-
-.burger { display: none; flex-direction: column; gap: 5px; background: none; border: none; cursor: pointer; padding: 4px; }
-.burger span { display: block; width: 22px; height: 2px; background: var(--gris-fonce); transition: all 0.3s; }
-
-/* ═══════════════════════════════════════
-   MAIN & SPA
-   ═══════════════════════════════════════ */
-main { padding-top: var(--nav-h); }
-.page-section { display: none; }
-.page-section.active { display: block; }
-
-/* ═══════════════════════════════════════
-   ANIMATIONS
-   ═══════════════════════════════════════ */
-.fade-in { opacity: 0; transform: translateY(24px); transition: opacity 2s ease, transform 2s ease; }
-.fade-in.visible { opacity: 1; transform: translateY(0); }
-@keyframes fadeIn { to { opacity: 1; transform: none; } }
-
-.mosaic-item { opacity: 1; }
-.mosaic-soap-label { opacity: 0; transform: translateY(10px); transition: opacity 0.8s ease, transform 0.8s ease; }
-.mosaic-item.visible .mosaic-soap-label { opacity: 1; transform: translateY(0); }
-.delay-1 { animation-delay: 0.1s; }
-.delay-2 { animation-delay: 0.2s; }
-.delay-3 { animation-delay: 0.35s; }
-.delay-4 { animation-delay: 0.5s; }
-.delay-5 { animation-delay: 0.65s; }
-@keyframes spin { to { transform: rotate(360deg); } }
-@keyframes modalEntre {
-  from { opacity: 0; transform: translateY(16px); }
-  to   { opacity: 1; transform: none; }
-}
-
-/* ═══════════════════════════════════════
-   BOUTONS
-   ═══════════════════════════════════════ */
-.btn {
-  display: inline-flex; align-items: center; gap: 8px;
-  font-family: 'DM Sans', sans-serif;
-  font-size: 0.75rem; letter-spacing: 0.12em; text-transform: uppercase;
-  font-weight: 500; cursor: pointer; border: none;
-  padding: 11px 24px; transition: all 0.2s; text-decoration: none;
-}
-.btn-sm { padding: 7px 16px; font-size: 0.68rem; }
-
-.btn-primary {
-  display: inline-flex; align-items: center; gap: 10px;
-  background: var(--primary); color: white; border: none;
-  padding: 12px 28px; font-family: 'DM Sans', sans-serif;
-  font-size: 0.78rem; letter-spacing: 0.12em; text-transform: uppercase;
-  font-weight: 500; cursor: pointer; transition: background 0.2s;
-}
-.btn-primary:hover { background: var(--primary-dark); }
-
-.btn-secondary {
-  display: inline-flex; align-items: center; gap: 10px;
-  background: rgba(90,138,58,0.1); color: var(--primary); border: none;
-  padding: 12px 28px; font-family: 'DM Sans', sans-serif;
-  font-size: 0.78rem; letter-spacing: 0.12em; text-transform: uppercase;
-  font-weight: 500; cursor: pointer; transition: background 0.2s;
-}
-.btn-secondary:hover { background: rgba(90,138,58,0.18); }
-
-.btn-danger {
-  display: inline-flex; align-items: center; gap: 10px;
-  background: var(--danger); color: white; border: none;
-  padding: 12px 28px; font-family: 'DM Sans', sans-serif;
-  font-size: 0.78rem; letter-spacing: 0.12em; text-transform: uppercase;
-  font-weight: 500; cursor: pointer; transition: background 0.2s;
-}
-.btn-danger:hover { background: #a33528; }
-
-.btn-accent {
-  display: inline-flex; align-items: center; gap: 10px;
-  background: var(--accent); color: white; border: none;
-  padding: 12px 28px; font-family: 'DM Sans', sans-serif;
-  font-size: 0.78rem; letter-spacing: 0.12em; text-transform: uppercase;
-  font-weight: 500; cursor: pointer; transition: background 0.2s;
-}
-.btn-accent:hover { background: #b8892e; }
-
-.btn-outline {
-  background: transparent; color: var(--gris); border: 1px solid var(--beige);
-}
-.btn-outline:hover { border-color: var(--primary); color: var(--primary); }
-
-.btn-edit {
-  background: rgba(90,138,58,0.08); color: var(--primary);
-  padding: 6px 14px; font-size: 0.68rem;
-  font-family: 'DM Sans', sans-serif; font-weight: 500;
-  letter-spacing: 0.1em; text-transform: uppercase;
-  border: none; cursor: pointer; transition: background 0.2s;
-}
-.btn-edit:hover { background: rgba(90,138,58,0.16); }
-
-.btn-suppr {
-  background: rgba(196,69,54,0.08); color: var(--danger);
-  padding: 6px 14px; font-size: 0.68rem;
-  font-family: 'DM Sans', sans-serif; font-weight: 500;
-  letter-spacing: 0.1em; text-transform: uppercase;
-  border: none; cursor: pointer; transition: background 0.2s;
-}
-.btn-suppr:hover { background: rgba(196,69,54,0.16); }
-
-.btn-finaliser {
-  background: var(--accent); color: white;
-  font-family: 'DM Sans', sans-serif; font-size: 0.75rem;
-  letter-spacing: 0.12em; text-transform: uppercase; font-weight: 500;
-  padding: 11px 28px; border: none; cursor: pointer; transition: filter 0.2s;
-}
-.btn-finaliser:hover { filter: brightness(1.08); }
-
-.btn-envoyer {
-  display: inline-flex; align-items: center; gap: 12px;
-  background: var(--primary); color: white; border: none;
-  padding: 16px 40px; font-family: 'DM Sans', sans-serif;
-  font-size: 0.78rem; letter-spacing: 0.15em; text-transform: uppercase;
-  font-weight: 500; cursor: pointer; transition: background 0.2s, transform 0.2s;
-}
-.btn-envoyer:hover { background: var(--primary-dark); transform: translateY(-1px); }
-.btn-envoyer svg { width: 16px; height: 16px; transition: transform 0.3s; }
-.btn-envoyer:hover svg { transform: translateX(4px); }
-.btn-envoyer:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
-
-/* ═══════════════════════════════════════
-   FORMULAIRES
-   ═══════════════════════════════════════ */
-.form-group { margin-bottom: 20px; }
-.form-groupe { display: flex; flex-direction: column; gap: 6px; }
-
-.form-label {
-  font-family: 'DM Sans', sans-serif;
-  font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase;
-  color: var(--gris); display: block; margin-bottom: 8px; font-weight: 500;
-}
-.form-label span { color: var(--danger); }
-.form-optionnel { font-weight: 300; text-transform: none; letter-spacing: 0; font-size: 0.68rem; color: var(--beige); }
-
-.form-control, .form-ctrl {
-  width: 100%; padding: 14px 14px 10px;
-  font-family: 'DM Sans', sans-serif; font-size: 1rem; font-weight: 300;
-  border: 1px solid var(--beige); background: white; color: var(--gris-fonce);
-  outline: none; transition: border-color 0.2s; -webkit-appearance: none; appearance: none;
-}
-.form-control:focus, .form-ctrl:focus { border-color: var(--primary); }
-textarea.form-control, textarea.form-ctrl { resize: vertical; min-height: 80px; line-height: 1.6; }
-select.form-control, select.form-ctrl { cursor: pointer; }
-.form-ctrl[readonly] { background: rgba(232,220,200,0.3); color: var(--gris); }
-
-.form-erreur { font-family: 'DM Sans', sans-serif; font-size: 0.78rem; color: var(--danger); margin-bottom: 16px; }
-.form-actions { display: flex; gap: 10px; margin-top: 24px; flex-wrap: wrap; }
-.form-submit { margin-top: 8px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
-.form-note { font-family: 'DM Sans', sans-serif; font-size: 0.72rem; color: var(--gris); font-weight: 300; }
-
-.form-grille { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 24px; }
-.form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-.col-plein { grid-column: 1 / -1; }
-.col-petit { max-width: 120px; }
-/* ═══════════════════════════════════════
-   MESSAGES
-   ═══════════════════════════════════════ */
-.msg-zone { min-height: 0; }
-.msg {
-  padding: 12px 18px; margin-bottom: 16px;
-  font-family: 'DM Sans', sans-serif; font-size: 0.84rem;
-  display: flex; align-items: center; gap: 10px;
-}
-.msg-succes, #msg-succes {
-  background: rgba(90,138,58,0.08); border-left: 3px solid var(--primary);
-  color: var(--gris-fonce); padding: 20px 24px; margin-top: 20px;
-  font-family: 'DM Sans', sans-serif; font-size: 0.88rem; line-height: 1.6; display: none;
-}
-.msg-erreur, #msg-erreur {
-  background: rgba(196,69,54,0.06); border-left: 3px solid var(--danger);
-  color: var(--gris-fonce); padding: 20px 24px; margin-top: 20px;
-  font-family: 'DM Sans', sans-serif; font-size: 0.88rem; line-height: 1.6; display: none;
-}
-
-/* ═══════════════════════════════════════
-   MODAL
-   ═══════════════════════════════════════ */
-.modal-overlay {
-  display: none; position: fixed; inset: 0; z-index: 200;
-  background: rgba(30,28,25,0.6); backdrop-filter: blur(4px);
-  align-items: center; justify-content: center;
-}
-.modal-overlay.ouvert { display: flex; }
-
-.modal-connexion {
-  background: var(--blanc); padding: 48px 40px;
-  width: 90%; max-width: 380px; position: relative;
-  animation: modalEntre 0.3s ease;
-}
-.modal-fermer {
-  position: absolute; top: 16px; right: 16px;
-  background: rgba(255,255,255,0.85); border: none; cursor: pointer;
-  color: var(--gris-fonce); font-size: 1rem; transition: all 0.2s;
-  width: 32px; height: 32px; border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  z-index: 10;
-}
-.modal-fermer:hover { color: var(--gris-fonce); }
-.modal-titre { font-family: 'Playfair Display', serif; font-size: 1.6rem; font-weight: 400; margin-bottom: 28px; color: var(--gris-fonce); }
-
-.modal-produit {
-  background: var(--blanc); max-width: 820px; width: 90%;
-  max-height: min(88vh, 900px);
-  display: grid; grid-template-columns: 1fr 2fr 1fr;
-  overflow-y: auto;
-  animation: modalEntre 0.35s ease;
-}
-.modal-visuel-hex { min-height: 320px; }
-.modal-visuel-photo { min-height: 320px; position: relative; display: flex; align-items: center; justify-content: center; }
-.modal-visuel-photo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-.modal-contenu { padding: 40px 32px; }
-.modal-collection { font-family: 'DM Sans', sans-serif; font-size: 0.68rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--accent); margin-bottom: 10px; }
-.modal-nom { font-family: 'Playfair Display', serif; font-size: 1.8rem; font-weight: 600; color: var(--gris-fonce); margin-bottom: 4px; }
-.modal-ligne { font-family: 'DM Sans', sans-serif; font-size: 0.78rem; color: var(--gris); margin-bottom: 8px; font-weight: 300; }
-.modal-desc-ligne { font-family: 'DM Sans', sans-serif; font-size: 0.78rem; color: var(--gris); margin-bottom: 20px; font-weight: 300; font-style: italic; }
-.ligne-groupe { margin-bottom: 48px; }
-.ligne-groupe-entete { margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid var(--beige); }
-.ligne-groupe-nom { font-family: 'Playfair Display', serif; font-size: 1.3rem; font-weight: 400; color: var(--gris-fonce); margin-bottom: 8px; }
-.ligne-groupe-desc { font-family: 'DM Sans', sans-serif; font-size: 0.88rem; line-height: 1.7; color: var(--gris); font-weight: 300; }
-.modal-desc { font-family: 'DM Sans', sans-serif; font-size: 0.85rem; line-height: 1.85; color: var(--gris); font-weight: 300; margin-bottom: 24px; }
-.modal-formats-titre { font-family: 'DM Sans', sans-serif; font-size: 0.68rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--gris); margin-bottom: 10px; }
-.modal-formats { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 24px; }
-.modal-format { padding: 10px 18px; border: 1px solid var(--beige); cursor: pointer; font-family: 'DM Sans', sans-serif; font-size: 0.78rem; transition: all 0.2s; color: var(--gris); text-align: center; min-width: 80px; }
-.modal-format:hover, .modal-format.selectionne { border-color: var(--primary); color: var(--primary); background: rgba(90,138,58,0.04); }
-.modal-format-prix { font-family: 'Playfair Display', serif; font-size: 1rem; color: var(--primary); display: block; margin-top: 2px; }
-.modal-cta { width: 100%; padding: 16px; background: var(--primary); color: white; border: none; font-family: 'DM Sans', sans-serif; font-size: 0.78rem; letter-spacing: 0.15em; text-transform: uppercase; cursor: pointer; transition: background 0.2s; font-weight: 500; }
-.modal-cta:hover { background: var(--primary-dark); }
-
-.modal-admin-overlay {
-  display: none; position: fixed; inset: 0; z-index: 300;
-  background: rgba(30,28,25,0.6); backdrop-filter: blur(4px);
-  align-items: center; justify-content: center;
-}
-.modal-admin-overlay.ouvert { display: flex; }
-.modal-admin { background: var(--blanc); max-width: 860px; width: 94%; max-height: 88vh; overflow-y: auto; animation: modalEntre 0.3s ease; }
-.modal-admin-header { padding: 24px 32px; border-bottom: 1px solid var(--beige); display: flex; align-items: center; justify-content: space-between; gap: 16px; }
-.modal-admin-titre { font-family: 'Playfair Display', serif; font-size: 1.3rem; color: var(--gris-fonce); }
-.modal-admin-info { font-family: 'DM Sans', sans-serif; font-size: 0.78rem; color: var(--gris); margin-top: 2px; }
-.modal-admin-body { padding: 28px 32px; }
-
-/* ═══════════════════════════════════════
-   CHARGEMENT / SPINNER
-   ═══════════════════════════════════════ */
-.chargement { text-align: center; padding: 80px 20px; font-family: 'DM Sans', sans-serif; color: var(--gris); font-size: 0.9rem; }
-.chargement-spinner { width: 36px; height: 36px; border: 2px solid var(--beige); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px; }
-.spinner { display: inline-block; width: 20px; height: 20px; border: 2px solid var(--beige); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; margin-right: 10px; vertical-align: middle; }
-.chargement-erreur { color: var(--gris); font-family: 'DM Sans', sans-serif; }
-
-/* ═══════════════════════════════════════
-   FOOTER
-   ═══════════════════════════════════════ */
-footer {
-  background: url('../Images/fond.png') center center / cover no-repeat;
-  color: var(--blanc-pur-75);
-  padding: 28px var(--padding-page);
-  display: flex; justify-content: space-between; align-items: center;
-  font-family: 'DM Sans', sans-serif; font-size: 0.78rem; letter-spacing: 0.06em;
-  position: relative;
-}
-footer::before {
-  content: ''; position: absolute; inset: 0;
-  background: var(--gris-fonce-70);
-  z-index: 0;
-}
-footer > * { position: relative; z-index: 1; }
-.footer-logo { font-family: 'Playfair Display', serif; font-size: 1.3rem; color: white; font-weight: 400; letter-spacing: 0.04em; }
-.footer-tagline { font-family: 'Birthstone', cursive; font-size: 1.1rem; margin-top: 4px; color: var(--accent); }
-
-/* ═══════════════════════════════════════
-   HERO ACCUEIL PUBLIC
-   ═══════════════════════════════════════ */
-.hero { min-height: calc(100vh - var(--nav-h)); display: grid; grid-template-columns: 1fr 1fr; }
-.hero-left { display: flex; flex-direction: column; justify-content: flex-start; align-items: stretch; padding: 24px 64px 80px 80px; position: relative; }
-.hero-left::after { display: none; }
-.hero-eyebrow { font-family: 'DM Sans', sans-serif; font-size: 0.7rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--accent); margin-bottom: 24px; font-weight: 500; }
-.hero-cta { display: flex; align-items: center; gap: 16px; background: var(--primary); color: white; padding: 16px 36px; font-size: 0.78rem; font-family: 'DM Sans', sans-serif; letter-spacing: 0.15em; text-transform: uppercase; text-decoration: none; font-weight: 500; transition: background 0.3s, transform 0.2s; }
-.hero-cta:hover { background: var(--primary-dark); transform: translateY(-1px); }
-.hero-cta svg { width: 16px; height: 16px; transition: transform 0.3s; }
-.hero-cta:hover svg { transform: translateX(4px); }
-.hero-stats { display: flex; justify-content: space-between; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--beige); width: 100%; max-width: 480px; margin-left: auto; margin-right: auto; }
-.hero-stat { flex: 1; text-align: center; }
-.hero-stat-num { font-family: 'Playfair Display', serif; font-size: 2.2rem; font-weight: 600; color: var(--primary); line-height: 1; }
-.hero-stat-label { font-family: 'DM Sans', sans-serif; font-size: 0.7rem; letter-spacing: 0.1em; color: var(--gris); text-transform: uppercase; margin-top: 4px; }
-.hero-right { position: relative; overflow: hidden; background: url('../Images/fond.png') center center / cover no-repeat; }
-.hero-logo-img { max-width: 325px; width: 100%; margin-bottom: 16px; display: block; margin-left: auto; margin-right: auto; }
-
-.hero-mosaic { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; height: 100%; gap: 16px; padding: 16px; }
-.mosaic-item { overflow: hidden; position: relative; }
-.mosaic-item:first-child { grid-row: span 2; }
-.mosaic-soap { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-family: 'DM Sans', sans-serif; color: rgba(255,255,255,0.9); text-transform: uppercase; position: relative; overflow: hidden; transition: transform 0.6s; opacity: 0.82; }
-.mosaic-soap:hover { transform: scale(1.03); }
-.mosaic-soap-accent  { background: var(--accent);  height: 100%; }
-.mosaic-soap-primary { background: var(--primary); height: 100%; }
-.mosaic-soap-gris    { background: var(--gris);    height: 100%; }
-.mosaic-soap-label { position: relative; z-index: 1; text-align: center; }
-.mosaic-soap-name { font-size: 0.85rem; font-weight: 500; display: block; }
-.mosaic-soap-col { font-size: 0.62rem; opacity: 0.75; letter-spacing: 0.12em; }
-
-/* ═══════════════════════════════════════
-   SECTION COLLECTIONS — ACCUEIL
-   ═══════════════════════════════════════ */
-.section-collections { padding: var(--padding-page); background: var(--blanc); }
-.section-header { display: flex; align-items: baseline; gap: 24px; margin-bottom: 48px; }
-.section-title { font-family: 'Playfair Display', serif; font-size: 2rem; font-weight: 400; color: var(--gris-fonce); }
-.section-line { flex: 1; height: 1px; background: var(--beige); }
-.section-count { font-family: 'DM Sans', sans-serif; font-size: 0.72rem; letter-spacing: 0.15em; color: var(--accent); text-transform: uppercase; }
-
-.collections-strip { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 2px; }
-.collection-tile { aspect-ratio: 3/4; position: relative; overflow: hidden; cursor: pointer; background: var(--beige); text-decoration: none; display: block; }
-.collection-tile-bg { position: absolute; inset: 0; transition: transform 0.6s ease; background: linear-gradient(135deg, var(--col-hex-1, var(--primary)) 0%, var(--col-hex-2, var(--primary-dark)) 100%); }
-.collection-tile:hover .collection-tile-bg { transform: scale(1.05); }
-.collection-tile-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(30,28,25,0.7) 0%, rgba(30,28,25,0.1) 60%, transparent 100%); }
-.collection-tile-content { position: absolute; bottom: 0; left: 0; right: 0; padding: 20px 16px; }
-.collection-tile-name { font-family: 'Playfair Display', serif; font-size: 1.2rem; font-weight: 600; color: white; letter-spacing: 0.03em; display: block; }
-.collection-tile-slogan { font-family: 'DM Sans', sans-serif; font-size: 0.68rem; color: rgba(255,255,255,0.75); margin-top: 4px; display: block; letter-spacing: 0.04em; font-weight: 300; }
-
-/* ═══════════════════════════════════════
-   EN-TÊTE DE PAGE
-   ═══════════════════════════════════════ */
-.page-entete { padding: var(--padding-page) var(--padding-page) 56px; border-bottom: 1px solid var(--beige); display: flex; align-items: flex-end; justify-content: space-between; gap: 40px; }
-.page-entete-gauche { max-width: 560px; }
-.page-entete-eyebrow { font-family: 'DM Sans', sans-serif; font-size: 0.7rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--accent); margin-bottom: 16px; font-weight: 500; }
-.page-entete-titre { font-family: 'Playfair Display', serif; font-size: clamp(2.2rem, 3.5vw, 3.2rem); font-weight: 400; line-height: 1.1; color: var(--gris-fonce); }
-.page-entete-titre em { font-style: italic; color: var(--primary); }
-.page-entete-plume { width: 100px; opacity: 0.15; flex-shrink: 0; }
-
-/* ═══════════════════════════════════════
-   QUI SOMMES-NOUS
-   ═══════════════════════════════════════ */
-.page-hero { padding: var(--padding-page) var(--padding-page) 64px; border-bottom: 1px solid var(--beige); display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center; }
-.page-hero-eyebrow { font-family: 'DM Sans', sans-serif; font-size: 0.7rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--accent); margin-bottom: 20px; font-weight: 500; }
-.page-hero-titre { font-family: 'Playfair Display', serif; font-size: clamp(2.5rem, 4vw, 4rem); font-weight: 400; line-height: 1.1; color: var(--gris-fonce); margin-bottom: 8px; }
-.page-hero-titre em { font-style: italic; color: var(--primary); display: block; }
-.page-hero-texte { font-family: 'DM Sans', sans-serif; font-size: 1rem; line-height: 1.9; color: var(--gris); font-weight: 300; margin-top: 28px; max-width: 480px; }
-.page-hero-signature { font-family: 'Birthstone', cursive; font-size: 1.8rem; color: var(--accent); margin-top: 40px; margin-bottom: 4px; }
-.page-hero-titre-signature { font-family: 'DM Sans', sans-serif; font-size: 0.72rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--gris); font-weight: 400; }
-.page-hero-signature-bloc { margin-top: 48px; padding-top: 40px; border-top: 1px solid var(--beige); }
-.page-hero-visuel { display: flex; align-items: center; justify-content: center; max-width: 480px; }
-.page-hero-visuel-bg { width: 100%; aspect-ratio: 4/5; background: var(--beige); display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; }
-.page-hero-visuel-bg img.photo-ambiance { width: 100%; height: 100%; object-fit: cover; position: absolute; inset: 0; }
-.plume-deco { width: 180px; opacity: 0.25; position: relative; z-index: 1; }
-
-.section-texte { padding: var(--padding-page); display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: start; }
-.texte-principal p { font-family: 'DM Sans', sans-serif; font-size: 1rem; line-height: 1.9; color: var(--gris); font-weight: 300; margin-bottom: 24px; }
-.texte-principal p:last-child { margin-bottom: 0; }
-.valeur-item { padding: 28px 0; border-bottom: 1px solid var(--beige); }
-.valeur-item:first-child { padding-top: 0; }
-.valeur-item:last-child { border-bottom: none; }
-.valeur-num { font-family: 'Playfair Display', serif; font-size: 2rem; font-weight: 600; color: var(--beige); line-height: 1; margin-bottom: 8px; }
-.valeur-titre { font-family: 'Playfair Display', serif; font-size: 1.1rem; font-weight: 600; color: var(--gris-fonce); margin-bottom: 8px; }
-.valeur-desc { font-family: 'DM Sans', sans-serif; font-size: 0.85rem; line-height: 1.7; color: var(--gris); font-weight: 300; }
-
-.bandeau-citation { background: var(--primary); padding: 64px var(--padding-page); text-align: center; }
-.citation-texte { font-family: 'Playfair Display', serif; font-size: clamp(1.4rem, 2.5vw, 2rem); font-weight: 400; font-style: italic; color: white; line-height: 1.5; max-width: 800px; margin: 0 auto 20px; }
-.citation-source { font-family: 'DM Sans', sans-serif; font-size: 0.75rem; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(255,255,255,0.65); }
-
-.section-cta { padding: var(--padding-page); text-align: center; border-top: 1px solid var(--beige); }
-.section-cta h2 { font-family: 'Playfair Display', serif; font-size: 2rem; font-weight: 400; color: var(--gris-fonce); margin-bottom: 16px; }
-.section-cta p { font-family: 'DM Sans', sans-serif; font-size: 0.9rem; color: var(--gris); font-weight: 300; margin-bottom: 40px; }
-.section-cta a { display: inline-flex; align-items: center; gap: 14px; background: var(--primary); color: white; padding: 16px 40px; font-size: 0.78rem; font-family: 'DM Sans', sans-serif; letter-spacing: 0.15em; text-transform: uppercase; text-decoration: none; font-weight: 500; transition: background 0.3s, transform 0.2s; }
-.section-cta a:hover { background: var(--primary-dark); transform: translateY(-1px); }
-.section-cta a svg { width: 16px; height: 16px; transition: transform 0.3s; }
-.section-cta a:hover svg { transform: translateX(4px); }
-
-/* ═══════════════════════════════════════
-   BON À SAVOIR
-   ═══════════════════════════════════════ */
-.bonne-section { padding: 64px var(--padding-page); border-bottom: 1px solid var(--beige); }
-.bonne-section:last-of-type { border-bottom: none; }
-.bonne-section-titre { font-family: 'Playfair Display', serif; font-size: 1.5rem; font-weight: 600; color: var(--gris-fonce); margin-bottom: 32px; display: flex; align-items: center; gap: 16px; }
-.bonne-section-titre::after { content: ''; flex: 1; height: 1px; background: var(--beige); }
-.items-grille { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 24px; }
-.info-card { background: white; padding: 28px 28px 28px 24px; border-left: 3px solid var(--primary); }
-.info-card.accent { border-left-color: var(--accent); }
-.info-card.neutre { border-left-color: var(--beige); }
-.info-card-titre { font-family: 'DM Sans', sans-serif; font-size: 0.78rem; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--gris-fonce); margin-bottom: 10px; }
-.info-card-texte { font-family: 'DM Sans', sans-serif; font-size: 0.88rem; line-height: 1.75; color: var(--gris); font-weight: 300; }
-.note-allergenes { margin: 0 var(--padding-page) 64px; background: rgba(212,164,69,0.08); border: 1px solid rgba(212,164,69,0.3); padding: 28px 32px; display: flex; gap: 20px; align-items: flex-start; }
-.note-allergenes-icone { width: 20px; height: 20px; flex-shrink: 0; margin-top: 2px; color: var(--accent); }
-.note-allergenes-texte { font-family: 'DM Sans', sans-serif; font-size: 0.85rem; line-height: 1.7; color: var(--gris-fonce); font-weight: 300; }
-.note-allergenes-texte strong { font-weight: 500; display: block; margin-bottom: 4px; }
-
-/* ═══════════════════════════════════════
-   CONTACT
-   ═══════════════════════════════════════ */
-.contact-grille { padding: 72px var(--padding-page) var(--padding-page); display: grid; grid-template-columns: 1fr 1.6fr; gap: 80px; align-items: start; }
-.contact-info-titre { font-family: 'Playfair Display', serif; font-size: 1.4rem; font-weight: 400; color: var(--gris-fonce); margin-bottom: 24px; }
-.contact-info-desc { font-family: 'DM Sans', sans-serif; font-size: 0.9rem; line-height: 1.8; color: var(--gris); font-weight: 300; margin-bottom: 40px; }
-.contact-item { display: flex; gap: 16px; align-items: flex-start; padding: 20px 0; border-bottom: 1px solid var(--beige); }
-.contact-item:first-of-type { border-top: 1px solid var(--beige); }
-.contact-item-icone { width: 36px; height: 36px; background: rgba(90,138,58,0.08); display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px; }
-.contact-item-icone svg { width: 16px; height: 16px; color: var(--primary); }
-.contact-item-label { font-family: 'DM Sans', sans-serif; font-size: 0.68rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gris); font-weight: 500; margin-bottom: 4px; }
-.contact-item-valeur { font-family: 'DM Sans', sans-serif; font-size: 0.9rem; color: var(--gris-fonce); font-weight: 300; }
-.contact-item-valeur a { color: var(--primary); text-decoration: none; transition: color 0.2s; }
-.contact-item-valeur a:hover { color: var(--primary-dark); }
-.contact-delai { margin-top: 32px; padding: 20px 24px; background: rgba(90,138,58,0.06); border-left: 3px solid var(--primary); }
-.contact-delai p { font-family: 'DM Sans', sans-serif; font-size: 0.82rem; line-height: 1.7; color: var(--gris); font-weight: 300; }
-.contact-delai strong { font-weight: 500; color: var(--gris-fonce); }
-.formulaire-titre { font-family: 'Playfair Display', serif; font-size: 1.4rem; font-weight: 400; color: var(--gris-fonce); margin-bottom: 32px; }
-
-/* ═══════════════════════════════════════
-   CATALOGUE PUBLIC
-   ═══════════════════════════════════════ */
-.catalogue-hero { padding: 56px var(--padding-page) 40px; border-bottom: 1px solid var(--beige); display: flex; align-items: flex-end; justify-content: space-between; }
-.catalogue-title { font-family: 'Playfair Display', serif; font-size: 2.8rem; font-weight: 400; color: var(--gris-fonce); }
-.catalogue-title span { color: var(--primary); font-style: italic; }
-.catalogue-subtitle { font-family: 'DM Sans', sans-serif; font-size: 0.85rem; color: var(--gris); font-weight: 300; margin-top: 8px; }
-.filtres-bar { padding: 20px var(--padding-page); display: flex; gap: 8px; flex-wrap: wrap; align-items: center; border-bottom: 1px solid var(--beige); background: var(--blanc); position: sticky; top: var(--nav-h); z-index: 50; }
-.filtre-label { font-family: 'DM Sans', sans-serif; font-size: 0.7rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--gris); margin-right: 8px; font-weight: 500; }
-.filtre-btn { padding: 7px 18px; font-size: 0.72rem; letter-spacing: 0.08em; border: 1px solid var(--beige); background: transparent; color: var(--gris); cursor: pointer; font-family: 'DM Sans', sans-serif; text-transform: uppercase; transition: all 0.2s; font-weight: 400; }
-.filtre-btn:hover { border-color: var(--primary); color: var(--primary); }
-.filtre-btn.actif { background: var(--primary); border-color: var(--primary); color: white; }
-.catalogue-body { padding: 48px var(--padding-page) 80px; }
-.collection-section { margin-bottom: 72px; }
-.collection-section.masquee { display: none; }
-.collection-entete { display: grid; grid-template-columns: 1fr 340px; gap: 48px; margin-bottom: 36px; padding-bottom: 28px; border-bottom: 1px solid var(--beige); align-items: start; }
-.collection-entete-nom { font-family: 'Playfair Display', serif; font-size: 2.2rem; font-weight: 400; color: var(--gris-fonce); margin-bottom: 4px; }
-.collection-entete-slogan { font-family: 'Playfair Display', serif; font-size: 0.95rem; font-style: italic; color: var(--accent); margin-bottom: 14px; }
-.collection-entete-desc { font-family: 'DM Sans', sans-serif; font-size: 0.85rem; line-height: 1.8; color: var(--gris); font-weight: 300; max-width: 560px; }
-.collection-entete-visuel { aspect-ratio: 4/5; overflow: hidden; position: relative; }
-.collection-entete-bg { width: 100%; aspect-ratio: 4/5; background: linear-gradient(135deg, color-mix(in srgb, var(--col-hex) 80%, transparent), color-mix(in srgb, var(--col-hex) 53%, transparent)); display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; }
-.collection-entete-bg img { width: 100%; height: 100%; object-fit: cover; position: absolute; inset: 0; }
-.entete-visuel-placeholder { font-family: 'Playfair Display', serif; font-size: 1.1rem; color: rgba(255,255,255,0.6); font-style: italic; letter-spacing: 0.06em; text-align: center; position: relative; z-index: 1; }
-.produits-grille { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 24px; }
-.carte-produit { background: white; cursor: pointer; transition: transform 0.3s, box-shadow 0.3s; }
-.carte-produit:hover { transform: translateY(-6px); box-shadow: 0 16px 40px rgba(90,138,58,0.12); }
-.carte-visuel { aspect-ratio: 1; position: relative; overflow: hidden; }
-.carte-couleur { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; transition: transform 0.5s; position: relative; background: var(--col-hex); }
-.carte-produit:hover .carte-couleur { transform: scale(1.04); }
-.carte-couleur img { width: 100%; height: 100%; object-fit: cover; position: absolute; inset: 0; }
-.carte-couleur-dot { position: absolute; bottom: 12px; right: 12px; width: 24px; height: 24px; border-radius: 50%; border: 2px solid var(--blanc-pur-60); background: var(--col-hex); }
-.carte-couleur-overlay { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(to top, color-mix(in srgb, var(--col-hex) 56%, transparent) 0%, color-mix(in srgb, var(--col-hex) 27%, transparent) 40%, transparent 70%); }
-.carte-infos { padding: 16px 16px 18px; background: color-mix(in srgb, var(--col-hex) 90%, transparent); }
-.carte-photo-placeholder { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; color: rgba(255,255,255,0.5); font-family: 'DM Sans', sans-serif; font-size: 0.62rem; letter-spacing: 0.1em; text-transform: uppercase; }
-.carte-photo-placeholder svg { width: 26px; height: 26px; opacity: 0.4; }
-
-.carte-infos.carte-infos-clair .carte-collection-badge,
-.recette-infos.carte-infos-clair .recette-badge { color: var(--blanc-pur-75); }
-.carte-infos.carte-infos-clair .carte-nom,
-.recette-infos.carte-infos-clair .recette-nom { color: var(--blanc); }
-.carte-infos.carte-infos-clair .carte-ligne,
-.recette-infos.carte-infos-clair .recette-ligne { color: var(--blanc-pur-70); }
-.carte-infos.carte-infos-clair .carte-prix,
-.recette-infos.carte-infos-clair .recette-prix { color: var(--blanc); }
-.carte-infos.carte-infos-clair .carte-bas { border-top-color: var(--blanc-pur-30); }
-
-.carte-infos.carte-infos-fonce .carte-collection-badge,
-.recette-infos.carte-infos-fonce .recette-badge { color: rgba(0,0,0,0.55); }
-.carte-infos.carte-infos-fonce .carte-nom,
-.recette-infos.carte-infos-fonce .recette-nom { color: rgba(0,0,0,0.85); }
-.carte-infos.carte-infos-fonce .carte-ligne,
-.recette-infos.carte-infos-fonce .recette-ligne { color: rgba(0,0,0,0.55); }
-.carte-infos.carte-infos-fonce .carte-prix,
-.recette-infos.carte-infos-fonce .recette-prix { color: rgba(0,0,0,0.85); }
-.carte-collection-badge { display: inline-block; font-family: 'DM Sans', sans-serif; font-size: 0.6rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); margin-bottom: 6px; font-weight: 500; }
-.carte-nom { font-family: 'DM Sans', sans-serif; font-size: 1rem; font-weight: 500; color: var(--gris-fonce); margin-bottom: 4px; line-height: 1.2; }
-.carte-ligne { font-family: 'DM Sans', sans-serif; font-size: 0.72rem; color: var(--gris); margin-bottom: 12px; font-weight: 300; }
-.carte-bas { display: flex; align-items: center; justify-content: space-between; padding-top: 10px; border-top: 1px solid var(--beige); }
-.carte-prix { font-family: 'Playfair Display', serif; font-size: 1.2rem; font-weight: 600; color: var(--primary); }
-.carte-formats { display: flex; gap: 4px; flex-wrap: wrap; }
-.carte-format-tag { padding: 3px 7px; font-family: 'DM Sans', sans-serif; font-size: 0.6rem; letter-spacing: 0.06em; border: 1px solid var(--beige); color: var(--gris); text-transform: uppercase; }
-
-/* ═══════════════════════════════════════
-   ADMIN — LAYOUT
-   ═══════════════════════════════════════ */
-.admin-layout { display: flex; padding-top: var(--nav-h); height: 100vh; overflow: hidden; }
-.admin-contenu { flex: 1; margin-left: 0; padding: 48px 56px; min-width: 0; box-sizing: border-box; height: calc(100vh - var(--nav-h)); overflow-y: auto; }
-.section-admin { display: none; }
-.section-admin.visible { display: block; }
-/* ═══════════════════════════════════════
-   ADMIN — SIDEBAR
-   ═══════════════════════════════════════ */
-#burger-admin { display: flex; }
-.sidebar { position: fixed; top: var(--nav-h); right: 0; left: auto; width: 220px; height: calc(100vh - var(--nav-h)); transform: translateX(100%); z-index: 90; background: var(--blanc); box-shadow: -4px 0 20px rgba(0,0,0,0.08); overflow-y: auto; }
-.sidebar.ouvert { transform: translateX(0); }
-.sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(30,28,25,0.4); z-index: 89; top: var(--nav-h); }
-.sidebar-overlay.visible { display: block; }
-.sidebar-groupe { margin-bottom: 4px; }
-.sidebar-titre { font-family: 'DM Sans', sans-serif; font-size: 0.62rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--beige); padding: 14px 24px 6px; font-weight: 500; }
-.sidebar-lien { display: block; padding: 9px 24px; font-family: 'DM Sans', sans-serif; font-size: 0.82rem; font-weight: 300; color: var(--gris); text-decoration: none; cursor: pointer; border: none; background: none; width: 100%; text-align: right; transition: all 0.15s; border-left: 3px solid transparent; }
-.sidebar-lien:hover { background: rgba(90,138,58,0.05); color: var(--primary); }
-.sidebar-lien.actif { background: rgba(90,138,58,0.08); color: var(--primary); border-left-color: var(--primary); font-weight: 500; }
-.sidebar-lien.bientot { color: var(--beige); cursor: default; font-style: italic; }
-.sidebar-lien.bientot:hover { background: none; color: var(--beige); }
-.sidebar-sep { height: 1px; background: var(--beige); margin: 10px 24px; }
-
-/* ═══════════════════════════════════════
-   ADMIN — EN-TÊTE DE PAGE
-   ═══════════════════════════════════════ */
-.page-titre { font-family: 'Playfair Display', serif; font-size: 2rem; font-weight: 400; color: var(--gris-fonce); }
-.page-titre em { font-style: italic; color: var(--primary); }
-.page-sous-titre { font-family: 'DM Sans', sans-serif; font-size: 0.78rem; color: var(--gris); margin-top: 4px; letter-spacing: 0.04em; }
-
-/* ═══════════════════════════════════════
-   ADMIN — ACCUEIL
-   ═══════════════════════════════════════ */
-.accueil-admin { display: grid; grid-template-columns: 1fr 1fr; height: calc(100vh - var(--nav-h)); margin: -48px -56px -48px -56px; overflow: hidden; }
-.accueil-gauche { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 24px 40px; border-right: 1px solid var(--beige); gap: 4px; overflow: hidden; }
-.accueil-logo { max-width: 220px; width: 60%; height: auto; margin-bottom: 8px; }
-.accueil-bonjour { font-family: 'Birthstone', cursive; font-size: 2.5rem; color: var(--accent); line-height: 1; align-self: center; letter-spacing: 0.05em; }
-.accueil-chantal { font-family: 'Playfair Display', serif; font-size: 1.6rem; color: var(--primary); font-weight: 400; line-height: 1; margin-bottom: 0; align-self: center; }
-.accueil-droite { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; height: 100%; background: url('../Images/fond.png') center center / cover no-repeat; gap: 16px; padding: 16px; box-sizing: border-box; overflow: hidden; }
-.accueil-grande-tuile { display: flex; flex-direction: row; align-items: stretch; height: 100%; gap: 2px; min-height: 0; }
-.accueil-grande-tuile-vert       { background: var(--primary-70); }
-.accueil-grande-tuile-jaune      { background: var(--accent-70); }
-.accueil-grande-tuile-gris       { background: var(--gris-70); }
-.accueil-grande-tuile-gris-fonce { background: var(--gris-fonce-70); }
-.accueil-tuile { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; font-family: 'DM Sans', sans-serif; font-size: 0.68rem; font-weight: 500; letter-spacing: 0.22em; text-transform: uppercase; color: white; cursor: pointer; border: none; transition: filter 0.4s ease; flex: 1; background: transparent; }
-.accueil-tuile:hover { filter: brightness(1.08); }
-.accueil-tuile:disabled { opacity: 0.4; cursor: default; filter: none; }
-.tuile-icone { width: 36px; height: 36px; display: block; transition: transform 0.4s ease; }
-.tuile-icone svg { width: 100%; height: 100%; }
-.accueil-tuile:hover:not(:disabled) .tuile-icone { transform: translateY(-3px); }
-.tuile-nom { position: relative; z-index: 1; }
-.tuile-nom::after { content: ''; display: block; width: 20px; height: 1px; background: rgba(255,255,255,0.45); margin: 8px auto 0; transition: width 0.3s ease; }
-.accueil-tuile-collections { background: var(--primary-70); }
-.accueil-tuile-recettes    { background: var(--accent-70); }
-.accueil-tuile-achats      { background: var(--gris-70); }
-.accueil-tuile-stock       { background: var(--primary-50); }
-.accueil-tuile-inventaire  { background: var(--gris-fonce-70); }
-.accueil-tuile-factures    { background: var(--accent-50); }
-.accueil-tuile-liste       { background: var(--primary-40); }
-.accueil-tuile-divers      { background: var(--gris-50); }
-
-/* ═══════════════════════════════════════
-   ADMIN — FORM PANEL
-   ═══════════════════════════════════════ */
-.form-panel { display: none; background: white; border: 1px solid var(--beige); margin-bottom: 32px; overflow: hidden; }
-.form-panel.visible { display: block; }
-.form-panel-header { padding: 20px 28px 16px; border-bottom: 1px solid var(--beige); background: rgba(232,220,200,0.2); display: flex; align-items: center; gap: 16px; }
-.form-panel-titre { font-family: 'Playfair Display', serif; font-size: 1.1rem; font-weight: 400; color: var(--gris-fonce); flex: 1; }
-.form-body { padding: 28px 28px 28px; }
-.form-body .form-actions { padding-top: 28px; padding-bottom: 28px; border-bottom: 1px solid var(--beige); }
- 
-
-/* ═══════════════════════════════════════
-   ADMIN — TABLEAU
-   ═══════════════════════════════════════ */
-.tableau-wrap { overflow-x: auto; }
-table { width: 100%; border-collapse: collapse; }
-thead tr { border-bottom: 2px solid var(--beige); }
-th { text-align: left; padding: 10px 16px; font-family: 'DM Sans', sans-serif; font-size: 0.62rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--gris); font-weight: 500; }
-td { padding: 14px 16px; border-bottom: 1px solid rgba(232,220,200,0.4); font-family: 'DM Sans', sans-serif; font-size: 0.84rem; }
-tr:hover td { background: rgba(232,220,200,0.15); }
-.td-actions { display: flex; gap: 6px; flex-wrap: wrap; }
-
-/* ═══════════════════════════════════════
-   ADMIN — BADGES
-   ═══════════════════════════════════════ */
-.badge-collection { display: inline-block; font-family: 'DM Sans', sans-serif; font-size: 0.62rem; letter-spacing: 0.1em; text-transform: uppercase; padding: 3px 10px; font-weight: 500; background: rgba(212,164,69,0.12); color: var(--accent); }
-.badge-statut-ok { font-family: 'DM Sans', sans-serif; font-size: 0.65rem; letter-spacing: 0.1em; text-transform: uppercase; padding: 3px 10px; font-weight: 500; background: rgba(90,138,58,0.1); color: var(--primary); }
-.badge-statut-cours { font-family: 'DM Sans', sans-serif; font-size: 0.65rem; letter-spacing: 0.1em; text-transform: uppercase; padding: 3px 10px; font-weight: 500; background: rgba(212,164,69,0.12); color: var(--accent); }
-
-/* ═══════════════════════════════════════
-   ADMIN — CARTES COLLECTIONS
-   ═══════════════════════════════════════ */
-.collections-grille { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 3px; margin-bottom: 32px; }
-.collection-carte { position: relative; aspect-ratio: 3/4; overflow: hidden; background: var(--beige); }
-.collection-carte-bg { position: absolute; inset: 0; transition: transform 0.5s ease; }
-.collection-carte:hover .collection-carte-bg { transform: scale(1.04); }
-.collection-carte-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(30,28,25,0.75) 0%, rgba(30,28,25,0.1) 55%, transparent 100%); }
-.collection-carte-contenu { position: absolute; bottom: 0; left: 0; right: 0; padding: 20px 18px;margin-left: auto; }
-.collection-carte-nom { font-family: 'Playfair Display', serif; font-size: 1.15rem; font-weight: 600; color: white; letter-spacing: 0.03em; display: block; margin-bottom: 4px; }
-.collection-carte-slogan { font-family: 'DM Sans', sans-serif; font-size: 0.65rem; color: rgba(255,255,255,0.7); display: block; letter-spacing: 0.04em; font-weight: 300; }
-.collection-carte-actions { position: absolute; top: 12px; right: 12px; display: flex; flex-direction: column; gap: 6px; opacity: 0; transition: opacity 0.2s; }
-.collection-carte:hover .collection-carte-actions { opacity: 1; }
-.carte-btn { font-family: 'DM Sans', sans-serif; font-size: 0.65rem; letter-spacing: 0.1em; text-transform: uppercase; padding: 6px 12px; border: none; cursor: pointer; font-weight: 500; }
-.carte-btn-edit { background: rgba(255,255,255,0.88); color: var(--primary); }
-.carte-btn-edit:hover { background: white; }
-.carte-btn-suppr { background: rgba(196,69,54,0.88); color: white; }
-.carte-btn-suppr:hover { background: var(--danger); }
-.collection-lignes-liste { margin-top: 12px; display: flex; flex-direction: column; gap: 6px; }
-.collection-ligne-item { display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.15); padding: 6px 10px; border-radius: 2px; }
-.collection-ligne-nom { color: white; font-family: 'DM Sans', sans-serif; font-size: 0.85rem; font-weight: 500; flex: 1; }
-.collection-ligne-format { color: rgba(255,255,255,0.7); font-family: 'DM Sans', sans-serif; font-size: 0.75rem; }
-.collection-ligne-actions { display: flex; gap: 4px; margin-left: 8px; }
-.photo-preview { width: 120px; height: 120px; object-fit: cover; border-radius: 6px; display: block; margin-top: 8px; }
-
-.couleur-apercu { width: 32px; height: 32px; border: 1px solid var(--beige); display: inline-block; vertical-align: middle; margin-left: 8px; background: var(--beige); }
-.btn-ajouter-ingredient { margin-top: 8px; }
-.text-right { text-align: right; }
-.mt-24 { margin-top: 24px; }
-.factures-compte { font-family: 'DM Sans', sans-serif; font-size: 0.78rem; color: var(--gris); margin-left: auto; }
-.filtres-bar { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 24px; align-items: center; }
-.filtre-select { width: auto; min-width: 180px; }
-.filtre-recherche { width: auto; min-width: 200px; }
-.fiche-grille { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 16px; margin-bottom: 24px; }
-.fiche-visuel { display: flex; gap: 16px; margin-bottom: 24px; align-items: flex-start; }
-.fiche-visuel-photo { width: 180px; height: 180px; object-fit: cover; flex-shrink: 0; }
-.fiche-visuel-hex { width: 180px; height: 180px; flex-shrink: 0; }
-.fiche-champ { display: flex; flex-direction: column; gap: 4px; }
-.fiche-label { font-family: 'DM Sans', sans-serif; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--gris); }
-.fiche-valeur { font-family: 'DM Sans', sans-serif; font-size: 0.95rem; color: var(--gris-fonce); }
-.fiche-section-titre { font-family: 'Playfair Display', serif; font-size: 1rem; color: var(--gris-fonce); margin: 24px 0 8px; border-bottom: 1px solid var(--beige); padding-bottom: 6px; }
-.fiche-texte { font-family: 'DM Sans', sans-serif; font-size: 0.9rem; color: var(--gris-fonce); white-space: pre-line; }
-.fiche-ingredients { display: flex; flex-direction: column; gap: 6px; }
-.fiche-ingredient { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--beige); font-family: 'DM Sans', sans-serif; font-size: 0.9rem; }
-.fiche-ing-nom { color: var(--gris-fonce); }
-.fiche-ing-qte { color: var(--gris); }
-.fiche-vide { color: var(--gris); font-family: 'DM Sans', sans-serif; font-size: 0.9rem; }
-
-
-
-
-
-
-
-
-
-
-
-
-/* ═══════════════════════════════════════
-   ADMIN — CARTES RECETTES
-   ═══════════════════════════════════════ */
-.recettes-grille { display: block; }
-.recette-cartes-grille { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 24px; }
-.recette-carte { background: white; transition: transform 0.3s, box-shadow 0.3s; position: relative; display: flex; flex-direction: column; }
-.recette-carte:hover { transform: translateY(-5px); box-shadow: 0 16px 40px rgba(90,138,58,0.1); }
-.recette-visuel { aspect-ratio: 1; position: relative; overflow: hidden; flex-shrink: 0; }
-.recette-couleur { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; transition: transform 0.5s; background: var(--col-hex, var(--gris)); position: relative; overflow: hidden; }
-.recette-couleur img { width: 100%; height: 100%; object-fit: cover; position: absolute; inset: 0; }
-.recette-couleur-overlay { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(to top, color-mix(in srgb, var(--col-hex) 56%, transparent) 0%, color-mix(in srgb, var(--col-hex) 10%, transparent) 20%, transparent 35%); }
-.recette-carte:hover .recette-couleur { transform: scale(1.04); }
-.recette-photo-placeholder { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; color: rgba(255,255,255,0.45); font-family: 'DM Sans', sans-serif; font-size: 0.62rem; letter-spacing: 0.1em; text-transform: uppercase; }
-.recette-photo-placeholder svg { width: 26px; height: 26px; opacity: 0.4; }
-.recette-dot { position: absolute; bottom: 12px; right: 12px; width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--blanc-pur-50); background: var(--col-hex, var(--gris)); }
-.recette-section-collection { margin-bottom: 56px; }
-.recette-collection-titre { font-family: 'Playfair Display', serif; font-size: 1.8rem; font-weight: 400; color: var(--gris-fonce); margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid var(--beige); }
-.recette-section-ligne { margin-bottom: 40px; }
-.recette-ligne-titre { font-family: 'DM Sans', sans-serif; font-size: 0.78rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--gris); margin-bottom: 16px; font-weight: 500; }
-.recette-carte-actions { position: absolute; top: 10px; right: 10px; display: flex; gap: 6px; opacity: 0; transition: opacity 0.2s; }
-.recette-carte:hover .recette-carte-actions { opacity: 1; }
-.recette-infos { padding: 16px 18px 18px; background: var(--col-hex); }
-.recette-badge { display: inline-block; font-family: 'DM Sans', sans-serif; font-size: 0.6rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); margin-bottom: 6px; font-weight: 500; }
-.recette-statut-badge { display: inline-block; font-family: 'DM Sans', sans-serif; font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase; padding: 2px 8px; font-weight: 500; margin-left: 6px; }
-.recette-statut-public { background: rgba(90,138,58,0.1); color: var(--primary); }
-.recette-statut-test { background: rgba(212,164,69,0.12); color: var(--accent); }
-.recette-nom { font-family: 'Playfair Display', serif; font-size: 1.1rem; font-weight: 600; color: var(--gris-fonce); margin-bottom: 4px; line-height: 1.2; }
-.recette-ligne { font-family: 'DM Sans', sans-serif; font-size: 0.73rem; color: var(--gris); margin-bottom: 12px; font-weight: 300; }
-.recette-bas { display: flex; align-items: center; justify-content: space-between; padding-top: 10px; border-top: 1px solid var(--beige); }
-.recette-prix { font-family: 'Playfair Display', serif; font-size: 1.2rem; font-weight: 600; color: var(--primary); }
-.recette-format { font-family: 'DM Sans', sans-serif; font-size: 0.62rem; letter-spacing: 0.06em; padding: 3px 8px; border: 1px solid var(--beige); color: var(--gris); }
-
-/* ═══════════════════════════════════════
-   ADMIN — INVENTAIRE
-   ═══════════════════════════════════════ */
-.inv-section { margin-bottom: 20px; }
-.inv-header { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; width: 100%; }
-.inv-titre { font-family: 'Playfair Display', serif; font-size: 1.1rem; font-weight: 400; color: var(--gris-fonce); font-style: italic; white-space: nowrap; }
-.inv-line { flex: 1; height: 1px; background: var(--beige); min-width: 0; }
-.inv-total { text-align: right; padding: 12px 0; border-top: 2px solid var(--beige); margin-top: 8px; }
-.inv-total-label { font-family: 'DM Sans', sans-serif; font-size: 0.65rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--gris); }
-.inv-total-montant { font-family: 'Playfair Display', serif; font-size: 2rem; color: var(--primary); }
-
-/* ═══════════════════════════════════════
-   ADMIN — FACTURES
-   ═══════════════════════════════════════ */
-.facture-active-banner { background: white; border: 1px solid var(--beige); border-left: 4px solid var(--primary); padding: 16px 24px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
-.facture-active-titre { font-family: 'Playfair Display', serif; font-size: 1.1rem; color: var(--gris-fonce); }
-.facture-active-info { font-family: 'DM Sans', sans-serif; font-size: 0.78rem; color: var(--gris); margin-top: 2px; }
-.facture-sous-total { font-family: 'Playfair Display', serif; font-size: 1.6rem; color: var(--primary); }
-.facture-sous-total-label { font-family: 'DM Sans', sans-serif; font-size: 0.65rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gris); text-align: right; }
-.finalisation-panel { background: white; border: 1px solid var(--beige); padding: 28px; margin-top: 24px; }
-.finalisation-titre { font-family: 'Playfair Display', serif; font-size: 1.1rem; margin-bottom: 20px; color: var(--gris-fonce); }
-.total-final-row { display: flex; align-items: center; gap: 32px; margin-top: 20px; flex-wrap: wrap; }
-.total-final-montant { font-family: 'Playfair Display', serif; font-size: 2rem; color: var(--gris-fonce); }
-.total-final-label { font-family: 'DM Sans', sans-serif; font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gris); }
-
-/* ═══════════════════════════════════════
-   ADMIN — WIZARD
-   ═══════════════════════════════════════ */
-.wizard-etapes { display: flex; align-items: center; margin-bottom: 40px; }
-.wizard-etape { display: flex; flex-direction: column; align-items: center; gap: 8px; }
-.wizard-cercle { width: 36px; height: 36px; border-radius: 50%; border: 2px solid var(--beige); background: var(--blanc); color: var(--gris); font-family: 'DM Sans', sans-serif; font-size: 0.82rem; font-weight: 500; display: flex; align-items: center; justify-content: center; transition: all 0.3s; }
-.wizard-label { font-family: 'DM Sans', sans-serif; font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gris); transition: color 0.3s; }
-.wizard-etape.active .wizard-cercle { border-color: var(--primary); background: var(--primary); color: white; }
-.wizard-etape.active .wizard-label { color: var(--primary); font-weight: 500; }
-.wizard-etape.complete .wizard-cercle { border-color: var(--primary); background: rgba(90,138,58,0.1); color: var(--primary); }
-.wizard-trait { flex: 1; height: 1px; background: var(--beige); margin: 0 12px; margin-bottom: 24px; }
-
-/* ═══════════════════════════════════════
-   ADMIN — ÉTATS
-   ═══════════════════════════════════════ */
-.vide { text-align: center; padding: 64px 20px; }
-.vide-titre { font-family: 'Playfair Display', serif; font-size: 1.3rem; color: var(--gris); margin-bottom: 8px; font-style: italic; }
-.vide-desc { font-family: 'DM Sans', sans-serif; font-size: 0.8rem; color: var(--beige); }
-.section-bientot { text-align: center; padding: 80px 20px; border: 1px dashed var(--beige); }
-.section-bientot h2 { font-family: 'Playfair Display', serif; font-size: 1.6rem; color: var(--gris); margin-bottom: 12px; font-weight: 400; font-style: italic; }
-.section-bientot p { font-family: 'DM Sans', sans-serif; font-size: 0.82rem; color: var(--beige); }
-
-/* ═══════════════════════════════════════
-   ADMIN — ACCÈS REFUSÉ
-   ═══════════════════════════════════════ */
-.acces-refuse { display: none; position: fixed; inset: 0; background: var(--blanc); z-index: 400; align-items: center; justify-content: center; flex-direction: column; gap: 20px; text-align: center; }
-.acces-refuse.visible { display: flex; }
-.acces-refuse-titre { font-family: 'Playfair Display', serif; font-size: 2rem; color: var(--gris); font-style: italic; }
-.acces-refuse-desc { font-family: 'DM Sans', sans-serif; font-size: 0.85rem; color: var(--gris); }
-
-/* ═══════════════════════════════════════
-   ADMIN — NAV DROPDOWNS
-   ═══════════════════════════════════════ */
-.nav-admin-links { display: none; }
-
-@media (min-width: 1024px) {
-   .nav-admin-links {
-    display: flex;
-    gap: 4px;
-    list-style: none;
-    margin-left: auto;
-  }
-
-  .nav-admin-item {
-    position: relative;
-  }
-
-  .nav-admin-btn {
-    font-family: 'DM Sans', sans-serif;
-    font-size: 0.75rem;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--gris);
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 8px 14px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    transition: color 0.2s;
-    font-weight: 400;
-  }
-  .nav-admin-btn:hover { color: var(--primary); }
-  .nav-admin-btn svg { width: 10px; height: 10px; transition: transform 0.2s; }
-  .nav-admin-item.ouvert .nav-admin-btn svg { transform: rotate(180deg); }
-
-.nav-dropdown {
-    display: none;
-    position: absolute;
-    top: 100%;
-    left: 0;
-    padding-top: 8px;
-    background: var(--blanc);
-    border: 1px solid var(--beige);
-    box-shadow: 0 8px 24px rgba(30,28,25,0.08);
-    min-width: 180px;
-    z-index: 150;
-  }
-  .nav-admin-item.ouvert .nav-dropdown { display: block; }
-
-  .nav-dropdown-item {
-    display: block;
-    width: 100%;
-    padding: 11px 20px;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 0.78rem;
-    color: var(--gris);
-    background: none;
-    border: none;
-    text-align: left;
-    cursor: pointer;
-    transition: all 0.15s;
-    border-left: 3px solid transparent;
-    font-weight: 300;
-  }
-  .nav-dropdown-item:hover {
-    background: rgba(90,138,58,0.05);
-    color: var(--primary);
-    border-left-color: var(--primary);
-  }
-  .nav-dropdown-item.bientot {
-    color: var(--beige);
-    cursor: default;
-    font-style: italic;
-  } 
-  .nav-dropdown-item.bientot:hover {
-    background: none;
-    color: var(--beige);
-    border-left-color: transparent;
+async function chargerCollectionsPourSelecteur() {
+  const res = await appelAPI('getCollections');
+  if (!res || !res.success) return;
+  const sel = document.getElementById('fr-collection');
+  sel.innerHTML = '<option value="">— Choisir —</option>';
+  collectionsDisponibles = {};
+  (res.items || []).forEach(item => {
+    if (!collectionsDisponibles[item.collection]) collectionsDisponibles[item.collection] = [];
+    if (item.ligne && !collectionsDisponibles[item.collection].includes(item.ligne))
+      collectionsDisponibles[item.collection].push(item.ligne);
+  });
+  Object.keys(collectionsDisponibles).sort().forEach(col => {
+    const o = document.createElement('option');
+    o.value = col; o.textContent = col; sel.appendChild(o);
+  });
+  const selSec = document.getElementById('fr-collections-secondaires');
+  if (selSec) {
+    selSec.innerHTML = '';
+    Object.keys(collectionsDisponibles).sort().forEach(col => {
+      const o = document.createElement('option');
+      o.value = col; o.textContent = col; selSec.appendChild(o);
+    });
   }
 }
+
+async function mettreAJourLignes() {
+  const col = document.getElementById('fr-collection').value;
+  const sel = document.getElementById('fr-ligne');
+  sel.innerHTML = '';
+  const lignes = collectionsDisponibles[col] || [];
+  if (!lignes.length) { sel.innerHTML = '<option value="">— Aucune ligne —</option>'; return; }
+  lignes.forEach(l => {
+    const o = document.createElement('option'); o.value = l; o.textContent = l; sel.appendChild(o);
+  });
+  await chargerIngredientsBaseRecette();
+}
+
+async function chargerIngredientsBaseRecette() {
+  const col   = document.getElementById('fr-collection').value;
+  const ligne = document.getElementById('fr-ligne').value;
+  if (!col || !ligne) return;
+  const res = await appelAPI('getRecettesBase');
+  if (!res || !res.items) return;
+  ingredientsBase = res.items
+    .filter(i => i.collection === col && i.ligne === ligne)
+    .map(i => ({ type: i.ingredient_type, nom: i.ingredient_nom, quantite: i.quantite_g }));
+  rafraichirListeIngredientsBase();
+}
+
+
+
+function ouvrirFicheRecette(id) {
+  const rec = donneesRecettes.find(r => r.recette_id === id);
+  if (!rec) return;
+  recetteActive = rec;
+  document.getElementById('fiche-recette-titre').textContent = rec.nom || '—';
+  const ings = rec.ingredients && rec.ingredients.length
+    ? rec.ingredients.map(i => `<div class="fiche-ingredient"><span class="fiche-ing-nom">${i.nom}</span><span class="fiche-ing-qte">${i.quantite_g} g</span></div>`).join('')
+    : '<div class="fiche-vide">Aucun ingrédient</div>';
+  document.getElementById('fiche-recette-contenu').innerHTML = `
+    <div class="fiche-visuel">
+      ${rec.image_url ? `<img src="${rec.image_url}" class="fiche-visuel-photo">` : ''}
+      <div class="fiche-visuel-hex" style="background:${rec.couleur_hex || 'var(--beige)'}"></div>
+    </div>
+    <div class="fiche-grille">
+      <div class="fiche-champ"><span class="fiche-label">Collection</span><span class="fiche-valeur">${rec.collection || '—'}</span></div>
+      <div class="fiche-champ"><span class="fiche-label">Ligne</span><span class="fiche-valeur">${rec.ligne || '—'}</span></div>
+      <div class="fiche-champ"><span class="fiche-label">Format</span><span class="fiche-valeur">${rec.format || '—'}</span></div>
+      <div class="fiche-champ"><span class="fiche-label">Statut</span><span class="fiche-valeur">${rec.statut || 'test'}</span></div>
+      <div class="fiche-champ"><span class="fiche-label">Prix</span><span class="fiche-valeur">${rec.prix_vente ? formaterPrix(rec.prix_vente) : '— $'}</span></div>
+      <div class="fiche-champ"><span class="fiche-label">Cure</span><span class="fiche-valeur">${rec.cure || '—'} jours</span></div>
+    </div>
+    <div class="fiche-section-titre">Description</div>
+    <div class="fiche-texte">${rec.description || '—'}</div>
+    <div class="fiche-section-titre">Instructions</div>
+    <div class="fiche-texte">${rec.instructions || '—'}</div>
+    <div class="fiche-section-titre">Notes</div>
+    <div class="fiche-texte">${rec.notes || '—'}</div>
+    <div class="fiche-section-titre">Ingrédients</div>
+    <div class="fiche-ingredients">${ings}</div>
+  `;
+  fermerFormRecette();
+  document.getElementById('fiche-recette').classList.add('visible');
+}
+
+function fermerFicheRecette() {
+  document.getElementById('fiche-recette').classList.remove('visible');
+  recetteActive = null;
+}
+
+function basculerModeEditionRecette() {
+  if (!recetteActive) return;
+  const id = recetteActive.recette_id;
+  fermerFicheRecette();
+  modifierRecette(id);
+}
+
+function supprimerRecetteActive() {
+  if (!recetteActive) return;
+  supprimerRecette(recetteActive.recette_id);
+}
+
+
+function ouvrirFormRecette() {
+  document.getElementById('form-recettes-titre').textContent = 'Nouvelle recette';
+  document.getElementById('fr-id').value = '';
+ ['fr-nom','fr-couleur','fr-format','fr-unites','fr-cure','fr-prix','fr-description','fr-instructions','fr-notes']
+    .forEach(id => { const e = document.getElementById(id); if (e) e.value = ''; });
+  document.getElementById('fr-statut').value = 'test';
+  document.getElementById('fr-collection').value = '';
+  document.getElementById('fr-ligne').innerHTML = '<option value="">— Choisir collection —</option>';
+  document.getElementById('fr-couleur-visible').value = '';
+  document.getElementById('fr-image-url').value = '';
+  const prevRecette = document.getElementById('fr-image-preview');
+  if (prevRecette) { prevRecette.src = ''; prevRecette.classList.add('cache'); }
+  const apercuRecette = document.getElementById('fr-couleur-apercu');
+  if (apercuRecette) apercuRecette.style.background = '';
+  document.getElementById('filtres-bar').classList.add('cache');
+  document.getElementById('grille-recettes').classList.add('cache');
+  document.getElementById('form-recettes').classList.add('visible');
+  document.getElementById('fr-nom').focus();
+}
+
+function fermerFormRecette() {
+  document.getElementById('form-recettes').classList.remove('visible');
+  document.getElementById('filtres-bar').classList.remove('cache');
+  document.getElementById('grille-recettes').classList.remove('cache');
+}
+
+function modifierRecette(id) {
+  const rec = donneesRecettes.find(r => r.recette_id === id);
+  if (!rec) return;
+  document.getElementById('form-recettes-titre').textContent = 'Modifier la recette';
+  document.getElementById('fr-id').value           = rec.recette_id;
+  document.getElementById('fr-nom').value          = rec.nom || '';
+  document.getElementById('fr-couleur').value      = rec.couleur_hex || '';
+  document.getElementById('fr-couleur-visible').value = rec.couleur_hex || '';
+  const apercu = document.getElementById('fr-couleur-apercu');
+  if (apercu) apercuCouleurRecette(document.getElementById('fr-couleur-visible'));
+  document.getElementById('fr-format').value       = rec.format || '';
+  document.getElementById('fr-unites').value       = rec.nb_unites || '';
+  document.getElementById('fr-cure').value         = rec.cure || '';
+  document.getElementById('fr-prix').value         = rec.prix_vente || '';
+  document.getElementById('fr-description').value  = rec.description || '';
+  document.getElementById('fr-instructions').value = rec.instructions || '';
+  document.getElementById('fr-notes').value        = rec.notes || '';
+  document.getElementById('fr-statut').value       = rec.statut || 'test';
+document.getElementById('fr-collection').value   = rec.collection || '';
+  mettreAJourLignes();
+  document.getElementById('fr-ligne').value        = rec.ligne || '';
+  document.getElementById('fr-image-url').value    = rec.image_url || '';
+  const preview = document.getElementById('fr-image-preview');
+  if (preview) preview.innerHTML = rec.image_url ? `<img src="${rec.image_url}" class="photo-preview">` : '';
+  const selSec = document.getElementById('fr-collections-secondaires');
+  if (selSec) {
+    Array.from(selSec.options).forEach(opt => {
+      opt.selected = Array.isArray(rec.collections_secondaires) && rec.collections_secondaires.includes(opt.value);
+    });
+  }
+  document.getElementById('filtres-bar').classList.add('cache');
+  document.getElementById('grille-recettes').classList.add('cache');
+  document.getElementById('form-recettes').classList.add('visible');
+  document.getElementById('fr-nom').focus();
+}
+async function sauvegarderRecette() {
+  const btnSauvegarder = document.querySelector('#form-recettes .btn-primary');
+  if (btnSauvegarder) { btnSauvegarder.disabled = true; btnSauvegarder.innerHTML = '<span class="spinner"></span> Sauvegarde…'; }
+  const id = document.getElementById('fr-id').value;
+  const d = {
+    recette_id:   id || ('REC-' + Date.now()),
+    nom:          document.getElementById('fr-nom').value.toUpperCase(),
+    couleur_hex:  document.getElementById('fr-couleur').value,
+    collection:   document.getElementById('fr-collection').value,
+    ligne:        document.getElementById('fr-ligne').value,
+    format:       document.getElementById('fr-format').value,
+    nb_unites:    parseInt(document.getElementById('fr-unites').value) || 1,
+    cure:         parseInt(document.getElementById('fr-cure').value) || 0,
+    prix_vente:   parseFloat(document.getElementById('fr-prix').value) || 0,
+    description:  document.getElementById('fr-description').value,
+    instructions: document.getElementById('fr-instructions').value,
+    notes:        document.getElementById('fr-notes').value,
+    statut:       document.getElementById('fr-statut').value || 'test',
+    image_url:    document.getElementById('fr-image-url').value,
+    collections_secondaires: Array.from(document.getElementById('fr-collections-secondaires')?.selectedOptions || []).map(o => o.value),
+    ingredients:  []
+  };
+  if (!d.nom) { afficherMsg('recettes', 'Le nom est requis.', 'erreur'); return; }
+  const res = await appelAPIPost('saveRecette', d);
+if (res && res.success) {
+    if (btnSauvegarder) { btnSauvegarder.disabled = false; btnSauvegarder.innerHTML = 'Enregistrer'; }
+    fermerFormRecette();
+    afficherMsg('recettes', id ? 'Recette mise à jour.' : 'Recette créée.');
+    chargerRecettes();
+  } else {
+    afficherMsg('recettes', 'Erreur.', 'erreur');
+    if (btnSauvegarder) { btnSauvegarder.disabled = false; btnSauvegarder.innerHTML = 'Enregistrer'; }
+  }
+}
+
+// CLOUDINARY
+function ouvrirCloudinary() {
+  cloudinary.openUploadWidget({
+    cloudName: 'dfasrauyy',
+    uploadPreset: 'univers-caresse',
+    sources: ['local', 'camera'],
+    multiple: false,
+    language: 'fr',
+    folder: 'univers-caresse/produits'
+  }, (error, result) => {
+    if (!error && result && result.event === 'success') {
+      document.getElementById('fr-image-url').value = result.info.secure_url;
+      const preview = document.getElementById('fr-image-preview');
+      preview.innerHTML = `<img src="${result.info.secure_url}" style="max-width:120px;margin-top:8px;">`;
+    }
+  });
+}
+
+function ouvrirCloudinaryCollection() {
+  cloudinary.openUploadWidget({
+    cloudName: 'dfasrauyy',
+    uploadPreset: 'univers-caresse',
+    sources: ['local', 'camera'],
+    multiple: false,
+    language: 'fr',
+    folder: 'univers-caresse/collections'
+  }, (error, result) => {
+  if (!error && result && result.event === 'success') {
   
-/* ═══════════════════════════════════════
-   RESPONSIVE
-   ═══════════════════════════════════════ */
-@media (max-width: 900px) {
-  nav { background: none; box-shadow: none; border: none; backdrop-filter: none; }
-  nav .nav-actions { display: none; }
- .burger-flottant {
-    display: flex;
-    position: fixed; top: 16px; right: 24px; z-index: 200;
-    width: 48px; height: 48px; border-radius: 50%;
-    background: var(--primary); border: none;
-    align-items: center; justify-content: center;
-    box-shadow: 0 4px 16px var(--noir-30);
-    transition: transform 0.3s, opacity 0.3s;
-    flex-direction: column; gap: 5px; padding: 0;
-  }
-  .burger-flottant span { background: white; }
-  .burger-flottant.cache-scroll { opacity: 0; pointer-events: none; transform: translateY(-16px); }
-  #filtres-bar.cache-scroll { opacity: 0; pointer-events: none; transform: translateY(-100%); }
-  .nav-links { display: none; }
-  .nav-links.ouvert {
-    display: flex; flex-direction: column;
-    position: fixed; top: 80px; right: 24px;
-    width: 220px; background: var(--blanc); padding: 20px var(--padding-mobile);
-    border: 1px solid var(--beige);
-    box-shadow: 0 8px 32px var(--noir-15);
-    gap: 16px; z-index: 201;
-  }
-
-
-  .hero { grid-template-columns: 1fr; }
-  .hero-right { min-height: 280px; }
-  .hero-left { padding: 48px var(--padding-mobile); }
-  .hero-left::after { display: none; }
-
-  .section-collections { padding: 48px var(--padding-mobile); }
-  .page-entete { padding: 48px var(--padding-mobile) 40px; flex-direction: column; gap: 16px; }
-  .page-entete-plume { display: none; }
-  .page-hero { grid-template-columns: 1fr; padding: 48px var(--padding-mobile); gap: 40px; }
-  .page-hero-visuel-bg { aspect-ratio: 3/2; }
-  .section-texte { grid-template-columns: 1fr; padding: 48px var(--padding-mobile); gap: 48px; }
-  .bandeau-citation { padding: 48px var(--padding-mobile); }
-  .section-cta { padding: 48px var(--padding-mobile); }
-  .bonne-section { padding: 48px var(--padding-mobile); }
-  .note-allergenes { margin: 0 var(--padding-mobile) 48px; }
-  .contact-grille { grid-template-columns: 1fr; padding: 48px var(--padding-mobile); gap: 48px; }
-  .form-row-2 { grid-template-columns: 1fr; }
-  .catalogue-hero { padding: 40px var(--padding-mobile) 28px; flex-direction: column; gap: 12px; }
-  .filtres-bar { padding: 14px var(--padding-mobile); }
-  .catalogue-body { padding: 28px var(--padding-mobile) 60px; }
-  .collection-entete { grid-template-columns: 1fr; }
-  .collection-entete-visuel { display: none; }
-
-.modal-produit { grid-template-columns: 1fr 2fr; grid-template-rows: auto auto; max-height: 90vh; overflow-y: auto; }
- .modal-visuel-hex { min-height: 240px; grid-column: 1; grid-row: 1; }
-  .modal-visuel-photo { min-height: 240px; grid-column: 2; grid-row: 1; }
-  .modal-visuel-photo img { object-fit: cover; object-position: center 70%; }
-  .modal-contenu { grid-column: 1 / -1; grid-row: 2; }
-
-  .admin-contenu { padding: 24px var(--padding-mobile); }
-  .accueil-admin { grid-template-columns: 1fr; margin: -24px calc(-1 * var(--padding-mobile)); }
-  .accueil-gauche { padding: 48px 24px; border-right: none; border-bottom: 1px solid var(--beige); }
-  .accueil-tuile { min-height: 130px; }
-  .form-grille { grid-template-columns: 1fr; }
-  .col-plein { grid-column: 1; }
-  .recettes-grille { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 16px; }
-  .collections-grille { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
-  .total-final-row { flex-direction: column; align-items: flex-start; }
-
-  footer { padding: 32px var(--padding-mobile); flex-direction: column; gap: 16px; text-align: center; }
+      document.getElementById('fc-photo-url').value = result.info.secure_url;
+      
+      const preview = document.getElementById('fc-photo-preview');
+      if (preview) preview.innerHTML = `<img src="${result.info.secure_url}" class="photo-preview">`;
+    }
+  });
+}
+function ouvrirCloudinaryLigne() {
+  cloudinary.openUploadWidget({
+    cloudName: 'dfasrauyy',
+    uploadPreset: 'univers-caresse',
+    sources: ['local', 'camera'],
+    multiple: false,
+    language: 'fr',
+    folder: 'univers-caresse/lignes'
+  }, (error, result) => {
+    if (!error && result && result.event === 'success') {
+      document.getElementById('fc-photo-url-ligne').value = result.info.secure_url;
+      const preview = document.getElementById('fc-photo-preview-ligne');
+      if (preview) preview.innerHTML = `<img src="${result.info.secure_url}" class="photo-preview">`;
+    }
+  });
 }
 
-@media (max-width: 480px) {
-  .recettes-grille { grid-template-columns: 1fr 1fr; gap: 12px; }
-  .collections-grille { grid-template-columns: 1fr 1fr; }
-  .td-actions { flex-direction: column; }
-  table { font-size: 0.78rem; }
-  th, td { padding: 10px 8px; }
+function basculerModeFormCollection() {
+  const mode    = document.getElementById('fc-mode');
+  const blocCol = document.getElementById('fc-bloc-collection');
+  const blocLig = document.getElementById('fc-bloc-ligne');
+  const titre   = document.getElementById('form-collections-titre');
+  const toggle  = document.getElementById('fc-toggle-mode');
+  const col     = document.getElementById('fc-collection').value;
+
+  if (mode.value === 'collection') {
+    mode.value = 'ligne';
+    blocCol.classList.add('cache');
+    blocLig.classList.remove('cache');
+    titre.textContent = 'Nouvelle ligne — ' + (col || '');
+    toggle.textContent = '← Retour collection';
+    document.getElementById('fc-collection-ligne').value = col;
+  } else {
+    mode.value = 'collection';
+    blocCol.classList.remove('cache');
+    blocLig.classList.add('cache');
+    titre.textContent = document.getElementById('fc-rowIndex').value ? 'Modifier la collection' : 'Nouvelle collection';
+    toggle.textContent = '+ Ajouter une ligne';
+  }
 }
+
+
+
+
+
+
+function apercuCouleurCollection(input) {
+  const val = input.value.trim();
+  const apercuId = input.id === 'fc-couleur-hex' ? 'fc-couleur-apercu' : 'fc-couleur-apercu-ligne';
+  const apercu = document.getElementById(apercuId);
+  if (!apercu) return;
+  apercu.style.background = /^#[0-9a-fA-F]{6}$/.test(val) ? val : 'var(--beige)';
+}
+function apercuCouleurRecette(input) {
+  const apercu = document.getElementById('fr-couleur-apercu');
+  if (apercu) apercu.style.background = /^#[0-9a-fA-F]{6}$/.test(input.value.trim()) ? input.value.trim() : 'var(--beige)';
+  document.getElementById('fr-couleur').value = input.value;
+}
+
+// INGRÉDIENTS DE BASE
+let ingredientsBase = [];
+
+function ajouterIngredientBase(type='', nom='', quantite=0) {
+  ingredientsBase.push({ type, nom, quantite });
+  rafraichirListeIngredientsBase();
+}
+
+function supprimerIngredientBase(index) {
+  ingredientsBase.splice(index, 1);
+  rafraichirListeIngredientsBase();
+}
+
+function rafraichirListeIngredientsBase() {
+  const liste = document.getElementById('liste-ingredients-base');
+  if (!liste) return;
+  if (ingredientsBase.length === 0) { liste.innerHTML = ''; return; }
+  liste.innerHTML = ingredientsBase.map((ing, i) => `
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">
+    <select class="form-ctrl" style="flex:1" onchange="ingredientsBase[${i}].type=this.value; ingredientsBase[${i}].nom=''; rafraichirListeIngredientsBase()">
+        <option value="">— Type —</option>
+       ${(listesDropdown.types || []).map(t => `<option value="${t}" ${ing.type===t?'selected':''}>${t}</option>`).join('')}
+      </select>
+      <select class="form-ctrl" style="flex:2" onchange="ingredientsBase[${i}].nom=this.value">
+        <option value="">— Ingrédient —</option>
+      ${(listesDropdown.fullData || []).filter(d => d.type===ing.type).map(d => `<option value="${d.ingredient}" ${ing.nom===d.ingredient?'selected':''}>${d.ingredient}</option>`).join('')}
+      </select>
+      <input type="text" inputmode="numeric" class="form-ctrl" style="width:90px" value="${ing.quantite||''}" placeholder="g" onchange="ingredientsBase[${i}].quantite=parseFloat(this.value)||0">
+      <button class="btn btn-sm btn-danger" onclick="supprimerIngredientBase(${i})">✕</button>
+    </div>
+  `).join('');
+}
+
+function supprimerRecette(id) {
+  confirmerAction('Supprimer cette recette ?', async () => {
+    const res = await appelAPIPost('deleteRecette', { recette_id: id });
+    if (res && res.success) {
+      fermerFicheRecette();
+      afficherMsg('recettes', 'Recette supprimée.');
+      await chargerRecettes();
+    } else {
+      afficherMsg('recettes', 'Erreur.', 'erreur');
+    }
+  });
+}
+
+// NOUVELLE FACTURE
+let factureActive = null;
+let produitsFacture = [];
+
+function calculerPrixParG() {
+  const prix  = parseFloat(document.getElementById('fp-prix-unitaire').value) || 0;
+  const qte   = parseFloat(document.getElementById('fp-contenu-qte').value) || 0;
+  const unite = document.getElementById('fp-contenu-unite').value;
+  let g = qte;
+  if (unite === 'L')  g = qte * 1000;
+  if (unite === 'kg') g = qte * 1000;
+  document.getElementById('fp-prix-par-g').value = g > 0 ? (prix / g).toFixed(4) + ' $/g' : '';
+}
+
+async function creerFacture() {
+  const numero      = document.getElementById('nf-numero').value.trim();
+  const date        = document.getElementById('nf-date').value;
+  const fournisseur = document.getElementById('nf-fournisseur').value.trim();
+  if (!numero || !date || !fournisseur) {
+    afficherMsg('nouvelle-facture', 'Tous les champs sont requis.', 'erreur');
+    return;
+  }
+  const res = await appelAPIPost('createInvoice', { numeroFacture: numero, date, fournisseur });
+  if (res && res.success) {
+    factureActive = { numero, date, fournisseur };
+    produitsFacture = [];
+    document.getElementById('etape1-facture').classList.add('cache');
+    document.getElementById('etape2-facture').classList.remove('cache');
+    document.getElementById('nf-entete-titre').textContent = 'Facture ' + numero;
+    document.getElementById('nf-entete-info').textContent  = date + ' — ' + fournisseur;
+    mettreAJourTotaux(0);
+    afficherMsg('nouvelle-facture', 'Facture créée. Ajoutez les produits.');
+  } else {
+    afficherMsg('nouvelle-facture', res?.message || 'Erreur.', 'erreur');
+  }
+}
+
+async function ajouterProduit() {
+  if (!factureActive) return;
+  const rowIndex     = document.getElementById('fp-row-index').value;
+  const nom          = document.getElementById('fp-nom').value.trim();
+  const quantite     = parseFloat(document.getElementById('fp-quantite').value) || 0;
+  const unite        = document.getElementById('fp-unite').value.trim();
+  const contenuQte   = parseFloat(document.getElementById('fp-contenu-qte').value) || 0;
+  const contenuUnite = document.getElementById('fp-contenu-unite').value;
+  const prixUnitaire = parseFloat(document.getElementById('fp-prix-unitaire').value) || 0;
+  const type         = document.getElementById('fp-type').value;
+  const ingredient   = document.getElementById('fp-ingredient').value.trim();
+  if (!nom || quantite <= 0 || prixUnitaire <= 0) {
+    afficherMsg('nouvelle-facture', 'Nom, quantité et prix sont requis.', 'erreur');
+    return;
+  }
+  let g = contenuQte;
+  if (contenuUnite === 'L')  g = contenuQte * 1000;
+  if (contenuUnite === 'kg') g = contenuQte * 1000;
+  const prixParG = g > 0 ? (prixUnitaire / g) : 0;
+  const d = {
+    numeroFacture: factureActive.numero,
+    fournisseur:   factureActive.fournisseur,
+    nomProduit:    nom, quantite, unite,
+    contenuQte, contenuUnite,
+    prixUnitaire,
+    prixParUnite:  prixParG.toFixed(4),
+    type, ingredient
+  };
+  const res = rowIndex
+    ? await appelAPIPost('updateProduct', { ...d, rowIndex: parseInt(rowIndex) })
+    : await appelAPIPost('addProduct', d);
+  if (res && res.success) {
+    reinitialiserFormProduit();
+    await rechargerProduits();
+    afficherMsg('nouvelle-facture', rowIndex ? 'Produit mis à jour.' : 'Produit ajouté.');
+  } else {
+    afficherMsg('nouvelle-facture', 'Erreur.', 'erreur');
+  }
+}
+
+async function rechargerProduits() {
+  const res = await appelAPIPost('getInvoiceProducts', { numeroFacture: factureActive.numero });
+  if (!res || !res.success) return;
+  produitsFacture = res.products || [];
+  afficherProduits();
+  mettreAJourTotaux(res.total || 0);
+}
+
+function afficherProduits() {
+  const tableau = document.getElementById('tableau-produits');
+  const vide    = document.getElementById('vide-produits');
+  const tbody   = document.getElementById('tbody-produits');
+  if (!produitsFacture.length) { tableau.classList.add('cache'); vide.classList.remove('cache'); return; }
+  tbody.innerHTML = '';
+  produitsFacture.forEach(p => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td style="font-weight:500">${p.nomProduit}</td>
+      <td>${p.quantite}</td>
+      <td style="color:var(--gris);font-size:0.78rem">${p.contenuQte ? p.contenuQte + ' ' + p.contenuUnite : '—'}</td>
+      <td>${formaterPrix(p.prixUnitaire)}</td>
+      <td style="color:var(--gris);font-size:0.75rem">${p.prixParUnite ? parseFloat(p.prixParUnite).toFixed(4) + ' $/g' : '—'}</td>
+      <td style="color:var(--primary);font-weight:500">${formaterPrix(p.prixTotal)}</td>
+      <td style="color:var(--gris);font-size:0.75rem">${p.type || '—'}</td>
+      <td>
+        <div class="td-actions">
+          <button class="btn-edit" onclick="modifierProduit(${p.rowIndex})">Modifier</button>
+          <button class="btn-suppr" onclick="supprimerProduit(${p.rowIndex})">Supprimer</button>
+        </div>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+  vide.classList.add('cache');
+  tableau.classList.remove('cache');
+}
+
+function mettreAJourTotaux(sousTotal) {
+  const st  = sousTotal || 0;
+  const tps = parseFloat(document.getElementById('nf-tps').value) || 0;
+  const tvq = parseFloat(document.getElementById('nf-tvq').value) || 0;
+  document.getElementById('nf-sous-total').textContent  = formaterPrix(st);
+  document.getElementById('nf-total-final').textContent = formaterPrix(st + tps + tvq);
+}
+
+function recalculerTotal() {
+  const st = produitsFacture.reduce((acc, p) => acc + (p.prixTotal || 0), 0);
+  mettreAJourTotaux(st);
+}
+
+function modifierProduit(rowIndex) {
+  const p = produitsFacture.find(x => x.rowIndex === rowIndex);
+  if (!p) return;
+  document.getElementById('fp-row-index').value     = rowIndex;
+  document.getElementById('fp-nom').value           = p.nomProduit;
+  document.getElementById('fp-quantite').value      = p.quantite;
+  document.getElementById('fp-unite').value         = p.unite || '';
+  document.getElementById('fp-contenu-qte').value   = p.contenuQte || '';
+  document.getElementById('fp-contenu-unite').value = p.contenuUnite || 'g';
+  document.getElementById('fp-prix-unitaire').value = p.prixUnitaire;
+  document.getElementById('fp-type').value          = p.type || '';
+  document.getElementById('fp-ingredient').value    = p.ingredient || '';
+  calculerPrixParG();
+  document.getElementById('btn-annuler-produit').classList.remove('cache');
+  document.getElementById('fp-nom').focus();
+}
+
+function annulerEditionProduit() { reinitialiserFormProduit(); }
+
+function reinitialiserFormProduit() {
+  ['fp-row-index','fp-nom','fp-quantite','fp-unite','fp-contenu-qte','fp-prix-unitaire','fp-ingredient','fp-prix-par-g']
+    .forEach(id => { const e = document.getElementById(id); if (e) e.value = ''; });
+  document.getElementById('fp-contenu-unite').value = 'g';
+  document.getElementById('fp-type').value = '';
+  document.getElementById('btn-annuler-produit').classList.add('cache');
+}
+
+function supprimerProduit(rowIndex) {
+  confirmerAction('Supprimer ce produit ?', async () => {
+    const res = await appelAPIPost('deleteProduct', { numeroFacture: factureActive.numero, rowIndex });
+    if (res && res.success) {
+      await rechargerProduits();
+      afficherMsg('nouvelle-facture', 'Produit supprimé.');
+    } else {
+      afficherMsg('nouvelle-facture', 'Erreur.', 'erreur');
+    }
+  });
+}
+
+
+
+function reinitialiserNouvelleFacture() {
+  factureActive = null;
+  produitsFacture = [];
+  document.getElementById('etape2-facture').classList.add('cache');
+  document.getElementById('etape1-facture').classList.remove('cache');
+  ['nf-numero','nf-fournisseur','nf-tps','nf-tvq'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('nf-date').value = new Date().toISOString().split('T')[0];
+}
+
+// FACTURES
+let toutesFactures = [];
+
+async function chargerFactures() {
+  const loading = document.getElementById('loading-factures');
+  const tableau = document.getElementById('tableau-factures');
+  const vide    = document.getElementById('vide-factures');
+  loading.classList.remove('cache');
+  tableau.classList.add('cache');
+  vide.classList.add('cache');
+
+  const res = await appelAPI('getInvoicesListWithFilters');
+
+loading.classList.add('cache');
+  if (!res || !res.invoices) { afficherMsg('factures', 'Erreur lors du chargement.', 'erreur'); return; }
+  toutesFactures = res.invoices || [];
+
+  const selFourn    = document.getElementById('filtre-fournisseur');
+  const valActuelle = selFourn.value;
+  selFourn.innerHTML = '<option value="">Tous les fournisseurs</option>';
+  (res.fournisseurs || []).forEach(f => {
+    const o = document.createElement('option');
+    o.value = f; o.textContent = f; selFourn.appendChild(o);
+  });
+  selFourn.value = valActuelle;
+
+  afficherFactures(toutesFactures);
+}
+
+function filtrerFactures() {
+  const fourn  = document.getElementById('filtre-fournisseur').value;
+  const statut = document.getElementById('filtre-statut').value;
+  const filtrees = toutesFactures.filter(f =>
+    (!fourn  || f.fournisseur === fourn) &&
+    (!statut || f.statut === statut)
+  );
+  afficherFactures(filtrees);
+}
+
+function reinitialiserFiltres() {
+  document.getElementById('filtre-fournisseur').value = '';
+  document.getElementById('filtre-statut').value = '';
+  afficherFactures(toutesFactures);
+}
+
+function afficherFactures(liste) {
+  const tableau = document.getElementById('tableau-factures');
+  const vide    = document.getElementById('vide-factures');
+  const tbody   = document.getElementById('tbody-factures');
+  const compte  = document.getElementById('factures-compte');
+
+  compte.textContent = liste.length + ' facture' + (liste.length > 1 ? 's' : '');
+
+  if (!liste.length) { tableau.classList.add('cache'); vide.classList.remove('cache'); return; }
+
+  tbody.innerHTML = '';
+  const triees = [...liste].sort((a, b) => b.dateRaw.localeCompare(a.dateRaw));
+
+  triees.forEach(f => {
+    const badge = f.statut === 'Finalisée'
+      ? `<span class="badge-statut-ok">Finalisée</span>`
+      : `<span class="badge-statut-cours">En cours</span>`;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td style="font-weight:500;font-family:'Playfair Display',serif">${f.numero}</td>
+      <td style="color:var(--gris);font-size:0.82rem">${f.date}</td>
+      <td>${f.fournisseur}</td>
+      <td style="color:var(--gris);font-size:0.82rem">${f.tps ? formaterPrix(f.tps) : '—'}</td>
+      <td style="color:var(--gris);font-size:0.82rem">${f.tvq ? formaterPrix(f.tvq) : '—'}</td>
+      <td style="color:var(--primary);font-weight:500;font-family:'Playfair Display',serif">${f.total ? formaterPrix(f.total) : '—'}</td>
+      <td>${badge}</td>
+      <td>
+        <div class="td-actions">
+          <button class="btn-edit" onclick="voirDetailFacture('${f.numero.replace(/'/g,"\\'")}','${f.date}','${f.fournisseur.replace(/'/g,"\\'")}')">Voir</button>
+          <button class="btn-suppr" onclick="supprimerFacture('${f.numero.replace(/'/g,"\\'")}')">Supprimer</button>
+        </div>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+
+  vide.classList.add('cache');
+  tableau.classList.remove('cache');
+}
+
+async function voirDetailFacture(numero, date, fournisseur) {
+  const modal = document.getElementById('modal-facture');
+  modal.classList.add('ouvert');
+  document.getElementById('modal-facture-titre').textContent = 'Facture ' + numero;
+  document.getElementById('modal-facture-info').textContent  = date + ' — ' + fournisseur;
+  document.getElementById('contenu-detail-facture').innerHTML = '';
+  document.getElementById('loading-detail-facture').classList.remove('cache');
+
+  const res = await appelAPIPost('getInvoiceProducts', { numeroFacture: numero });
+  document.getElementById('loading-detail-facture').classList.add('cache');
+
+  if (!res || !res.success || !res.products.length) {
+    document.getElementById('contenu-detail-facture').innerHTML = '<div class="vide"><div class="vide-titre">Aucun produit</div></div>';
+    return;
+  }
+
+  let html = `
+    <div class="tableau-wrap">
+      <table>
+        <thead>
+          <tr><th>Produit</th><th>Qté</th><th>Contenu</th><th>Prix unit.</th><th>Prix/g</th><th>Total</th><th>Type</th><th>Ingrédient</th></tr>
+        </thead>
+        <tbody>`;
+  res.products.forEach(p => {
+    html += `
+      <tr>
+        <td style="font-weight:500">${p.nomProduit}</td>
+        <td>${p.quantite}</td>
+        <td style="color:var(--gris);font-size:0.78rem">${p.contenuQte ? p.contenuQte + ' ' + p.contenuUnite : '—'}</td>
+        <td>${formaterPrix(p.prixUnitaire)}</td>
+        <td style="color:var(--gris);font-size:0.75rem">${p.prixParUnite ? parseFloat(p.prixParUnite).toFixed(4) + ' $/g' : '—'}</td>
+        <td style="color:var(--primary);font-weight:500">${formaterPrix(p.prixTotal)}</td>
+        <td style="color:var(--gris);font-size:0.75rem">${p.type || '—'}</td>
+        <td style="color:var(--gris);font-size:0.78rem">${p.ingredient || '—'}</td>
+      </tr>`;
+  });
+  html += `</tbody></table></div>`;
+  html += `<div style="text-align:right;padding:16px 0;border-top:1px solid var(--beige);margin-top:8px;font-family:'Playfair Display',serif;font-size:1.2rem;color:var(--primary)">Sous-total\u00a0: ${formaterPrix(res.total)}</div>`;
+  document.getElementById('contenu-detail-facture').innerHTML = html;
+}
+
+function fermerModalFacture() {
+  document.getElementById('modal-facture').classList.remove('ouvert');
+}
+
+function supprimerFacture(numero) {
+  confirmerAction('Supprimer la facture ' + numero + ' et tous ses produits ?', async () => {
+    const res = await appelAPIPost('deleteInvoice', { numeroFacture: numero });
+    if (res && res.success) {
+      afficherMsg('factures', 'Facture supprimée.');
+      chargerFactures();
+    } else {
+      afficherMsg('factures', 'Erreur lors de la suppression.', 'erreur');
+    }
+  });
+}
+
+// INVENTAIRE
+async function chargerInventaire() {
+  const loading = document.getElementById('loading-inventaire');
+  const contenu = document.getElementById('contenu-inventaire');
+  const vide    = document.getElementById('vide-inventaire');
+  loading.classList.remove('cache');
+  contenu.innerHTML = '';
+  vide.classList.add('cache');
+
+  const res = await appelAPI('getInventory');
+
+
+ loading.classList.add('cache');
+  if (!res || !res.success) { afficherMsg('inventaire', 'Erreur.', 'erreur'); return; }
+
+  const inv   = res.inventory || {};
+  const types = Object.keys(inv).sort();
+  if (!types.length) { vide.classList.remove('cache'); return; }
+
+  let html = '';
+  let total = 0;
+
+  types.forEach(type => {
+    const ings = inv[type];
+    html += `
+      <div class="inv-section">
+        <div class="inv-header">
+          <div class="inv-titre">${type}</div>
+          <div class="inv-line"></div>
+        </div>
+        <div class="tableau-wrap">
+          <table>
+            <thead>
+              <tr><th>Ingrédient</th><th>Fournisseur</th><th>Unités</th><th>Format</th><th>Prix/g</th><th>Valeur</th></tr>
+            </thead>
+            <tbody>`;
+    Object.keys(ings).sort().forEach(nom => {
+      Object.keys(ings[nom]).forEach((fourn, idx) => {
+        const d = ings[nom][fourn];
+        total += d.valeur || 0;
+        html += `
+          <tr>
+            <td style="font-weight:${idx === 0 ? '500' : '300'}">${idx === 0 ? nom : ''}</td>
+            <td style="color:var(--gris);font-size:0.8rem">${fourn}</td>
+            <td>${d.unites}</td>
+            <td style="color:var(--gris);font-size:0.78rem">${d.format || '—'}</td>
+            <td style="color:var(--gris);font-size:0.78rem">${d.prixParG ? d.prixParG.toFixed(4) + ' $/g' : '—'}</td>
+            <td style="color:var(--primary);font-weight:500">${formaterPrix(d.valeur)}</td>
+          </tr>`;
+      });
+    });
+    html += `</tbody></table></div></div>`;
+  });
+
+  html += `
+    <div class="inv-total">
+      <div class="inv-total-label">Valeur totale de l'inventaire</div>
+      <div class="inv-total-montant">${formaterPrix(total)}</div>
+    </div>`;
+
+  contenu.innerHTML = html;
+}
+
+// DENSITÉS
+let donneesDensites = [];
+
+async function chargerDensites() {
+  const loading = document.getElementById('loading-densites');
+  const tableau = document.getElementById('tableau-densites');
+  const vide    = document.getElementById('vide-densites');
+  loading.classList.remove('cache');
+  tableau.classList.add('cache');
+  vide.classList.add('cache');
+
+  const res = await appelAPI('getDensities');
+
+
+loading.classList.add('cache');
+  if (!res || !Array.isArray(res.densities)) { afficherMsg('densites', 'Erreur.', 'erreur'); return; }
+  donneesDensites = res.densities;
+
+  if (!donneesDensites.length) { vide.classList.remove('cache'); return; }
+
+  const tbody = document.getElementById('tbody-densites');
+  tbody.innerHTML = '';
+  donneesDensites.forEach(d => {
+    const tr = document.createElement('tr');
+    tr.style.cursor = 'pointer';
+    tr.onclick = () => modifierDensite(d.type);
+    tr.innerHTML = `
+      <td>${d.type}</td>
+      <td>${parseFloat(d.densite).toFixed(3)}</td>
+      <td>${d.unite}</td>
+      <td>${d.marge_perte_pct ? parseFloat(d.marge_perte_pct).toFixed(1) + ' %' : '—'}</td>
+      <td>
+        <div class="td-actions">
+          <button class="btn-edit" onclick="event.stopPropagation(); modifierDensite('${d.type.replace(/'/g, "\\'")}')">Modifier</button>
+        </div>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+  tableau.classList.remove('cache');
+}
+
+function ouvrirFormDensite() {
+  document.getElementById('form-densites-titre').textContent = 'Nouveau type';
+  document.getElementById('fd-mode').value         = 'ajout';
+  document.getElementById('fd-type').value         = '';
+  document.getElementById('fd-densite').value      = '';
+  document.getElementById('fd-unite').value        = 'ml';
+  document.getElementById('fd-marge-perte').value  = '';
+  document.getElementById('fd-type').readOnly      = false;
+  document.getElementById('form-densites').classList.add('visible');
+  document.getElementById('fd-type').focus();
+}
+
+function fermerFormDensite() {
+  document.getElementById('form-densites').classList.remove('visible');
+}
+
+function modifierDensite(type) {
+  const d = donneesDensites.find(x => x.type === type);
+  if (!d) return;
+  document.getElementById('form-densites-titre').textContent = 'Modifier la densité';
+  document.getElementById('fd-mode').value         = 'modif';
+  document.getElementById('fd-type').value         = d.type;
+  document.getElementById('fd-densite').value      = d.densite;
+  document.getElementById('fd-unite').value        = d.unite;
+  document.getElementById('fd-marge-perte').value  = d.marge_perte_pct || '';
+  document.getElementById('fd-type').readOnly      = true;
+  document.getElementById('form-densites').classList.add('visible');
+  document.getElementById('fd-densite').focus();
+}
+
+async function sauvegarderDensite() {
+  const mode    = document.getElementById('fd-mode').value;
+  const type    = document.getElementById('fd-type').value.trim();
+  const densite = parseFloat(document.getElementById('fd-densite').value);
+  const unite   = document.getElementById('fd-unite').value;
+  if (!type) { afficherMsg('densites', 'Le type est requis.', 'erreur'); return; }
+  if (isNaN(densite) || densite <= 0) { afficherMsg('densites', 'Densité invalide.', 'erreur'); return; }
+  const marge_perte_pct = parseFloat(document.getElementById('fd-marge-perte').value) || 0;
+  const action = mode === 'modif' ? 'saveDensity' : 'addDensityType';
+  const res = await appelAPIPost(action, { type, densite, unite, marge_perte_pct });
+  if (res && res.success) {
+    fermerFormDensite();
+    afficherMsg('densites', mode === 'modif' ? 'Densité mise à jour.' : 'Type ajouté.');
+    donneesDensites = [];
+    chargerDensites();
+  } else {
+    afficherMsg('densites', res?.message || 'Erreur.', 'erreur');
+  }
+}
+
+// NOUVELLE FACTURE — WIZARD
+
+let listesDropdown = { types: [], fullData: [], fournisseurs: [] };
+
+async function initialiserNouvelleFacture() {
+  if (factureActive) return;
+  factureActive   = null;
+  produitsFacture = [];
+  const dateField = document.getElementById('facture-date');
+  if (dateField && !dateField.value) dateField.value = new Date().toISOString().split('T')[0];
+  await chargerListesFournisseurs();
+  wizardEtape1();
+}
+
+async function chargerListesFournisseurs() {
+  const res = await appelAPI('getDropdownLists');
+  if (res) {
+    listesDropdown.types    = res.types    || [];
+    listesDropdown.fullData = res.fullData || [];
+  }
+  const resFactures = await appelAPI('getInvoicesListWithFilters');
+  if (resFactures) {
+    listesDropdown.fournisseurs = resFactures.fournisseurs || [];
+  }
+  peuplerSelectFournisseur();
+  peuplerSelectType();
+}
+
+function peuplerSelectFournisseur() {
+  const sel = document.getElementById('facture-fournisseur');
+  if (!sel) return;
+  sel.innerHTML = '<option value=""></option>';
+  listesDropdown.fournisseurs.forEach(f => {
+    const opt = document.createElement('option');
+    opt.value = f; opt.textContent = f;
+    sel.appendChild(opt);
+  });
+  const optNew = document.createElement('option');
+  optNew.value = '__nouveau__'; optNew.textContent = '+ Nouveau fournisseur…';
+  sel.appendChild(optNew);
+}
+
+function peuplerSelectType() {
+  const sel = document.getElementById('item-type');
+  if (!sel) return;
+  sel.innerHTML = '<option value=""></option>';
+  listesDropdown.types.forEach(t => {
+    const opt = document.createElement('option');
+    opt.value = t; opt.textContent = t;
+    sel.appendChild(opt);
+  });
+}
+
+function onChangeFournisseur() {
+  const sel   = document.getElementById('facture-fournisseur');
+  const champ = document.getElementById('facture-fournisseur-nouveau');
+  if (!sel || !champ) return;
+  champ.classList.toggle('cache', sel.value !== '__nouveau__');
+  if (sel.value === '__nouveau__' && window.innerWidth > 900) champ.focus();
+}
+
+function onChangeType() {
+  const type = document.getElementById('item-type')?.value;
+  const sel  = document.getElementById('item-ingredient');
+  if (!sel) return;
+  sel.innerHTML = '<option value=""></option>';
+  listesDropdown.fullData.filter(d => d.type === type).forEach(d => {
+    const opt = document.createElement('option');
+    opt.value = d.ingredient; opt.textContent = d.ingredient;
+    sel.appendChild(opt);
+  });
+  const optNew = document.createElement('option');
+  optNew.value = '__nouveau__'; optNew.textContent = '+ Nouvel ingrédient…';
+  sel.appendChild(optNew);
+}
+
+function onChangeIngredient() {
+  const sel   = document.getElementById('item-ingredient');
+  const champ = document.getElementById('item-ingredient-nouveau');
+  if (!sel || !champ) return;
+  champ.classList.toggle('cache', sel.value !== '__nouveau__');
+  if (sel.value === '__nouveau__') champ.focus();
+}
+
+function wizardEtape1() {
+  document.getElementById('wizard-step-1').classList.remove('cache');
+  document.getElementById('wizard-step-2').classList.add('cache');
+  document.getElementById('wizard-step-3').classList.add('cache');
+  document.getElementById('wizard-etape-1').classList.add('active');
+  document.getElementById('wizard-etape-1').classList.remove('complete');
+  document.getElementById('wizard-etape-2').classList.remove('active', 'complete');
+  document.getElementById('wizard-etape-3').classList.remove('active', 'complete');
+}
+
+async function wizardEtape2() {
+  const numeroFacture = document.getElementById('facture-numero')?.value?.trim();
+  const date          = document.getElementById('facture-date')?.value;
+  let fournisseur     = document.getElementById('facture-fournisseur')?.value;
+  if (fournisseur === '__nouveau__') {
+    fournisseur = document.getElementById('facture-fournisseur-nouveau')?.value?.trim();
+  }
+  if (!numeroFacture || !date || !fournisseur) {
+    afficherMsg('facture-msg', 'Numéro, date et fournisseur sont requis.', 'erreur');
+    return;
+  }
+
+  if (!factureActive) {
+    const res = await appelAPIPost('createInvoice', { numeroFacture, date, fournisseur });
+    if (!res || !res.success) {
+      afficherMsg('facture-msg', res?.message || 'Erreur lors de la création.', 'erreur');
+      return;
+    }
+    factureActive = { numeroFacture, date, fournisseur };
+    if (!listesDropdown.fournisseurs.includes(fournisseur)) {
+      listesDropdown.fournisseurs.push(fournisseur);
+      listesDropdown.fournisseurs.sort();
+    }
+  }
+
+  document.getElementById('wizard-step-1').classList.add('cache');
+  document.getElementById('wizard-step-2').classList.remove('cache');
+  document.getElementById('wizard-step-3').classList.add('cache');
+  document.getElementById('wizard-etape-1').classList.remove('active');
+  document.getElementById('wizard-etape-1').classList.add('complete');
+  document.getElementById('wizard-etape-2').classList.add('active');
+  document.getElementById('wizard-etape-3').classList.remove('active', 'complete');
+  afficherBanniereFacture();
+  afficherItemsFacture();
+}
+
+function wizardEtape3() {
+  if (produitsFacture.length === 0) {
+    afficherMsg('item-msg', 'Ajoutez au moins un item avant de continuer.', 'erreur');
+    return;
+  }
+  document.getElementById('wizard-step-1').classList.add('cache');
+  document.getElementById('wizard-step-2').classList.add('cache');
+  document.getElementById('wizard-step-3').classList.remove('cache');
+  document.getElementById('wizard-etape-2').classList.remove('active');
+  document.getElementById('wizard-etape-2').classList.add('complete');
+  document.getElementById('wizard-etape-3').classList.add('active');
+  const sousTotal = produitsFacture.reduce((s, i) => s + i.prixTotal, 0);
+  document.getElementById('final-sous-total').value = sousTotal.toFixed(2);
+  calculerTotalFinal();
+}
+
+function afficherBanniereFacture() {
+  const banniere = document.getElementById('facture-banniere');
+  if (!banniere || !factureActive) return;
+  banniere.classList.remove('cache');
+  const sousTotal = produitsFacture.reduce((s, i) => s + i.prixTotal, 0);
+  document.getElementById('banniere-numero').textContent     = factureActive.numeroFacture;
+  document.getElementById('banniere-fournisseur').textContent = factureActive.fournisseur;
+  document.getElementById('banniere-sous-total').textContent  = formaterPrix(sousTotal);
+}
+
+async function ajouterItem() {
+  if (!factureActive) {
+    afficherMsg('item-msg', 'Aucune facture active.', 'erreur');
+    return;
+  }
+  let ingredient = document.getElementById('item-ingredient')?.value;
+  if (ingredient === '__nouveau__') {
+    ingredient = document.getElementById('item-ingredient-nouveau')?.value?.trim();
+  }
+  const type        = document.getElementById('item-type')?.value;
+  const formatQte   = document.getElementById('item-format-qte')?.value?.trim();
+  const formatUnite = document.getElementById('item-format-unite')?.value;
+  const prixUnit    = document.getElementById('item-prix-unitaire')?.value?.trim();
+  const quantite    = document.getElementById('item-quantite')?.value?.trim();
+  const notes       = document.getElementById('item-notes')?.value?.trim();
+
+  if (!type || !ingredient || !formatQte || !prixUnit || !quantite) {
+    afficherMsg('item-msg', 'Tous les champs obligatoires doivent être remplis.', 'erreur');
+    return;
+  }
+
+  const prixTotal = parseFloat(quantite) * parseFloat(prixUnit);
+
+  const res = await appelAPIPost('addProduct', {
+    numFacture:   factureActive.numeroFacture,
+    date:         factureActive.date,
+    fournisseur:  factureActive.fournisseur,
+    type,
+    ingredient,
+    formatQte:    parseFloat(formatQte),
+    formatUnite,
+    prixUnitaire: parseFloat(prixUnit),
+    quantite:     parseFloat(quantite),
+    notes:        notes || '',
+    codeBarres:   ''
+  });
+
+  if (!res || !res.success) {
+    afficherMsg('item-msg', res?.message || 'Erreur lors de l\'ajout.', 'erreur');
+    return;
+  }
+
+  produitsFacture.push({ type, ingredient, formatQte, formatUnite, prixUnitaire: parseFloat(prixUnit), quantite: parseFloat(quantite), prixTotal });
+  afficherMsg('item-msg', 'Item ajouté.', 'succes');
+  reinitialiserFormulaireItem();
+  afficherItemsFacture();
+  afficherBanniereFacture();
+}
+
+function reinitialiserFormulaireItem() {
+  ['item-type','item-ingredient','item-format-qte','item-prix-unitaire','item-quantite','item-notes']
+    .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  const champNouv = document.getElementById('item-ingredient-nouveau');
+  if (champNouv) { champNouv.classList.add('cache'); champNouv.value = ''; }
+  document.getElementById('item-format-unite').value = 'g';
+  document.getElementById('item-ingredient').innerHTML = '<option value=""></option>';
+}
+
+function afficherItemsFacture() {
+  const zone = document.getElementById('items-tableau-zone');
+  if (!zone) return;
+  if (produitsFacture.length === 0) {
+    zone.innerHTML = '<p class="vide-desc" style="padding:24px 0;">Aucun item pour l\'instant.</p>';
+    return;
+  }
+  const sousTotal = produitsFacture.reduce((s, i) => s + i.prixTotal, 0);
+  let html = `
+    <div class="tableau-wrap">
+      <table>
+        <thead>
+          <tr><th>Type</th><th>Ingrédient</th><th>Format</th><th>Prix unit.</th><th>Qté</th><th>Total</th></tr>
+        </thead>
+        <tbody>`;
+  produitsFacture.forEach(item => {
+    html += `
+      <tr>
+        <td>${item.type}</td>
+        <td>${item.ingredient}</td>
+        <td>${item.formatQte} ${item.formatUnite}</td>
+        <td>${formaterPrix(item.prixUnitaire)}</td>
+        <td>${item.quantite}</td>
+        <td>${formaterPrix(item.prixTotal)}</td>
+      </tr>`;
+  });
+  html += `</tbody></table></div>
+    <div class="inv-total" style="margin-top:16px;">
+      <div class="inv-total-label">Sous-total</div>
+      <div class="inv-total-montant">${formaterPrix(sousTotal)}</div>
+    </div>`;
+  zone.innerHTML = html;
+}
+
+function calculerTotalFinal() {
+  const sousTotal = parseFloat(document.getElementById('final-sous-total')?.value) || 0;
+  const tps       = parseFloat(document.getElementById('final-tps')?.value)        || 0;
+  const tvq       = parseFloat(document.getElementById('final-tvq')?.value)        || 0;
+  const livraison = parseFloat(document.getElementById('final-livraison')?.value)  || 0;
+  const affichage = document.getElementById('final-total-affichage');
+  if (affichage) affichage.textContent = formaterPrix(sousTotal + tps + tvq + livraison);
+}
+
+async function finaliserFacture() {
+  if (!factureActive) {
+    afficherMsg('final-msg', 'Aucune facture active.', 'erreur');
+    return;
+  }
+  if (produitsFacture.length === 0) {
+    afficherMsg('final-msg', 'Aucun item à finaliser.', 'erreur');
+    return;
+  }
+  const btnFinaliser = document.querySelector('.btn-finaliser');
+  if (btnFinaliser) { btnFinaliser.disabled = true; btnFinaliser.innerHTML = '<span class="spinner"></span> Finalisation…'; }
+  const sousTotal = parseFloat(document.getElementById('final-sous-total')?.value) || 0;
+  const tps       = parseFloat(document.getElementById('final-tps')?.value)        || 0;
+  const tvq       = parseFloat(document.getElementById('final-tvq')?.value)        || 0;
+  const livraison = parseFloat(document.getElementById('final-livraison')?.value)  || 0;
+  const res = await appelAPIPost('finalizeInvoice', {
+    numeroFacture: factureActive.numeroFacture,
+    sousTotal, tps, tvq, livraison
+  });
  
+if (!res || !res.success) {
+    if (btnFinaliser) { btnFinaliser.disabled = false; btnFinaliser.innerHTML = 'Finaliser'; }
+    afficherMsg('final-msg', res?.message || 'Erreur lors de la finalisation.', 'erreur');
+    return;
+  }
+  afficherMsg('final-msg', `✓ Facture ${factureActive.numeroFacture} finalisée — Total : ${formaterPrix(res.total)}`, 'succes');
+  setTimeout(() => {
 
-/* ═══════════════════════════════════════
-   ADMIN — FICHE COLLECTION
-   ═══════════════════════════════════════ */
-.fiche-collection-bandeau {
-  padding: 20px 24px;
-  border-radius: 2px;
-  margin-bottom: 20px;
+     
+     factureActive   = null;
+    produitsFacture = [];
+    wizardEtape1();
+    document.getElementById('facture-numero').value = '';
+    document.getElementById('facture-date').value   = new Date().toISOString().split('T')[0];
+    document.getElementById('facture-fournisseur').value = '';
+    document.getElementById('facture-banniere').classList.add('cache');
+    document.getElementById('items-tableau-zone').innerHTML = '';
+    document.getElementById('final-total-affichage').textContent = '0,00 $';
+  }, 5000);
 }
-.fiche-collection-bandeau .form-panel-titre { color: var(--gris-fonce); font-size: 1.3rem; display: block; }
-.fiche-collection-slogan { color: var(--gris);font-family: 'DM Sans', sans-serif; font-size: 0.82rem; display: block; margin-top: 4px; }
-.fiche-collection-desc { font-family: 'DM Sans', sans-serif; font-size: 0.88rem; color: var(--gris); line-height: 1.7; margin-bottom: 24px; }
-.fiche-collection-extras-wrap { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
-.fiche-collection-couleur { width: 80px; height: 80px; border-radius: 6px; flex-shrink: 0; }
-.fiche-collection-photo img { width: 80px; height: 80px; object-fit: cover; border-radius: 6px; }
-.fiche-collection-rang { font-family: 'DM Sans', sans-serif; font-size: 0.82rem; color: var(--gris); }
-.fiche-ligne-item { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: 16px 0; border-bottom: 1px solid var(--beige); }
-.fiche-ligne-item:last-child { border-bottom: none; }
-.fiche-ligne-info { flex: 1; }
-.fiche-ligne-nom { font-family: 'DM Sans', sans-serif; font-size: 0.88rem; font-weight: 500; color: var(--gris-fonce); display: block; }
-.fiche-ligne-format { font-family: 'DM Sans', sans-serif; font-size: 0.75rem; color: var(--gris); display: block; margin-top: 2px; }
-.fiche-ligne-desc { font-family: 'DM Sans', sans-serif; font-size: 0.78rem; color: var(--gris); margin-top: 6px; line-height: 1.6; }
-.collection-carte-lignes { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; }
-.collection-carte-lignes-haut { position: absolute; top: 12px; left: 12px; right: 12px; display: flex; flex-wrap: wrap; gap: 4px; z-index: 1; }
-.collection-carte-ligne-tag { font-family: 'DM Sans', sans-serif; font-size: 0.62rem; letter-spacing: 0.08em; color: #fff; background: rgba(0,0,0,0.3); padding: 2px 8px; display: block; width: fit-content;}
-.section-label { font-family: 'DM Sans', sans-serif; font-size: 0.72rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--gris); margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--beige); }
+function validerConnexionAdmin() {
+  const mdp = document.getElementById('input-mdp-admin').value;
+  if (mdp === CONFIG.MOT_DE_PASSE) {
+    sessionStorage.setItem('uc_admin', 'true');
+    document.getElementById('ecran-connexion').classList.add('cache');
+    chargerStatsAccueil();
+    afficherSection('accueil', null);
+  } else {
+    document.getElementById('erreur-mdp-admin').textContent = 'Mot de passe incorrect.';
+    document.getElementById('input-mdp-admin').value = '';
+    document.getElementById('input-mdp-admin').focus();
+  }
+}
 
+// CONTENU DU SITE
+async function chargerContenuSite() {
+  const loading = document.getElementById('loading-contenu-site');
+  const corps = document.getElementById('corps-contenu-site');
+  if (loading) loading.classList.remove('cache');
+  if (corps) corps.classList.add('cache');
+ const data = await appelAPI('getContenu');
+if (loading) loading.classList.add('cache');
+  if (!data || !data.success || !data.contenu) { afficherMsg('msg-contenu-site', 'Erreur de chargement.', 'erreur'); return; }
+  const c = data.contenu;
+  Object.keys(c).forEach(cle => {
+    const el = document.getElementById('cs-' + cle);
+    if (el) el.value = c[cle];
+  });
+  if (corps) corps.classList.remove('cache');
+}
 
-/* ═══════════════════════════════════════
-   ADMIN — TOAST
-   ═══════════════════════════════════════ */
-
-
-.toast { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.9); background: var(--gris-fonce); color: var(--blanc); padding: 16px 32px; border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 1rem; z-index: 9999; opacity: 0; transition: opacity 0.3s, transform 0.3s; pointer-events: none; }
-.toast.visible { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-.toast.toast-succes { background: var(--primary); }
-.toast.toast-erreur { background: var(--danger); }
-
-
-/* ═══════════════════════════════════════
-   ADMIN — écran de connexion
-
-   ═══════════════════════════════════════ */
-.ecran-connexion { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--blanc); display: none; align-items: center; justify-content: center; z-index: 99999; }
-.ecran-connexion.visible { display: flex; }
-.cache { display: none !important; }
-.connexion-boite { display: flex; flex-direction: column; align-items: center; gap: 16px; width: 300px; padding: 48px 40px; background: white; border-radius: 12px; box-shadow: 0 4px 24px rgba(0,0,0,0.08); }
-.connexion-logo { width: 80px; margin-bottom: 8px; }
-.connexion-titre { font-family: 'Playfair Display', serif; font-size: 1.4rem; color: var(--gris-fonce); letter-spacing: 0.05em; }
-.connexion-erreur { color: var(--danger); font-size: 0.85rem; min-height: 20px; }
-.login-body { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--blanc); }
-.login-contenu { display: flex; flex-direction: column; align-items: center; padding: var(--padding-page); max-width: 600px; width: 100%; }
-.login-logo-wrap { position: relative; display: flex; justify-content: center; width: 100%; margin-bottom: 8px; }
-.login-admin-label { position: absolute; top: 0; left: 0; font-family: 'DM Sans', sans-serif; font-size: 0.78rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); }
-.login-logo { width: 220px; }
-.login-separateur { width: 100%; height: 1px; background: var(--accent); margin: 32px 0; }
-.login-champ { display: flex; flex-direction: column; gap: 8px; width: 100%; }
-.login-row { display: flex; gap: 0; width: 100%; }
-.login-row .login-input { flex: 1; border-radius: 4px 0 0 4px; }
-.login-row .login-btn { border-radius: 0 4px 4px 0; white-space: nowrap; }
-.connexion-erreur { color: var(--danger); font-size: 0.85rem; min-height: 20px; }
-
-
-
-/* ═══════════════════════════════════════
-  truc
-
-   ═══════════════════════════════════════ */
-
-.citation-guillemet { color: var(--accent); }
+async function sauvegarderContenuSite() {
+  const corps = document.getElementById('corps-contenu-site');
+  if (!corps) return;
+  const contenu = {};
+  corps.querySelectorAll('[id^="cs-"]').forEach(el => {
+    const cle = el.id.replace('cs-', '');
+    contenu[cle] = el.value;
+  });
+const data = await appelAPIPost('updateContenu', { contenu });
+if (data && data.success) {
+    afficherMsg('msg-contenu-site', 'Contenu sauvegardé.', 'succes');
+  } else {
+    afficherMsg('msg-contenu-site', 'Erreur lors de la sauvegarde.', 'erreur');
+  }
+}
