@@ -206,7 +206,7 @@ function ouvrirFicheCollection(col) {
         ${item.format ? `<span class="fiche-ligne-format">${item.format}</span>` : ''}
         ${item.description_ligne ? `<p class="fiche-ligne-desc">${item.description_ligne}</p>` : ''}
       </div>
-      <button class="btn btn-sm btn-edit" onclick="modifierProduit(${item.rowIndex})">Modifier</button>
+      <button class="btn btn-sm btn-edit" onclick="modifierLigneProduit(${item.rowIndex})">Modifier</button>
     </div>`).join('');
 
   const fiche = document.getElementById('fiche-collection');
@@ -287,6 +287,28 @@ function fermerModalConfirm() {
 function fermerFormCollection() {
   document.getElementById('contenu-collections').classList.remove('cache');
   document.getElementById('form-collections').classList.remove('visible');
+}
+
+async function modifierLigneProduit(rowIndex) {
+  const item = donneesCollections.find(i => i.rowIndex === rowIndex);
+  if (!item) return;
+  fermerFicheCollection();
+  document.getElementById('form-collections-titre').textContent = 'Modifier la ligne — ' + (item.collection || '');
+  document.getElementById('fc-rowIndex').value = rowIndex;
+  document.getElementById('fc-mode').value = 'ligne';
+  document.getElementById('fc-bloc-collection').classList.add('cache');
+  document.getElementById('fc-bloc-ligne').classList.remove('cache');
+  document.getElementById('fc-toggle-mode').textContent = '← Retour collection';
+  document.getElementById('fc-collection-ligne').value = item.collection || '';
+  document.getElementById('fc-ligne').value = item.ligne || '';
+  document.getElementById('fc-format').value = item.format || '';
+  document.getElementById('fc-desc-ligne').value = item.description_ligne || '';
+  document.getElementById('fc-couleur-hex-ligne').value = item.couleur_hex || '';
+  document.getElementById('fc-photo-url-ligne').value = item.photo_url || '';
+  apercuCouleurCollection(document.getElementById('fc-couleur-hex-ligne'));
+  document.getElementById('contenu-collections').classList.add('cache');
+  document.getElementById('form-collections').classList.add('visible');
+  document.getElementById('fc-ligne').focus();
 }
 
 async function modifierCollection(rowIndex) {
