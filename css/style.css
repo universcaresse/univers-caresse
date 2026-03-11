@@ -416,7 +416,7 @@ select.form-control, select.form-ctrl { cursor: pointer; }
    ═══════════════════════════════════════ */
 .msg-zone { min-height: 0; }
 .msg {
-  padding: 12px 18px; margin-top: 10px; margin-bottom: 16px;
+  padding: 12px 18px; margin-bottom: 16px;
   font-family: 'DM Sans', sans-serif; font-size: 0.84rem;
   display: flex; align-items: center; gap: 10px;
 }
@@ -930,7 +930,7 @@ tr:hover td { background: rgba(232,220,200,0.15); }
 /* ═══════════════════════════════════════
    ADMIN — WIZARD
    ═══════════════════════════════════════ */
-.wizard-etapes { display: flex; align-items: center; margin-bottom: 40px; }
+.wizard-etapes { display: flex; align-items: center; margin-top: 20px;  margin-bottom: 40px; }
 .wizard-etape { display: flex; flex-direction: column; align-items: center; gap: 8px; }
 .wizard-cercle { width: 36px; height: 36px; border-radius: 50%; border: 2px solid var(--beige); background: var(--blanc); color: var(--gris); font-family: 'DM Sans', sans-serif; font-size: 0.82rem; font-weight: 500; display: flex; align-items: center; justify-content: center; transition: all 0.3s; }
 .wizard-label { font-family: 'DM Sans', sans-serif; font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gris); transition: color 0.3s; }
