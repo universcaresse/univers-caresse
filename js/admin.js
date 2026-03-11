@@ -206,7 +206,8 @@ function ouvrirFicheCollection(col) {
         ${item.format ? `<span class="fiche-ligne-format">${item.format}</span>` : ''}
         ${item.description_ligne ? `<p class="fiche-ligne-desc">${item.description_ligne}</p>` : ''}
       </div>
-      <button class="btn btn-sm btn-edit" onclick="modifierLigneProduit(${item.rowIndex})">Modifier</button>
+     <button class="btn btn-sm btn-edit" onclick="modifierLigneProduit(${item.rowIndex})">Modifier</button>
+      <button class="btn btn-sm btn-danger" onclick="supprimerLigne(${item.rowIndex}, '${item.collection}', '${item.ligne}')">Supprimer</button>
     </div>`).join('');
 
   const fiche = document.getElementById('fiche-collection');
@@ -409,8 +410,12 @@ async function sauvegarderCollection() {
   }
 }
 
-function supprimerLigne(rowIndex) {
-  confirmerAction('Supprimer cette ligne ?', async () => {
+function supprimerLigne(rowIndex, collection, ligne) {
+  const recettesLiees = donneesRecettes.filter(r => r.collection === collection && r.ligne === ligne);
+  const msg = recettesLiees.length > 0
+    ? `Cette ligne a ${recettesLiees.length} recette(s) liée(s). Supprimer quand même ?`
+    : 'Supprimer cette ligne ?';
+  confirmerAction(msg, async () => {
     const res = await appelAPIPost('deleteCollectionItem', { rowIndex });
     if (res && res.success) {
       afficherMsg('collections', 'Ligne supprimée.');
