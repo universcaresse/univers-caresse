@@ -213,7 +213,14 @@ function ouvrirFicheCollection(col) {
   document.getElementById('fiche-collection-titre').textContent = col.toUpperCase();
 document.getElementById('fiche-collection-bandeau').style.background = '';
   document.getElementById('fiche-collection-slogan').textContent = groupe.info.slogan || '';
-  document.getElementById('fiche-collection-desc').textContent = groupe.info.description_collection || '';
+ document.getElementById('fiche-collection-desc').textContent = groupe.info.description_collection || '';
+  const couleur = groupe.info.couleur_hex || '';
+  const photo   = groupe.info.photo_url   || '';
+  let ficheExtrasHtml = '';
+  if (couleur) ficheExtrasHtml += `<div class="fiche-collection-couleur"><span class="couleur-apercu" style="background:${couleur}"></span> ${couleur}</div>`;
+  if (photo)   ficheExtrasHtml += `<div class="fiche-collection-photo"><img src="${photo}" alt="Photo collection"></div>`;
+  const ficheExtras = document.getElementById('fiche-collection-extras');
+  if (ficheExtras) ficheExtras.innerHTML = ficheExtrasHtml;
   document.getElementById('fiche-collection-lignes').innerHTML = lignesHtml || '<p class="vide-desc">Aucune ligne</p>';
 document.getElementById('fiche-collection-modifier').onclick = () => {
     fermerFicheCollection();
