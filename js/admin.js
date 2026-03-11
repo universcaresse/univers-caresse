@@ -409,8 +409,11 @@ async function sauvegarderCollection() {
     if (btnSauvegarder) { btnSauvegarder.disabled = false; btnSauvegarder.innerHTML = 'Enregistrer'; }
   }
 }
-
-function supprimerLigne(rowIndex, collection, ligne) {
+async function supprimerLigne(rowIndex, collection, ligne) {
+  if (!donneesRecettes.length) {
+    const res = await appelAPI('getRecettes');
+    donneesRecettes = (res && res.recettes) ? res.recettes : [];
+  }
   const recettesLiees = donneesRecettes.filter(r => r.collection === collection && r.ligne === ligne);
   const msg = recettesLiees.length > 0
     ? `Cette ligne a ${recettesLiees.length} recette(s) liée(s). Supprimer quand même ?`
