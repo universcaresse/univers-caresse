@@ -274,6 +274,11 @@ function ouvrirFormCollection() {
     .filter(i => i.collection === item.collection && i.ligne === item.ligne)
     .map(i => ({ type: i.ingredient_type, nom: i.ingredient_nom, quantite: i.quantite_g }));
   rafraichirListeIngredientsBase();
+  const res = await appelAPI('getRecettesBase');
+  ingredientsBase = (res && res.items ? res.items : [])
+    .filter(i => i.collection === item.collection && i.ligne === item.ligne)
+    .map(i => ({ type: i.ingredient_type, nom: i.ingredient_nom, quantite: i.quantite_g }));
+  rafraichirListeIngredientsBase();
   document.getElementById('contenu-collections').classList.add('cache');
   document.getElementById('form-collections').classList.add('visible');
 }
