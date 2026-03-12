@@ -1285,8 +1285,8 @@ function afficherFactures(liste) {
       <td>${badge}</td>
       <td>
         <div class="td-actions">
-          <button class="btn-edit" onclick="voirDetailFacture('${f.numero.replace(/'/g,"\\'")}','${f.date}','${f.fournisseur.replace(/'/g,"\\'")}')">Voir</button>
-          <button class="btn-suppr" onclick="supprimerFacture('${f.numero.replace(/'/g,"\\'")}')">Supprimer</button>
+         <button class="btn-edit" onclick="voirDetailFacture('${String(f.numero).replace(/'/g,"\\'")}','${f.date}','${f.fournisseur.replace(/'/g,"\\'")}')">Voir</button>
+          <button class="btn-suppr" onclick="supprimerFacture('${String(f.numero).replace(/'/g,"\\'")}')">Supprimer</button>
         </div>
       </td>`;
     tbody.appendChild(tr);
