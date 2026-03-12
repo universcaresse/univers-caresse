@@ -1322,9 +1322,9 @@ async function voirDetailFacture(numero) {
   res.products.forEach(p => {
     html += `
       <tr>
-        <td style="font-weight:500">${p.nomProduit}</td>
+     <td style="font-weight:500">${p.ingredient || '—'}</td>
         <td>${p.quantite}</td>
-        <td style="color:var(--gris);font-size:0.78rem">${p.contenuQte ? p.contenuQte + ' ' + p.contenuUnite : '—'}</td>
+        <td style="color:var(--gris);font-size:0.78rem">${p.formatQte ? p.formatQte + ' ' + p.formatUnite : '—'}</td>
         <td>${formaterPrix(p.prixUnitaire)}</td>
         <td style="color:var(--gris);font-size:0.75rem">${p.prixParUnite ? parseFloat(p.prixParUnite).toFixed(4) + ' $/g' : '—'}</td>
         <td style="color:var(--primary);font-weight:500">${formaterPrix(p.prixTotal)}</td>
