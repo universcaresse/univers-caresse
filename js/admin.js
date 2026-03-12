@@ -770,8 +770,11 @@ function ouvrirFormRecette() {
   document.getElementById('fr-ligne').innerHTML = '<option value="">— Choisir collection —</option>';
   document.getElementById('fr-couleur-visible').value = '';
   document.getElementById('fr-image-url').value = '';
+  document.getElementById('fr-image-url-noel').value = '';
   const prevRecette = document.getElementById('fr-image-preview');
   if (prevRecette) { prevRecette.src = ''; prevRecette.classList.add('cache'); }
+  const prevNoel = document.getElementById('fr-image-preview-noel');
+  if (prevNoel) prevNoel.innerHTML = '';
   const apercuRecette = document.getElementById('fr-couleur-apercu');
   if (apercuRecette) apercuRecette.style.background = '';
  document.querySelector('#section-recettes .filtres-bar').classList.add('cache');
@@ -807,9 +810,12 @@ function modifierRecette(id) {
 document.getElementById('fr-collection').value   = rec.collection || '';
   mettreAJourLignes();
   document.getElementById('fr-ligne').value        = rec.ligne || '';
-  document.getElementById('fr-image-url').value    = rec.image_url || '';
+  document.getElementById('fr-image-url').value = rec.image_url || '';
   const preview = document.getElementById('fr-image-preview');
   if (preview) preview.innerHTML = rec.image_url ? `<img src="${rec.image_url}" class="photo-preview">` : '';
+  document.getElementById('fr-image-url-noel').value = rec.image_url_noel || '';
+  const previewNoel = document.getElementById('fr-image-preview-noel');
+  if (previewNoel) previewNoel.innerHTML = rec.image_url_noel ? `<img src="${rec.image_url_noel}" class="photo-preview">` : '';
   const selSec = document.getElementById('fr-collections-secondaires');
   if (selSec) {
     Array.from(selSec.options).forEach(opt => {
@@ -841,7 +847,8 @@ async function sauvegarderRecette() {
     instructions: document.getElementById('fr-instructions').value,
     notes:        document.getElementById('fr-notes').value,
     statut:       document.getElementById('fr-statut').value || 'test',
-    image_url:    document.getElementById('fr-image-url').value,
+    image_url:         document.getElementById('fr-image-url').value,
+    image_url_noel:    document.getElementById('fr-image-url-noel').value,
     collections_secondaires: Array.from(document.getElementById('fr-collections-secondaires')?.selectedOptions || []).map(o => o.value),
      ingredients:  ingredientsRecette.map(i => ({ type: i.type, nom: i.nom, quantite_g: i.quantite }))
   };

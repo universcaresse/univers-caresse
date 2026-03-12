@@ -496,14 +496,22 @@
                 <div id="fr-couleur-apercu" class="couleur-apercu"></div>
               </div>
             </div>
-           <div class="form-groupe col-plein">
-              <label class="form-label">Photo</label>
+          <div class="form-groupe col-plein">
+              <label class="form-label">Photo principale</label>
               <div class="cloudinary-zone">
                 <input type="text" class="form-ctrl" id="fr-image-url">
                 <button type="button" class="btn btn-secondary" onclick="ouvrirCloudinary()">Choisir une photo</button>
               </div>
               <div id="fr-image-preview"></div>
-			  </div>
+            </div>
+           <div class="form-groupe col-plein">
+              <label class="form-label">Photo Noël</label>
+              <div class="cloudinary-zone">
+                <input type="text" class="form-ctrl" id="fr-image-url-noel">
+                <button type="button" class="btn btn-secondary" onclick="ouvrirMediaLibrary('fr-image-url-noel', 'fr-image-preview-noel')">Choisir une photo</button>
+              </div>
+              <div id="fr-image-preview-noel"></div>
+            </div>
            <div class="form-groupe col-plein" id="zone-ingredients-recette">
               <label class="form-label">Ingrédients</label>
               <div id="liste-ingredients-recette"></div>
