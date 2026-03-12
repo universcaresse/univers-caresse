@@ -1318,7 +1318,7 @@ async function voirDetailFacture(numero) {
     <div class="tableau-wrap">
       <table>
         <thead>
-          <tr><th>Produit</th><th>Qté</th><th>Contenu</th><th>Prix unit.</th><th>Prix/g</th><th>Total</th><th>Type</th><th>Ingrédient</th></tr>
+          <tr><th>Produit</th><th>Qté</th><th>Contenu</th><th>Prix unit.</th><th>Prix/g</th><th>Total</th></tr>
         </thead>
         <tbody>`;
   res.products.forEach(p => {
@@ -1330,8 +1330,7 @@ async function voirDetailFacture(numero) {
         <td>${formaterPrix(p.prixUnitaire)}</td>
         <td style="color:var(--gris);font-size:0.75rem">${p.prixParUnite ? parseFloat(p.prixParUnite).toFixed(4) + ' $/g' : '—'}</td>
         <td style="color:var(--primary);font-weight:500">${formaterPrix(p.prixTotal)}</td>
-        <td style="color:var(--gris);font-size:0.75rem">${p.type || '—'}</td>
-        <td style="color:var(--gris);font-size:0.78rem">${p.ingredient || '—'}</td>
+      
       </tr>`;
   });
   html += `</tbody></table></div>`;
