@@ -601,7 +601,7 @@ footer > * { position: relative; z-index: 1; }
 .page-hero-texte { font-family: 'DM Sans', sans-serif; font-size: 1rem; line-height: 1.9; color: var(--gris); font-weight: 300; margin-top: 28px; max-width: 480px; }
 .page-hero-signature { font-family: 'Birthstone', cursive; font-size: 1.8rem; color: var(--accent); margin-top: 40px; margin-bottom: 4px; }
 .page-hero-titre-signature { font-family: 'DM Sans', sans-serif; font-size: 0.72rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--gris); font-weight: 400; }
-.page-hero-signature-bloc { margin-top: 48px; padding-top: 40px; border-top: 1px solid var(--beige); }
+.page-hero-signature-bloc { margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--beige); }
 .page-hero-visuel { display: flex; align-items: center; justify-content: center; max-width: 480px; }
 .page-hero-visuel-bg { width: 100%; aspect-ratio: 4/5; background: var(--beige); display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; }
 .page-hero-visuel-bg img.photo-ambiance { width: 100%; height: 100%; object-fit: cover; position: absolute; inset: 0; }
@@ -1080,7 +1080,8 @@ tr:hover td { background: rgba(232,220,200,0.15); }
 
   .hero { grid-template-columns: 1fr; }
   .hero-right { min-height: 280px; }
-  .hero-left { padding: 48px var(--padding-mobile); }
+ .hero-left { padding: 48px var(--padding-mobile); align-items: center; }
+  .hero-cta { width: 500px; max-width: 100%; justify-content: center; }
   .hero-left::after { display: none; }
 
   .section-collections { padding: 48px var(--padding-mobile); }
