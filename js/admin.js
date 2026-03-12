@@ -1756,12 +1756,13 @@ async function ajouterItem() {
 }
 
 function reinitialiserFormulaireItem() {
-  ['item-type','item-ingredient','item-format-qte','item-prix-unitaire','item-quantite','item-notes']
+ ['item-type','item-ingredient','item-format-qte','item-format-unite','item-prix-unitaire','item-quantite','item-notes']
     .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
   const champNouv = document.getElementById('item-ingredient-nouveau');
   if (champNouv) { champNouv.classList.add('cache'); champNouv.value = ''; }
-  document.getElementById('item-format-unite').value = 'g';
   document.getElementById('item-ingredient').innerHTML = '<option value=""></option>';
+  const selFormat = document.getElementById('item-format');
+  if (selFormat) selFormat.innerHTML = '<option value="">— Choisir un format —</option>';
 }
 
 function afficherItemsFacture() {
