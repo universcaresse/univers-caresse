@@ -373,7 +373,7 @@
             </div>
 			 
  
-            <<div class="form-actions">
+            <div class="form-actions">
               <button class="btn btn-primary" onclick="sauvegarderCollection()">Enregistrer</button>
               <button class="btn btn-secondary" onclick="fermerFormCollection()">Annuler</button>
               <button class="btn btn-danger cache" id="btn-supprimer-ligne">Supprimer la ligne</button>
@@ -646,21 +646,15 @@
             <input type="text" id="item-ingredient-nouveau" class="form-ctrl"
                    class="cache" autocomplete="off">
           </div>
-
-          <div class="form-groupe">
-            <label class="form-label">Format — quantité</label>
-            <input type="text" inputmode="numeric" id="item-format-qte" class="form-ctrl" autocomplete="off">
-          </div>
-
-          <div class="form-groupe">
-            <label class="form-label">Unité</label>
-            <select id="item-format-unite" class="form-ctrl">
-              <option value="g">g</option>
-              <option value="ml">ml</option>
-              <option value="kg">kg</option>
-              <option value="L">L</option>
+			<div class="form-groupe">
+            <label class="form-label">Format</label>
+            <select id="item-format" class="form-ctrl" onchange="onChangeFormat()">
+              <option value="">— Choisir un format —</option>
             </select>
           </div>
+          <input type="hidden" id="item-format-qte">
+          <input type="hidden" id="item-format-unite">
+          
 
           <div class="form-groupe">
             <label class="form-label">Prix unitaire ($)</label>

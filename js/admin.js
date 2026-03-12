@@ -1609,7 +1609,29 @@ function onChangeIngredient() {
   const champ = document.getElementById('item-ingredient-nouveau');
   if (!sel || !champ) return;
   champ.classList.toggle('cache', sel.value !== '__nouveau__');
-  if (sel.value === '__nouveau__') champ.focus();
+
+  const selFormat = document.getElementById('item-format');
+  if (!selFormat) return;
+  selFormat.innerHTML = '<option value="">— Choisir un format —</option>';
+  const type = document.getElementById('item-type')?.value;
+  const ing  = sel.value;
+  if (!ing || ing === '__nouveau__') return;
+  const item = listesDropdown.fullData.find(d => d.type === type && d.ingredient === ing);
+  if (!item || !item.formats.length) return;
+  item.formats.forEach(f => {
+    const opt = document.createElement('option');
+    opt.value = JSON.stringify(f);
+    opt.textContent = f.contenant + ' ' + f.quantite + ' ' + f.unite;
+    selFormat.appendChild(opt);
+  });
+}
+
+function onChangeFormat() {
+  const selFormat = document.getElementById('item-format');
+  if (!selFormat || !selFormat.value) return;
+  const f = JSON.parse(selFormat.value);
+  document.getElementById('item-format-qte').value   = f.quantite;
+  document.getElementById('item-format-unite').value = f.unite;
 }
 
 function wizardEtape1() {
