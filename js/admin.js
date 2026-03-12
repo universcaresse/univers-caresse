@@ -503,8 +503,7 @@ async function chargerRecettes() {
 
   if (!donneesRecettes.length) { loading.classList.add('cache'); vide.classList.remove('cache'); return; }
 
-  grille.innerHTML = '';
-  loading.classList.add('cache');
+ grille.innerHTML = '';
   grille.classList.remove('cache');
 
   const parCollection = {};
