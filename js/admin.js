@@ -819,57 +819,30 @@ if (res && res.success) {
 }
 
 // ─── CLOUDINARY ───
-function ouvrirCloudinary() {
-  cloudinary.openUploadWidget({
-    cloudName: 'dfasrauyy',
-    uploadPreset: 'univers-caresse',
-    sources: ['local', 'camera'],
-    multiple: false,
-    language: 'fr',
-    folder: 'univers-caresse/produits'
-  }, (error, result) => {
-    if (!error && result && result.event === 'success') {
-      document.getElementById('fr-image-url').value = result.info.secure_url;
-      const preview = document.getElementById('fr-image-preview');
-      preview.innerHTML = `<img src="${result.info.secure_url}" style="max-width:120px;margin-top:8px;">`;
-    }
-  });
+let _mediaLibrary = null;
+
+function ouvrirMediaLibrary(champId, previewId) {
+  if (!_mediaLibrary) {
+    _mediaLibrary = cloudinary.createMediaLibrary(
+      { cloud_name: 'dfasrauyy', api_key: '' },
+      {
+        insertHandler: function(data) {
+          if (data && data.assets && data.assets.length > 0) {
+            const url = data.assets[0].secure_url;
+            document.getElementById(champId).value = url;
+            const preview = document.getElementById(previewId);
+            if (preview) preview.innerHTML = `<img src="${url}" class="photo-preview">`;
+          }
+        }
+      }
+    );
+  }
+  _mediaLibrary.show();
 }
 
-function ouvrirCloudinaryCollection() {
-  cloudinary.openUploadWidget({
-    cloudName: 'dfasrauyy',
-    uploadPreset: 'univers-caresse',
-    sources: ['local', 'camera'],
-    multiple: false,
-    language: 'fr',
-    folder: 'univers-caresse/collections'
-  }, (error, result) => {
-  if (!error && result && result.event === 'success') {
-  
-      document.getElementById('fc-photo-url').value = result.info.secure_url;
-      
-      const preview = document.getElementById('fc-photo-preview');
-      if (preview) preview.innerHTML = `<img src="${result.info.secure_url}" class="photo-preview">`;
-    }
-  });
-}
-function ouvrirCloudinaryLigne() {
-  cloudinary.openUploadWidget({
-    cloudName: 'dfasrauyy',
-    uploadPreset: 'univers-caresse',
-    sources: ['local', 'camera'],
-    multiple: false,
-    language: 'fr',
-    folder: 'univers-caresse/lignes'
-  }, (error, result) => {
-    if (!error && result && result.event === 'success') {
-      document.getElementById('fc-photo-url-ligne').value = result.info.secure_url;
-      const preview = document.getElementById('fc-photo-preview-ligne');
-      if (preview) preview.innerHTML = `<img src="${result.info.secure_url}" class="photo-preview">`;
-    }
-  });
-}
+function ouvrirCloudinary()           { ouvrirMediaLibrary('fr-image-url',     'fr-image-preview');       }
+function ouvrirCloudinaryCollection() { ouvrirMediaLibrary('fc-photo-url',     'fc-photo-preview');       }
+function ouvrirCloudinaryLigne()      { ouvrirMediaLibrary('fc-photo-url-ligne','fc-photo-preview-ligne'); }
 
 function basculerModeFormCollection() {
   const mode    = document.getElementById('fc-mode');
