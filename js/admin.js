@@ -979,7 +979,7 @@ function rafraichirListeIngredientsRecette() {
         <option value="">— Ingrédient —</option>
         ${(listesDropdown.fullData || []).filter(d => d.type===ing.type).map(d => `<option value="${d.ingredient}" ${ing.nom===d.ingredient?'selected':''}>${d.ingredient}</option>`).join('')}
       </select>
-      <input type="text" inputmode="numeric" class="form-ctrl" value="${ing.quantite||''}" placeholder="g" onchange="ingredientsRecette[${i}].quantite=parseFloat(this.value)||0">
+      <input type="text" inputmode="decimal" class="form-ctrl" value="${ing.quantite||''}" placeholder="g" onchange="ingredientsRecette[${i}].quantite=parseFloat(this.value)||0">
       <button class="btn btn-sm btn-danger" onclick="supprimerIngredientRecette(${i})">✕</button>
     </div>
   `).join('');
@@ -1012,7 +1012,7 @@ function rafraichirListeIngredientsBase() {
         <option value="">— Ingrédient —</option>
         ${(listesDropdown.fullData || []).filter(d => d.type===ing.type).map(d => `<option value="${d.ingredient}" ${ing.nom===d.ingredient?'selected':''}>${d.ingredient}</option>`).join('')}
       </select>
-      <input type="text" inputmode="numeric" class="form-ctrl" value="${ing.quantite||''}" placeholder="g" onchange="ingredientsBase[${i}].quantite=parseFloat(this.value)||0">
+      <input type="text" inputmode="decimal" class="form-ctrl" value="${ing.quantite||''}" placeholder="g" onchange="ingredientsBase[${i}].quantite=parseFloat(this.value)||0">
       <button class="btn btn-sm btn-danger" onclick="supprimerIngredientBase(${i})">✕</button>
     </div>
   `).join('');
@@ -1204,9 +1204,11 @@ function reinitialiserNouvelleFacture() {
   produitsFacture = [];
   document.getElementById('etape2-facture').classList.add('cache');
   document.getElementById('etape1-facture').classList.remove('cache');
-  ['nf-numero','nf-fournisseur','nf-tps','nf-tvq'].forEach(id => {
-    document.getElementById(id).value = '';
+  ['facture-numero','facture-fournisseur','facture-fournisseur-nouveau','final-tps','final-tvq','final-livraison'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
   });
+  const champNouv = document.getElementById('facture-fournisseur-nouveau');
+  if (champNouv) champNouv.classList.add('cache');
   document.getElementById('nf-date').value = new Date().toISOString().split('T')[0];
 }
 
