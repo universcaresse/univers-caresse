@@ -1279,9 +1279,7 @@ function afficherFactures(liste) {
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td style="font-weight:500;font-family:'Playfair Display',serif">${f.numero}</td>
-      <td style="color:var(--gris);font-size:0.82rem">${f.date}</td>
-      <td>${f.fournisseur}</td>
-      <td style="color:var(--gris);font-size:0.82rem">${f.date}</td>
+            <td style="color:var(--gris);font-size:0.82rem">${f.date}</td>
       <td>${f.fournisseur}</td>
       <td style="color:var(--primary);font-weight:500;font-family:'Playfair Display',serif">${f.total ? formaterPrix(f.total) : '—'}</td>
       <td>${badge}</td>
