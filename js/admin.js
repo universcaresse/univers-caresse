@@ -1271,22 +1271,21 @@ function afficherFactures(liste) {
   const triees = [...liste].sort((a, b) => b.dateRaw.localeCompare(a.dateRaw));
 
   triees.forEach(f => {
-    const badge = f.statut === 'Finalisée'
-      ? `<span class="badge-statut-ok">Finalisée</span>`
-      : `<span class="badge-statut-cours">En cours</span>`;
+  const badge = f.statut === 'Finalisée'
+      ? `<span class="badge-statut-ok">✓</span>`
+      : `<span class="badge-statut-cours">●</span>`;
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td style="font-weight:500;font-family:'Playfair Display',serif">${f.numero}</td>
       <td style="color:var(--gris);font-size:0.82rem">${f.date}</td>
       <td>${f.fournisseur}</td>
-      <td style="color:var(--gris);font-size:0.82rem">${f.tps ? formaterPrix(f.tps) : '—'}</td>
-      <td style="color:var(--gris);font-size:0.82rem">${f.tvq ? formaterPrix(f.tvq) : '—'}</td>
+      <td style="color:var(--gris);font-size:0.82rem">${f.date}</td>
+      <td>${f.fournisseur}</td>
       <td style="color:var(--primary);font-weight:500;font-family:'Playfair Display',serif">${f.total ? formaterPrix(f.total) : '—'}</td>
       <td>${badge}</td>
       <td>
         <div class="td-actions">
-         <button class="btn-edit" onclick="voirDetailFacture('${String(f.numero).replace(/'/g,"\\'")}','${f.date}','${f.fournisseur.replace(/'/g,"\\'")}')">Voir</button>
-          <button class="btn-suppr" onclick="supprimerFacture('${String(f.numero).replace(/'/g,"\\'")}')">Supprimer</button>
+        <button class="btn-edit" onclick="voirDetailFacture('${String(f.numero).replace(/'/g,"\\'")}')">Voir</button>
         </div>
       </td>`;
     tbody.appendChild(tr);
@@ -1296,11 +1295,12 @@ function afficherFactures(liste) {
   tableau.classList.remove('cache');
 }
 
-async function voirDetailFacture(numero, date, fournisseur) {
+async function voirDetailFacture(numero) {
+  const facture = toutesFactures.find(f => String(f.numero) === String(numero));
   const modal = document.getElementById('modal-facture');
   modal.classList.add('ouvert');
   document.getElementById('modal-facture-titre').textContent = 'Facture ' + numero;
-  document.getElementById('modal-facture-info').textContent  = date + ' — ' + fournisseur;
+  document.getElementById('modal-facture-info').textContent  = (facture ? facture.date + ' — ' + facture.fournisseur : '');
   document.getElementById('contenu-detail-facture').innerHTML = '';
   document.getElementById('loading-detail-facture').classList.remove('cache');
 
@@ -1333,7 +1333,22 @@ async function voirDetailFacture(numero, date, fournisseur) {
       </tr>`;
   });
   html += `</tbody></table></div>`;
-  html += `<div style="text-align:right;padding:16px 0;border-top:1px solid var(--beige);margin-top:8px;font-family:'Playfair Display',serif;font-size:1.2rem;color:var(--primary)">Sous-total\u00a0: ${formaterPrix(res.total)}</div>`;
+ 
+const tps      = facture ? parseFloat(facture.tps) || 0 : 0;
+  const tvq      = facture ? parseFloat(facture.tvq) || 0 : 0;
+  const livraison = facture ? parseFloat(facture.livraison) || 0 : 0;
+  const total    = facture ? parseFloat(facture.total) || 0 : res.total;
+  html += `
+    <div class="facture-totaux">
+      <div class="facture-total-ligne">Sous-total <span>${formaterPrix(res.total)}</span></div>
+      ${tps ? `<div class="facture-total-ligne">TPS <span>${formaterPrix(tps)}</span></div>` : ''}
+      ${tvq ? `<div class="facture-total-ligne">TVQ <span>${formaterPrix(tvq)}</span></div>` : ''}
+      ${livraison ? `<div class="facture-total-ligne">Livraison <span>${formaterPrix(livraison)}</span></div>` : ''}
+      <div class="facture-total-ligne facture-total-final">Total <span>${formaterPrix(total)}</span></div>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-danger" onclick="fermerModalFacture(); supprimerFacture('${numero}')">Supprimer</button>
+    </div>`;
   document.getElementById('contenu-detail-facture').innerHTML = html;
 }
 
