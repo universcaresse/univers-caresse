@@ -269,11 +269,13 @@ function ouvrirFormCollection() {
   ['fc-couleur-apercu','fc-couleur-apercu-ligne'].forEach(id => {
     const e = document.getElementById(id); if (e) e.style.background = '';
   });
-  ingredientsBase = [];
+  const res = await appelAPI('getRecettesBase');
+  ingredientsBase = (res && res.items ? res.items : [])
+    .filter(i => i.collection === item.collection && i.ligne === item.ligne)
+    .map(i => ({ type: i.ingredient_type, nom: i.ingredient_nom, quantite: i.quantite_g }));
   rafraichirListeIngredientsBase();
   document.getElementById('contenu-collections').classList.add('cache');
   document.getElementById('form-collections').classList.add('visible');
-  document.getElementById('fc-rang').focus();
 }
 function confirmerAction(message, callback) {
   document.getElementById('modal-confirm-message').textContent = message;
