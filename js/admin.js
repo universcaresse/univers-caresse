@@ -720,9 +720,11 @@ async function chargerIngredientsBaseRecette() {
   ingredientsBase = res.items
     .filter(i => i.collection === col && i.ligne === ligne)
     .map(i => ({ type: i.ingredient_type, nom: i.ingredient_nom, quantite: i.quantite_g }));
-  ingredientsRecette = [...ingredientsBase];
+  if (!document.getElementById('fr-id').value) {
+    ingredientsRecette = [...ingredientsBase];
+    rafraichirListeIngredientsRecette();
+  }
   rafraichirListeIngredientsBase();
-  rafraichirListeIngredientsRecette();
 }
 
 
