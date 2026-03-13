@@ -902,6 +902,10 @@ function ajusterHauteurTextarea(el) {
 }
 
 function ouvrirMediaLibrary(champId, previewId) {
+  if (typeof cloudinary === 'undefined') {
+    alert('La librairie photo n\'est pas disponible. Vérifiez votre connexion et rechargez la page.');
+    return;
+  }
   _mediaLibraryChampId = champId;
   _mediaLibraryPreviewId = previewId;
   if (!_mediaLibrary) {
