@@ -565,15 +565,18 @@ grille.innerHTML = '';
               <div class="recette-dot"></div>
             </div>
           </div>
-          <div class="recette-infos ${couleurTexteContraste(couleur)}">
-            <span class="recette-badge">${rec.collection || '—'}</span>
-            <span class="recette-statut-badge recette-statut-${rec.statut || 'test'}">${rec.statut === 'public' ? 'Public' : 'Test'}</span>
+		  <div class="recette-infos ${couleurTexteContraste(couleur)}">
+          
+
+		<span class="recette-badge">${rec.collection || '—'}</span>
             <div class="recette-nom">${rec.nom || '—'}</div>
             <div class="recette-ligne">${rec.ligne || ''}</div>
             <div class="recette-bas">
               <span class="recette-prix">${rec.prix_vente ? formaterPrix(rec.prix_vente) : '—\u00a0$'}</span>
-              ${rec.format ? `<span class="recette-format">${rec.format}</span>` : ''}
+              <span class="recette-statut-badge recette-statut-${rec.statut || 'test'} recette-statut-droite">${rec.statut === 'public' ? 'Public' : 'Test'}</span>
             </div>
+			
+			
           </div>`;
         grilleInner.appendChild(div);
       });
@@ -1309,17 +1312,16 @@ function afficherFactures(liste) {
       ? `<span class="badge-statut-ok">✓</span>`
       : `<span class="badge-statut-cours">●</span>`;
     const tr = document.createElement('tr');
+	
+	
+  tr.className = 'cliquable';
+    tr.onclick = () => voirDetailFacture(String(f.numero));
     tr.innerHTML = `
-      <td style="font-weight:500;font-family:'Playfair Display',serif">${f.numero}</td>
-            <td style="color:var(--gris);font-size:0.82rem">${f.date}</td>
+      <td class="td-numero">${f.numero}</td>
+      <td class="td-date">${f.date}</td>
       <td>${f.fournisseur}</td>
-      <td style="color:var(--primary);font-weight:500;font-family:'Playfair Display',serif">${f.total ? formaterPrix(f.total) : '—'}</td>
-      <td>${badge}</td>
-      <td>
-        <div class="td-actions">
-        <button class="btn-edit" onclick="voirDetailFacture('${String(f.numero).replace(/'/g,"\\'")}')">Voir</button>
-        </div>
-      </td>`;
+      <td class="td-prix">${f.total ? formaterPrix(f.total) : '—'}</td>
+      <td>${badge}</td>`;
     tbody.appendChild(tr);
   });
 
