@@ -1281,16 +1281,37 @@ loading.classList.add('cache');
 function filtrerFactures() {
   const fourn  = document.getElementById('filtre-fournisseur').value;
   const statut = document.getElementById('filtre-statut').value;
-  const filtrees = toutesFactures.filter(f =>
-    (!fourn  || f.fournisseur === fourn) &&
-    (!statut || f.statut === statut)
-  );
+  const debut  = document.getElementById('filtre-date-debut').value;
+  const fin    = document.getElementById('filtre-date-fin').value;
+
+  const filtrees = toutesFactures.filter(f => {
+    if (fourn  && f.fournisseur !== fourn)  return false;
+    if (statut && f.statut !== statut)      return false;
+    if (debut  && f.dateRaw < debut)        return false;
+    if (fin    && f.dateRaw > fin)          return false;
+    return true;
+  });
+
+  const selStatut = document.getElementById('filtre-statut');
+  const valStatut = selStatut.value;
+  const statutsDispo = [...new Set(
+    toutesFactures.filter(f => !fourn || f.fournisseur === fourn).map(f => f.statut)
+  )];
+  selStatut.innerHTML = '<option value="">Tous les statuts</option>';
+  ['En cours', 'Finalisée'].filter(s => statutsDispo.includes(s)).forEach(s => {
+    const o = document.createElement('option');
+    o.value = s; o.textContent = s; selStatut.appendChild(o);
+  });
+  selStatut.value = valStatut;
+
   afficherFactures(filtrees);
 }
 
 function reinitialiserFiltres() {
   document.getElementById('filtre-fournisseur').value = '';
   document.getElementById('filtre-statut').value = '';
+  document.getElementById('filtre-date-debut').value = '';
+  document.getElementById('filtre-date-fin').value = '';
   afficherFactures(toutesFactures);
 }
 
@@ -1299,22 +1320,21 @@ function afficherFactures(liste) {
   const vide    = document.getElementById('vide-factures');
   const tbody   = document.getElementById('tbody-factures');
   const compte  = document.getElementById('factures-compte');
+  const totalEl = document.getElementById('factures-total');
 
   compte.textContent = liste.length + ' facture' + (liste.length > 1 ? 's' : '');
 
-  if (!liste.length) { tableau.classList.add('cache'); vide.classList.remove('cache'); return; }
+  if (!liste.length) { tableau.classList.add('cache'); vide.classList.remove('cache'); if (totalEl) totalEl.classList.add('cache'); return; }
 
   tbody.innerHTML = '';
   const triees = [...liste].sort((a, b) => b.dateRaw.localeCompare(a.dateRaw));
 
   triees.forEach(f => {
-  const badge = f.statut === 'Finalisée'
+    const badge = f.statut === 'Finalisée'
       ? `<span class="badge-statut-ok">✓</span>`
       : `<span class="badge-statut-cours">●</span>`;
     const tr = document.createElement('tr');
-	
-	
-  tr.className = 'cliquable';
+    tr.className = 'cliquable';
     tr.onclick = () => voirDetailFacture(String(f.numero));
     tr.innerHTML = `
       <td class="td-numero">${f.numero}</td>
@@ -1324,6 +1344,9 @@ function afficherFactures(liste) {
       <td>${badge}</td>`;
     tbody.appendChild(tr);
   });
+
+  const total = triees.reduce((acc, f) => acc + (f.total || 0), 0);
+  if (totalEl) { totalEl.textContent = formaterPrix(total); totalEl.classList.remove('cache'); }
 
   vide.classList.add('cache');
   tableau.classList.remove('cache');

@@ -399,6 +399,7 @@
           <button class="btn btn-primary" onclick="ouvrirFormRecette()">+ Nouvelle recette</button>
         </div>
        <div class="msg-zone" id="msg-recettes"></div>
+	   
         <div class="filtres-bar">
           <select class="form-ctrl filtre-select" id="filtre-recette-collection" onchange="onFiltreCollection()">
             <option value="">Toutes les collections</option>
@@ -752,7 +753,9 @@
           </div>
         </div>
         <div class="msg-zone" id="msg-factures"></div>
-        <div class="filtres-bar">
+		
+		
+       <div class="filtres-bar">
           <select class="form-ctrl filtre-select" id="filtre-fournisseur" onchange="filtrerFactures()">
             <option value="">Tous les fournisseurs</option>
           </select>
@@ -761,18 +764,29 @@
             <option value="En cours">En cours</option>
             <option value="Finalisée">Finalisée</option>
           </select>
-          <button class="btn btn-sm btn-outline" onclick="reinitialiserFiltres()">Réinitialiser</button>
+          <input class="form-ctrl filtre-select" type="date" id="filtre-date-debut" onchange="filtrerFactures()">
+          <input class="form-ctrl filtre-select" type="date" id="filtre-date-fin" onchange="filtrerFactures()">
+          <button class="btn btn-sm btn-outline btn-icone" onclick="reinitialiserFiltres()" title="Réinitialiser">✕</button>
           <span id="factures-compte" class="factures-compte"></span>
         </div>
+		
+		
+		
         <div class="chargement" id="loading-factures"><span class="spinner"></span>Chargement...</div>
         <div class="tableau-wrap">
-          <table id="tableau-factures" class="cache">
+		
+		
+         <table id="tableau-factures" class="cache">
             <thead>
-              <tr><th>Numéro</th><th>Date</th><th>Fournisseur</th><th>Total</th><th>Statut</th><th></th></tr>
+              <tr><th>Numéro</th><th>Date</th><th>Fournisseur</th><th>Total</th><th>Statut</th></tr>
             </thead>
             <tbody id="tbody-factures"></tbody>
           </table>
+          <div id="factures-total" class="inv-total cache"></div>
         </div>
+		
+		
+		
         <div class="vide cache" id="vide-factures">
           <div class="vide-titre">Aucune facture</div>
           <div class="vide-desc">Créez votre première facture</div>
