@@ -903,29 +903,24 @@ function ajusterHauteurTextarea(el) {
 
 function ouvrirMediaLibrary(champId, previewId) {
   if (typeof cloudinary === 'undefined') {
-    alert('La librairie photo n\'est pas disponible. Vérifiez votre connexion et rechargez la page.');
+    afficherMsg('recettes', 'La librairie photo n\'est pas disponible. Rechargez la page.', 'erreur');
     return;
   }
   _mediaLibraryChampId = champId;
   _mediaLibraryPreviewId = previewId;
-  if (!_mediaLibrary) {
-    _mediaLibrary = cloudinary.createMediaLibrary(
-      { cloud_name: 'dfasrauyy', api_key: '' },
-      {
-        inline_container: '#cloudinary-container',
-        insertHandler: function(data) {
-          if (data && data.assets && data.assets.length > 0) {
-            const url = data.assets[0].secure_url;
-            document.getElementById(_mediaLibraryChampId).value = url;
-            const preview = document.getElementById(_mediaLibraryPreviewId);
-            if (preview) preview.innerHTML = `<img src="${url}" class="photo-preview">`;
-            fermerMediaLibrary();
-          }
+  _mediaLibrary = cloudinary.createMediaLibrary(
+    { cloud_name: 'dfasrauyy', api_key: '' },
+    {
+      insertHandler: function(data) {
+        if (data && data.assets && data.assets.length > 0) {
+          const url = data.assets[0].secure_url;
+          document.getElementById(_mediaLibraryChampId).value = url;
+          const preview = document.getElementById(_mediaLibraryPreviewId);
+          if (preview) preview.innerHTML = `<img src="${url}" class="photo-preview">`;
         }
       }
-    );
-  }
-  document.getElementById('modal-cloudinary').classList.remove('cache');
+    }
+  );
   _mediaLibrary.show();
 }
 
