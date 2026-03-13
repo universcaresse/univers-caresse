@@ -892,6 +892,8 @@ if (res && res.success) {
 
 // ─── CLOUDINARY ───
 let _mediaLibrary = null;
+let _mediaLibraryChampId = null;
+let _mediaLibraryPreviewId = null;
 
 function ajusterHauteurTextarea(el) {
   if (!el) return;
@@ -900,22 +902,31 @@ function ajusterHauteurTextarea(el) {
 }
 
 function ouvrirMediaLibrary(champId, previewId) {
+  _mediaLibraryChampId = champId;
+  _mediaLibraryPreviewId = previewId;
   if (!_mediaLibrary) {
     _mediaLibrary = cloudinary.createMediaLibrary(
       { cloud_name: 'dfasrauyy', api_key: '' },
       {
+        inline_container: '#cloudinary-container',
         insertHandler: function(data) {
           if (data && data.assets && data.assets.length > 0) {
             const url = data.assets[0].secure_url;
-            document.getElementById(champId).value = url;
-            const preview = document.getElementById(previewId);
+            document.getElementById(_mediaLibraryChampId).value = url;
+            const preview = document.getElementById(_mediaLibraryPreviewId);
             if (preview) preview.innerHTML = `<img src="${url}" class="photo-preview">`;
+            fermerMediaLibrary();
           }
         }
       }
     );
   }
+  document.getElementById('modal-cloudinary').classList.remove('cache');
   _mediaLibrary.show();
+}
+
+function fermerMediaLibrary() {
+  document.getElementById('modal-cloudinary').classList.add('cache');
 }
 
 function ouvrirCloudinary()           { ouvrirMediaLibrary('fr-image-url',     'fr-image-preview');       }
