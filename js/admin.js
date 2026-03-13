@@ -757,12 +757,16 @@ function ouvrirFicheRecette(id) {
     <div class="fiche-section-titre">Ingrédients</div>
     <div class="fiche-ingredients">${ings}</div>
   `;
-  fermerFormRecette();
+fermerFormRecette();
   document.getElementById('fiche-recette').classList.add('visible');
+  document.querySelector('#section-recettes .filtres-bar').classList.add('cache');
+  document.getElementById('grille-recettes').classList.add('cache');
   window.scrollTo(0, 0);
 }
 function fermerFicheRecette() {
   document.getElementById('fiche-recette').classList.remove('visible');
+  document.querySelector('#section-recettes .filtres-bar').classList.remove('cache');
+  document.getElementById('grille-recettes').classList.remove('cache');
   recetteActive = null;
 }
 
