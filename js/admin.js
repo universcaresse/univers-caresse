@@ -1345,7 +1345,7 @@ function afficherFactures(liste) {
     tbody.appendChild(tr);
   });
 
-  const total = triees.reduce((acc, f) => acc + (f.total || 0), 0);
+ const total = triees.reduce((acc, f) => acc + (parseFloat(f.total) || 0), 0);
   if (totalEl) { totalEl.textContent = formaterPrix(total); totalEl.classList.remove('cache'); }
 
   vide.classList.add('cache');
