@@ -850,7 +850,10 @@ document.getElementById('fr-collection').value   = rec.collection || '';
   const selSec = document.getElementById('fr-collections-secondaires');
   if (selSec) {
     Array.from(selSec.querySelectorAll('input[type="checkbox"]')).forEach(cb => {
-      cb.checked = Array.isArray(rec.collections_secondaires) && rec.collections_secondaires.includes(cb.value);
+      cb.checked = false;
+    });
+    Array.from(selSec.querySelectorAll('input[type="checkbox"]')).forEach(cb => {
+      cb.checked = Array.isArray(rec.collections_secondaires) && rec.collections_secondaires.map(s => s.trim().toUpperCase()).includes(cb.value.trim().toUpperCase());
     });
   }
 ingredientsRecette = (rec.ingredients || []).map(i => ({ type: i.type, nom: i.nom, quantite: i.quantite_g }));
