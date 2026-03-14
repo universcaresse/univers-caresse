@@ -891,6 +891,7 @@ async function sauvegarderRecette() {
     cure:         parseInt(document.getElementById('fr-cure').value) || 0,
     prix_vente:   parseFloat(document.getElementById('fr-prix').value) || 0,
     description:  document.getElementById('fr-description').value,
+    desc_emballage: document.getElementById('fr-desc-emballage').value,
     instructions: document.getElementById('fr-instructions').value,
     notes:        document.getElementById('fr-notes').value,
     statut:       document.getElementById('fr-statut').value || 'test',
