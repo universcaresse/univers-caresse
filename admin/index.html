@@ -823,13 +823,13 @@
         </div>
         <div class="msg-zone" id="msg-inventaire"></div>
         <div class="filtres-factures" id="filtres-inventaire">
-          <select class="filtre-select" id="inv-filtre-type" onchange="filtrerInventaire()">
+          <select class="form-ctrl filtre-select" id="inv-filtre-type" onchange="filtrerInventaire()">
             <option value="">Tous les types</option>
           </select>
-          <select class="filtre-select" id="inv-filtre-fourn" onchange="filtrerInventaire()">
+          <select class="form-ctrl filtre-select" id="inv-filtre-fourn" onchange="filtrerInventaire()">
             <option value="">Tous les fournisseurs</option>
           </select>
-          <input type="text" class="filtre-select" id="inv-recherche" placeholder="Rechercher par nom…" oninput="filtrerInventaire()">
+          <input type="text" class="form-ctrl filtre-select" id="inv-recherche" placeholder="Rechercher par nom…" oninput="filtrerInventaire()">
           <button class="btn btn-outline btn-icone" onclick="reinitialiserFiltresInventaire()" title="Réinitialiser">✕</button>
         </div>
         <div class="chargement" id="loading-inventaire"><span class="spinner"></span>Chargement...</div>
