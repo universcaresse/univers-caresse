@@ -766,6 +766,8 @@ function ouvrirFicheRecette(id) {
     </div>
     <div class="fiche-section-titre">Description</div>
     <div class="fiche-texte">${rec.description || '—'}</div>
+    <div class="fiche-section-titre">Description emballage</div>
+    <div class="fiche-texte">${rec.desc_emballage || '—'}</div>
     <div class="fiche-section-titre">Instructions</div>
     <div class="fiche-texte">${rec.instructions || '—'}</div>
     <div class="fiche-section-titre">Notes</div>
@@ -845,6 +847,7 @@ function modifierRecette(id) {
   document.getElementById('fr-cure').value         = rec.cure || '';
   document.getElementById('fr-prix').value         = rec.prix_vente || '';
   document.getElementById('fr-description').value  = rec.description || '';
+   document.getElementById('fr-desc-emballage').value = rec.desc_emballage || '';
   document.getElementById('fr-instructions').value = rec.instructions || '';
   document.getElementById('fr-notes').value        = rec.notes || '';
   document.getElementById('fr-statut').value       = rec.statut || 'test';

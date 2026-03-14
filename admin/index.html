@@ -292,7 +292,7 @@
             <div class="form-panel-titre" id="form-collections-titre">Nouvelle collection</div>
             <div class="td-actions">
               <button class="btn btn-sm btn-outline" id="fc-toggle-mode" onclick="basculerModeFormCollection()">+ Ajouter une ligne</button>
-              <button class="btn btn-sm btn-outline" onclick="fermerFormCollection()">Fermer</button>
+              <button class="btn btn-sm btn-outline btn-icone" onclick="fermerFormCollection()" title="Fermer">✕</button>
             </div>
           </div>
           <div class="form-body">
@@ -421,7 +421,7 @@
             <div class="form-actions">
               <button class="btn btn-sm btn-primary" onclick="basculerModeEditionRecette()">Modifier</button>
               <button class="btn btn-sm btn-danger" onclick="supprimerRecetteActive()">Supprimer</button>
-              <button class="btn btn-sm btn-outline" onclick="fermerFicheRecette()">Fermer</button>
+              <button class="btn btn-sm btn-outline btn-icone" onclick="fermerFicheRecette()" title="Fermer">✕</button>
             </div>
           </div>
           <div class="form-body" id="fiche-recette-contenu"></div>
@@ -430,7 +430,7 @@
         <div class="form-panel" id="form-recettes">
           <div class="form-panel-header">
             <div class="form-panel-titre" id="form-recettes-titre">Nouvelle recette</div>
-            <button class="btn btn-sm btn-outline" onclick="fermerFormRecette()">Fermer</button>
+            <button class="btn btn-sm btn-outline btn-icone" onclick="fermerFormRecette()" title="Fermer">✕</button>
           </div>
           <div class="form-body">
            <input type="hidden" id="fr-id">
@@ -472,9 +472,13 @@
                 <label class="form-label">Prix de vente ($)</label>
                 <input type="text" inputmode="decimal" class="form-ctrl" id="fr-prix">
               </div>
-              <div class="form-groupe col-plein">
+       <div class="form-groupe col-plein">
                 <label class="form-label">Description</label>
                 <textarea class="form-ctrl" id="fr-description" rows="3"></textarea>
+              </div>
+              <div class="form-groupe col-plein">
+                <label class="form-label">Description emballage</label>
+                <textarea class="form-ctrl" id="fr-desc-emballage" rows="2"></textarea>
               </div>
               <div class="form-groupe col-plein">
                 <label class="form-label">Instructions</label>
