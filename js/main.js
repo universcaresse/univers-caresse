@@ -385,6 +385,8 @@ async function chargerCatalogue() {
   }
 }
 
+
+
 // ─── CONTENU DYNAMIQUE ───
 async function chargerContenu() {
   try {
