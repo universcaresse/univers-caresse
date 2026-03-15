@@ -1240,6 +1240,12 @@ tr.cliquable { cursor: pointer; }
 .edu-photo svg { width: 32px; height: 32px; color: var(--gris); opacity: 0.4; }
 .edu-photo-legende { font-family: 'DM Sans', sans-serif; font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--gris); opacity: 0.6; line-height: 1.6; }
 
+.edu-pager { display: flex; align-items: center; gap: 16px; }
+.edu-pager-num { font-family: 'DM Sans', sans-serif; font-size: 0.78rem; letter-spacing: 0.12em; color: var(--gris); font-weight: 400; }
+.edu-pager-btn { background: none; border: none; cursor: pointer; color: var(--gris); display: flex; align-items: center; padding: 4px; transition: color 0.2s; }
+.edu-pager-btn:hover { color: var(--primary); }
+.edu-pager-btn svg { width: 16px; height: 16px; }
+.edu-accroche { font-family: 'DM Sans', sans-serif; font-size: 0.88rem; color: var(--gris); font-weight: 300; margin-top: 8px; }
 .edu-nav { padding: 32px var(--padding-page); display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--beige); }
 .edu-nav-btn { font-family: 'DM Sans', sans-serif; font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gris); display: flex; align-items: center; gap: 10px; transition: color 0.2s; font-weight: 400; background: none; border: none; cursor: pointer; }
 .edu-nav-btn:hover { color: var(--primary); }
