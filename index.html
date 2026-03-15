@@ -1013,7 +1013,7 @@ if (body) body.classList.remove('cache');
   ordre.forEach(col => {
     if (!parCollection[col]) return;
     const produits = parCollection[col];
-    const infos = produits[0];
+    const infos = produits.find(p => p.collection === col) || produits[0];
     const section = document.createElement('div');
     section.className = 'collection-section';
     section.dataset.collection = col;
