@@ -53,9 +53,9 @@
 
     <div class="hero">
       <div class="hero-left">
-        <p class="hero-eyebrow" id="contenu-accueil-eyebrow"></p>
+        <p class="hero-eyebrow fade-in" id="contenu-accueil-eyebrow"></p>
         <img src="Images/Logofinal.png" alt="Univers Caresse" class="hero-logo-img fade-in delay-3">
-        <a href="#catalogue" class="hero-cta fade-in delay-6" onclick="naviguer('catalogue')">
+        <a href="#catalogue" class="hero-cta fade-in delay-4" onclick="naviguer('catalogue')">
           <span id="contenu-accueil-cta"></span>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
         </a>
@@ -733,7 +733,7 @@
       </div>
     </div>
 
-
+ 
     <div class="bonne-section">
       <h2 class="bonne-section-titre">Testez et écoutez votre peau</h2>
       <div class="edu-checklists">
@@ -952,7 +952,6 @@
 let donneescatalogue = [];
 let collectionsOrdre = [];
 let catalogueCharge = false;
-let infoCollectionsMap = {};
 let collectionEnAttente = null;
 
 async function chargerCatalogue() {
@@ -964,8 +963,7 @@ async function chargerCatalogue() {
     const data = await response.json();
     if (!data || !data.success || !data.produits) { afficherErreurCatalogue('Impossible de charger le catalogue.'); return; }
     donneescatalogue = data.produits;
-  collectionsOrdre = data.collections || [];
-    infoCollectionsMap = data.infoCollections || {};
+    collectionsOrdre = data.collections || [];
     construireCatalogue();
   } catch (err) {
     afficherErreurCatalogue('Erreur de connexion.');
@@ -1015,8 +1013,8 @@ if (body) body.classList.remove('cache');
   ordre.forEach(col => {
     if (!parCollection[col]) return;
     const produits = parCollection[col];
-    const infos = (infoCollectionsMap && infoCollectionsMap[col]) ? infoCollectionsMap[col] : produits[0];
-	    const section = document.createElement('div');
+    const infos = produits[0];
+    const section = document.createElement('div');
     section.className = 'collection-section';
     section.dataset.collection = col;
 
