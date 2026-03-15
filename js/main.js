@@ -391,7 +391,7 @@ async function chargerContenu() {
     const data = await appelAPI('getContenu', { t: Date.now() });
     if (!data || !data.success || !data.contenu) return;
     const c = data.contenu;
-    if (c.maintenance_active === '1') { afficherMaintenance(); return; }
+    if (String(c.maintenance_active) === '1') { afficherMaintenance(); return; }
     const set = (id, val) => { const el = document.getElementById(id); if (el && val) el.textContent = val; };
     const setHtml = (id, val) => { const el = document.getElementById(id); if (el && val) el.innerHTML = val; };
 
