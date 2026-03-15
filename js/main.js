@@ -197,6 +197,13 @@ function afficherModeAdmin() {
   if (lienAdmin)      lienAdmin.classList.remove('cache');
 }
 
+function afficherMaintenance() {
+  document.getElementById('page-maintenance').classList.remove('cache');
+  document.getElementById('nav').classList.add('cache');
+  const burger = document.getElementById('burger');
+  if (burger) burger.classList.add('cache');
+}
+
 function afficherModePublic() {
   const btnConnexion  = document.getElementById('btn-connexion');
   const btnDeconnexion = document.getElementById('btn-deconnexion');
@@ -384,6 +391,7 @@ async function chargerContenu() {
     const data = await appelAPI('getContenu', { t: Date.now() });
     if (!data || !data.success || !data.contenu) return;
     const c = data.contenu;
+    if (c.maintenance_active === '1') { afficherMaintenance(); return; }
     const set = (id, val) => { const el = document.getElementById(id); if (el && val) el.textContent = val; };
     const setHtml = (id, val) => { const el = document.getElementById(id); if (el && val) el.innerHTML = val; };
 
