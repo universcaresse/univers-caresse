@@ -1036,7 +1036,7 @@ if (body) body.classList.remove('cache');
   ordre.forEach(col => {
     if (!parCollection[col]) return;
     const produits = parCollection[col];
-    const infos = produits[0];
+    const infos = (data.infoCollections && data.infoCollections[col]) ? data.infoCollections[col] : produits[0];
     const section = document.createElement('div');
     section.className = 'collection-section';
     section.dataset.collection = col;

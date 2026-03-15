@@ -342,7 +342,7 @@ ajusterHauteurTextarea(descCol);
   document.getElementById('fc-ligne').value             = item.ligne || '';
   document.getElementById('fc-format').value            = item.format || '';
   document.getElementById('fc-desc-ligne').value        = item.description_ligne || '';
-document.getElementById('fc-couleur-hex').value       = item.couleur_hex || 'var(--gris)';
+document.getElementById('fc-couleur-hex').value       = item.couleur_hex || '';
   apercuCouleurCollection(document.getElementById('fc-couleur-hex'));
   document.getElementById('fc-photo-url').value         = item.photo_url || '';
   const preview = document.getElementById('fc-photo-preview');
